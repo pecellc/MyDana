@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -2184,6 +2185,80 @@ html.auth-pending #auth-screen {
   color: #64748b;
 }
 
+.buyer-catalog-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.buyer-catalog-tab {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  font-family: var(--mc-pixel-font);
+  font-size: 7.5px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+}
+
+.buyer-catalog-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.buyer-catalog-tab:active {
+  transform: translateY(1px);
+}
+
+.buyer-catalog-tab.active {
+  background: rgba(71, 226, 104, 0.18);
+  border-color: var(--mc-emerald);
+  color: #d1fae5;
+  box-shadow: inset 0 0 0 1px rgba(71, 226, 104, 0.25);
+}
+
+[data-theme="day"] .buyer-catalog-tab {
+  color: #475569;
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="day"] .buyer-catalog-tab.active {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: #059669;
+}
+
+.buyer-product-cat {
+  align-self: flex-start;
+  font-size: 0.62rem !important;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.buyer-product-cat-pulsa {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.buyer-product-cat-dana {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
 .buyer-products,
 .buyer-orders {
   display: flex;
@@ -2864,9 +2939,11 @@ textarea,
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='8' fill='%235b8731'/%3E%3Crect x='2' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='11' y='9' width='4' height='4' fill='%2347e268'/%3E%3Crect x='19' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='2' y='2' width='28' height='2' fill='%2374a333'/%3E%3Crect x='2' y='10' width='28' height='20' fill='%23866043'/%3E%3Crect x='5' y='13' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='22' y='14' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='10' y='23' width='5' height='4' fill='%236d4c33'/%3E%3Crect x='20' y='24' width='4' height='4' fill='%23573d26'/%3E%3Crect x='2' y='2' width='28' height='28' stroke='%231c2612' stroke-width='2' fill='none'/%3E%3Cpolygon points='16,14 22,21 16,28 10,21' fill='%2347e268'/%3E%3Cpolygon points='16,16 20,21 16,26 12,21' fill='%23a7f3d0'/%3E%3Cpolygon points='16,18 18,21 16,24 14,21' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='8' fill='%235b8731'/%3E%3Crect x='2' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='11' y='9' width='4' height='4' fill='%2347e268'/%3E%3Crect x='19' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='2' y='2' width='28' height='2' fill='%2374a333'/%3E%3Crect x='2' y='10' width='28' height='20' fill='%23866043'/%3E%3Crect x='5' y='13' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='22' y='14' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='10' y='23' width='5' height='4' fill='%236d4c33'/%3E%3Crect x='20' y='24' width='4' height='4' fill='%23573d26'/%3E%3Crect x='2' y='2' width='28' height='28' stroke='%231c2612' stroke-width='2' fill='none'/%3E%3Cpolygon points='16,14 22,21 16,28 10,21' fill='%2347e268'/%3E%3Cpolygon points='16,16 20,21 16,26 12,21' fill='%23a7f3d0'/%3E%3Cpolygon points='16,18 18,21 16,24 14,21' fill='%23ffffff'/%3E%3C/svg%3E">
   <script>document.documentElement.classList.add('auth-pending');</script>
 </head>
+
 <body>
 
   <!-- ================= AUTH SCREEN (SUPABASE) ================= -->
@@ -2875,19 +2952,19 @@ textarea,
       <div class="auth-brand">
         <span class="auth-brand-logo">
           <svg viewBox="0 0 32 32" width="46" height="46" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
-            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
-            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
-            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
-            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
-            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
-            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
-            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
-            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
-            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
-            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731" />
+            <rect x="2" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="11" y="9" width="4" height="4" fill="#47e268" />
+            <rect x="19" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="2" y="2" width="28" height="2" fill="#74a333" />
+            <rect x="2" y="10" width="28" height="20" fill="#866043" />
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33" />
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33" />
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33" />
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2" />
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268" />
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0" />
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff" />
           </svg>
         </span>
         <h1>MYDANA</h1>
@@ -2917,19 +2994,24 @@ textarea,
 
         <form id="login-form" class="auth-form">
           <label for="login-username">USERNAME</label>
-          <input id="login-username" class="modal-input" type="text" autocomplete="username" placeholder="username" maxlength="24" required>
+          <input id="login-username" class="modal-input" type="text" autocomplete="username" placeholder="username"
+            maxlength="24" required>
           <label for="login-password">PASSWORD</label>
-          <input id="login-password" class="modal-input" type="password" autocomplete="current-password" placeholder="••••••••" required>
+          <input id="login-password" class="modal-input" type="password" autocomplete="current-password"
+            placeholder="••••••••" required>
           <button class="mc-btn mc-btn-green" type="submit">🔑 MASUK</button>
         </form>
 
         <form id="register-form" class="auth-form" hidden>
           <label for="register-username">USERNAME BARU</label>
-          <input id="register-username" class="modal-input" type="text" autocomplete="username" placeholder="3-24 huruf kecil/angka/titik" maxlength="24" required>
+          <input id="register-username" class="modal-input" type="text" autocomplete="username"
+            placeholder="3-24 huruf kecil/angka/titik" maxlength="24" required>
           <label for="register-password">PASSWORD</label>
-          <input id="register-password" class="modal-input" type="password" autocomplete="new-password" placeholder="minimal 6 karakter" minlength="6" required>
+          <input id="register-password" class="modal-input" type="password" autocomplete="new-password"
+            placeholder="minimal 6 karakter" minlength="6" required>
           <label for="register-confirm">ULANGI PASSWORD</label>
-          <input id="register-confirm" class="modal-input" type="password" autocomplete="new-password" placeholder="ulangi password" minlength="6" required>
+          <input id="register-confirm" class="modal-input" type="password" autocomplete="new-password"
+            placeholder="ulangi password" minlength="6" required>
           <button class="mc-btn mc-btn-green" type="submit">BUAT AKUN BUYER</button>
           <p class="auth-hint">Satu IP hanya boleh memiliki satu akun.</p>
         </form>
@@ -2950,19 +3032,19 @@ textarea,
       <div class="buyer-brand">
         <span class="buyer-logo">
           <svg viewBox="0 0 32 32" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
-            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
-            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
-            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
-            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
-            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
-            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
-            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
-            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
-            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
-            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731" />
+            <rect x="2" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="11" y="9" width="4" height="4" fill="#47e268" />
+            <rect x="19" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="2" y="2" width="28" height="2" fill="#74a333" />
+            <rect x="2" y="10" width="28" height="20" fill="#866043" />
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33" />
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33" />
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33" />
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2" />
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268" />
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0" />
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff" />
           </svg>
         </span>
         <div>
@@ -2983,10 +3065,12 @@ textarea,
           </div>
           <input type="file" id="buyer-avatar-file-input" accept="image/*" style="display:none;">
         </div>
-        <button class="mc-btn" id="buyer-sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro" type="button">
+        <button class="mc-btn" id="buyer-sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro"
+          type="button">
           🔊 SFX: ON
         </button>
-        <button class="mc-btn" id="buyer-bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM" type="button">
+        <button class="mc-btn" id="buyer-bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM"
+          type="button">
           <span class="bgm-icon">🎵</span> BGM: OFF
         </button>
         <button class="mc-btn mc-btn-diamond" id="buyer-refresh" type="button">🔄 REFRESH</button>
@@ -2998,11 +3082,14 @@ textarea,
     <div id="buyer-notif-permission-bar" class="buyer-notif-bar" style="display:none; margin-bottom:14px;">
       <div style="font-size:0.8rem; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
         <span style="font-size:1.15rem;">🔔</span>
-        <span><strong>Aktifkan Notifikasi Pengingat?</strong> Dapatkan info saat pulsa di-ACC dan pengingat tempo otomatis agar tidak lupa menyisihkan uang.</span>
+        <span><strong>Aktifkan Notifikasi Pengingat?</strong> Dapatkan info saat pulsa di-ACC dan pengingat tempo
+          otomatis agar tidak lupa menyisihkan uang.</span>
       </div>
       <div style="display:flex; gap:8px; flex-shrink:0;">
-        <button class="mc-btn mc-btn-green" id="btn-enable-notif" type="button" style="padding:5px 12px; font-size:0.75rem;">AKTIFKAN NOTIFIKASI</button>
-        <button class="mc-btn" id="btn-dismiss-notif" type="button" style="padding:5px 9px; font-size:0.75rem;">NANTI SAJA</button>
+        <button class="mc-btn mc-btn-green" id="btn-enable-notif" type="button"
+          style="padding:5px 12px; font-size:0.75rem;">AKTIFKAN NOTIFIKASI</button>
+        <button class="mc-btn" id="btn-dismiss-notif" type="button" style="padding:5px 9px; font-size:0.75rem;">NANTI
+          SAJA</button>
       </div>
     </div>
 
@@ -3024,6 +3111,14 @@ textarea,
 
       <div class="buyer-card">
         <span class="buyer-card-label">🛒 PRODUK TERSEDIA</span>
+        <div class="buyer-catalog-tabs" id="buyer-catalog-tabs" role="tablist" aria-label="Filter katalog produk">
+          <button type="button" class="buyer-catalog-tab active" data-catalog-tab="all" role="tab"
+            aria-selected="true">🗂️ SEMUA</button>
+          <button type="button" class="buyer-catalog-tab" data-catalog-tab="pulsa" role="tab" aria-selected="false">📶
+            PULSA</button>
+          <button type="button" class="buyer-catalog-tab" data-catalog-tab="dana" role="tab" aria-selected="false">💳
+            SALDO DANA</button>
+        </div>
         <div id="buyer-products" class="buyer-products">Memuat produk...</div>
       </div>
 
@@ -3035,24 +3130,29 @@ textarea,
             Pesanan yang nominalnya melebihi saldo modal akan otomatis ditolak.
           </p>
           <label class="buyer-form-label" for="buyer-order-name">PRODUK / NOMINAL</label>
-          <input id="buyer-order-name" class="modal-input" type="text" placeholder="Nama produk / nominal pulsa" required>
+          <input id="buyer-order-name" class="modal-input" type="text" placeholder="Nama produk / nominal pulsa"
+            required>
           <label class="buyer-form-label" for="buyer-order-amount">NOMINAL (Rp)</label>
-          <input id="buyer-order-amount" class="modal-input" type="number" min="1" step="1" placeholder="Nominal (Rp)" required>
-          <label class="buyer-form-label" for="buyer-order-payment">💳 METODE PEMBAYARAN <span style="color:var(--mc-redstone);">*</span></label>
-          <select id="buyer-order-payment" class="modal-input">
-            <option value="dana">📱 DANA (Transfer Online)</option>
-            <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
-          </select>
-          <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
-            💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
+          <input id="buyer-order-amount" class="modal-input" type="number" min="1" step="1" placeholder="Nominal (Rp)"
+            required>
+          <label class="buyer-form-label" for="buyer-order-payment">💳 METODE PEMBAYARAN <span
+              style="color:var(--mc-redstone);">*</span></label>
+          <input type="hidden" id="buyer-order-payment" value="dana">
+          <div class="buyer-payment-static" id="buyer-order-payment-display" aria-label="Kategori pembayaran: DANA">
+            <span class="buyer-payment-icon">📱</span>
+            <span class="buyer-payment-name">DANA</span>
+            <span class="buyer-payment-note">Transfer online • hanya DANA</span>
           </div>
           <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
           <select id="buyer-order-timing" class="modal-input">
             <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
           </select>
-          <div id="buyer-due-motivational-tip" style="display:none; font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border-left:3px solid #38bdf8; padding:7px 10px; margin-top:5px; border-radius:3px; line-height:1.45;"></div>
+          <div id="buyer-due-motivational-tip"
+            style="display:none; font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border-left:3px solid #38bdf8; padding:7px 10px; margin-top:5px; border-radius:3px; line-height:1.45;">
+          </div>
           <label class="buyer-form-label" for="buyer-order-notes">CATATAN</label>
-          <textarea id="buyer-order-notes" class="modal-input" rows="2" placeholder="Catatan (opsional): nomor tujuan, provider, dll."></textarea>
+          <textarea id="buyer-order-notes" class="modal-input" rows="2"
+            placeholder="Catatan (opsional): nomor tujuan, provider, dll."></textarea>
           <button class="mc-btn mc-btn-green" type="submit">KIRIM PESANAN</button>
         </form>
       </div>
@@ -3065,18 +3165,21 @@ textarea,
 
     <!-- MINECRAFT MODAL: NOTIFIKASI PESANAN MASUK (BUYER) -->
     <div id="buyer-order-alert-modal" class="mc-modal-overlay">
-      <div class="mc-modal-box" style="max-width: 500px; width: 92%; border-color: var(--mc-emerald); box-shadow: inset 2px 2px 0 var(--panel-border-light), 0 0 28px rgba(71, 226, 104, 0.45);">
+      <div class="mc-modal-box"
+        style="max-width: 500px; width: 92%; border-color: var(--mc-emerald); box-shadow: inset 2px 2px 0 var(--panel-border-light), 0 0 28px rgba(71, 226, 104, 0.45);">
         <div class="mc-modal-title" style="color: var(--mc-emerald); display: flex; align-items: center; gap: 8px;">
           <span>🎉</span> <span>PESANAN KAMU TELAH DIPROSES!</span>
         </div>
         <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 8px;">
           Owner kios telah menyetujui (ACC) / memperbarui pesananmu:
         </div>
-        <div id="buyer-order-alert-content" style="display: flex; flex-direction: column; gap: 8px; margin: 10px 0; max-height: 320px; overflow-y: auto;">
+        <div id="buyer-order-alert-content"
+          style="display: flex; flex-direction: column; gap: 8px; margin: 10px 0; max-height: 320px; overflow-y: auto;">
           <!-- Diisi otomatis lewat buyer.js -->
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
-          <button class="mc-btn mc-btn-green" id="buyer-order-alert-close" type="button" style="padding: 8px 18px; font-weight: bold;">
+          <button class="mc-btn mc-btn-green" id="buyer-order-alert-close" type="button"
+            style="padding: 8px 18px; font-weight: bold;">
             👍 SIAP, TERIMA KASIH!
           </button>
         </div>
@@ -3086,7 +3189,8 @@ textarea,
     <!-- MINECRAFT MODAL: POPUP PESAN PRODUK (BUYER) -->
     <div id="buyer-order-modal" class="mc-modal-overlay">
       <div class="mc-modal-box buyer-popup-box">
-        <div class="mc-modal-title" style="color: var(--mc-diamond); display: flex; align-items: center; justify-content: space-between;">
+        <div class="mc-modal-title"
+          style="color: var(--mc-diamond); display: flex; align-items: center; justify-content: space-between;">
           <span style="display:flex; align-items:center; gap:8px;">
             <span>🛒</span> <span id="buyer-popup-title">PESAN PRODUK</span>
           </span>
@@ -3100,16 +3204,21 @@ textarea,
               <strong id="buyer-popup-prod-name" style="font-size: 1rem; color: #fff;">-</strong>
               <div id="buyer-popup-prod-desc" style="font-size: 0.74rem; color: #94a3b8; margin-top: 2px;"></div>
             </div>
-            <div id="buyer-popup-prod-price" style="font-family: var(--mc-pixel-font); font-size: 11px; color: var(--mc-diamond); text-align: right; flex-shrink: 0;">Rp 0</div>
+            <div id="buyer-popup-prod-price"
+              style="font-family: var(--mc-pixel-font); font-size: 11px; color: var(--mc-diamond); text-align: right; flex-shrink: 0;">
+              Rp 0</div>
           </div>
           <div class="buyer-popup-pills" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <span class="badge-modal-cost" style="font-size: 0.7rem; background: rgba(251,146,60,0.18); color: #fb923c; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(251,146,60,0.3);">
+            <span class="badge-modal-cost"
+              style="font-size: 0.7rem; background: rgba(251,146,60,0.18); color: #fb923c; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(251,146,60,0.3);">
               🔥 Modal Kios: <strong id="buyer-popup-prod-modal">Rp 0</strong>
             </span>
-            <span class="badge-admin-fee" style="font-size: 0.7rem; background: rgba(71,226,104,0.18); color: var(--mc-emerald); padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(71,226,104,0.3);">
+            <span class="badge-admin-fee"
+              style="font-size: 0.7rem; background: rgba(71,226,104,0.18); color: var(--mc-emerald); padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(71,226,104,0.3);">
               💎 Admin: <strong id="buyer-popup-prod-admin">Rp 0</strong>
             </span>
-            <span id="buyer-popup-modal-status" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">
+            <span id="buyer-popup-modal-status"
+              style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">
               <!-- CUKUP / KURANG -->
             </span>
           </div>
@@ -3118,33 +3227,40 @@ textarea,
         <!-- Form Pemesanan -->
         <form id="buyer-popup-form" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
           <div>
-            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP / ID AKUN TUJUAN <span style="color:var(--mc-redstone);">*</span></label>
-            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890 / ID Game" required autocomplete="tel">
-            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor tujuan pengisian pulsa / kuota / saldo transfer.</span>
+            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP / ID AKUN TUJUAN <span
+                style="color:var(--mc-redstone);">*</span></label>
+            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890 / ID Game"
+              required autocomplete="tel">
+            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor tujuan pengisian
+              pulsa / kuota / saldo transfer.</span>
           </div>
 
           <div>
-            <label class="buyer-form-label" for="buyer-popup-payment">💳 METODE PEMBAYARAN <span style="color:var(--mc-redstone);">*</span></label>
-            <select id="buyer-popup-payment" class="modal-input">
-              <option value="dana">📱 DANA (Transfer Online)</option>
-              <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
-            </select>
-            <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
-              💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
+            <label class="buyer-form-label" for="buyer-popup-payment">💳 METODE PEMBAYARAN <span
+                style="color:var(--mc-redstone);">*</span></label>
+            <input type="hidden" id="buyer-popup-payment" value="dana">
+            <div class="buyer-payment-static" id="buyer-popup-payment-display" aria-label="Kategori pembayaran: DANA">
+              <span class="buyer-payment-icon">📱</span>
+              <span class="buyer-payment-name">DANA</span>
+              <span class="buyer-payment-note">Transfer online • hanya DANA</span>
             </div>
           </div>
 
           <div>
-            <label class="buyer-form-label" for="buyer-popup-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI) <span style="color:var(--mc-redstone);">*</span></label>
+            <label class="buyer-form-label" for="buyer-popup-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI) <span
+                style="color:var(--mc-redstone);">*</span></label>
             <select id="buyer-popup-timing" class="modal-input">
               <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
             </select>
-            <div id="buyer-popup-due-tip" style="display:none; font-size: 0.74rem; color: #38bdf8; background: rgba(56,189,248,0.12); border-left: 3px solid #38bdf8; padding: 6px 9px; margin-top: 5px; border-radius: 3px; line-height: 1.4;"></div>
+            <div id="buyer-popup-due-tip"
+              style="display:none; font-size: 0.74rem; color: #38bdf8; background: rgba(56,189,248,0.12); border-left: 3px solid #38bdf8; padding: 6px 9px; margin-top: 5px; border-radius: 3px; line-height: 1.4;">
+            </div>
           </div>
 
           <div>
             <label class="buyer-form-label" for="buyer-popup-notes">📝 CATATAN TAMBAHAN (OPSIONAL)</label>
-            <textarea id="buyer-popup-notes" class="modal-input" rows="2" placeholder="Catatan tambahan: provider, waktu pengiriman, dll."></textarea>
+            <textarea id="buyer-popup-notes" class="modal-input" rows="2"
+              placeholder="Catatan tambahan: provider, waktu pengiriman, dll."></textarea>
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
@@ -3158,7 +3274,8 @@ textarea,
     <!-- MINECRAFT MODAL: POPUP PENGATURAN PROFIL BUYER -->
     <div id="buyer-profile-modal" class="mc-modal-overlay">
       <div class="mc-modal-box buyer-popup-box">
-        <div class="mc-modal-title" style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
+        <div class="mc-modal-title"
+          style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
           <span style="display:flex; align-items:center; gap:8px;">
             <span>👤</span> <span>PENGATURAN PROFIL &amp; AKUN</span>
           </span>
@@ -3169,7 +3286,8 @@ textarea,
         <div class="buyer-profile-banner">
           <div class="buyer-profile-avatar-big-wrap">
             <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;">
-            <span id="buyer-profile-modal-avatar-placeholder" class="buyer-avatar-placeholder" style="font-size:2rem;">👤</span>
+            <span id="buyer-profile-modal-avatar-placeholder" class="buyer-avatar-placeholder"
+              style="font-size:2rem;">👤</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -3177,8 +3295,10 @@ textarea,
               <span class="badge-buyer-role">🛒 PEMBELI</span>
             </div>
             <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
-              <button class="mc-btn mc-btn-diamond" type="button" id="buyer-profile-change-avatar-btn" style="padding:5px 10px; font-size:7.5px;">📷 GANTI FOTO</button>
-              <button class="mc-btn mc-btn-dark" type="button" id="buyer-profile-remove-avatar-btn" style="padding:5px 10px; font-size:7.5px;">🗑️ HAPUS FOTO</button>
+              <button class="mc-btn mc-btn-diamond" type="button" id="buyer-profile-change-avatar-btn"
+                style="padding:5px 10px; font-size:7.5px;">📷 GANTI FOTO</button>
+              <button class="mc-btn mc-btn-dark" type="button" id="buyer-profile-remove-avatar-btn"
+                style="padding:5px 10px; font-size:7.5px;">🗑️ HAPUS FOTO</button>
             </div>
           </div>
         </div>
@@ -3187,7 +3307,8 @@ textarea,
         <form id="buyer-profile-form" style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
           <div>
             <label class="buyer-form-label" for="buyer-profile-phone-input">📱 NOMOR HP SAYA (DEFAULT)</label>
-            <input id="buyer-profile-phone-input" class="modal-input" type="tel" placeholder="Contoh: 081234567890" autocomplete="tel">
+            <input id="buyer-profile-phone-input" class="modal-input" type="tel" placeholder="Contoh: 081234567890"
+              autocomplete="tel">
             <span style="font-size:0.68rem; color:#94a3b8; display:block; margin-top:3px;">
               💡 Nomor HP ini akan otomatis terisi setiap kali kamu memesan pulsa.
             </span>
@@ -3201,7 +3322,8 @@ textarea,
             </div>
             <div class="buyer-stat-card">
               <span class="buyer-stat-title">✅ SELESAI / ACC</span>
-              <strong id="buyer-stat-completed-orders" class="buyer-stat-value" style="color:var(--mc-emerald);">0</strong>
+              <strong id="buyer-stat-completed-orders" class="buyer-stat-value"
+                style="color:var(--mc-emerald);">0</strong>
             </div>
             <div class="buyer-stat-card">
               <span class="buyer-stat-title">⏳ TEMPO AKTIF</span>
@@ -3209,8 +3331,10 @@ textarea,
             </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap:wrap;">
-            <button class="mc-btn mc-btn-redstone" id="buyer-profile-logout-btn" type="button">🚪 KELUAR / LOGOUT</button>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap:wrap;">
+            <button class="mc-btn mc-btn-redstone" id="buyer-profile-logout-btn" type="button">🚪 KELUAR /
+              LOGOUT</button>
             <div style="display: flex; gap: 8px;">
               <button class="mc-btn mc-btn-dark" id="buyer-profile-cancel-btn" type="button">TUTUP</button>
               <button class="mc-btn mc-btn-green" type="submit">💾 SIMPAN PENGATURAN</button>
@@ -3249,19 +3373,19 @@ textarea,
       <div class="mc-brand">
         <div class="mc-logo-block">
           <svg viewBox="0 0 32 32" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
-            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
-            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
-            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
-            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
-            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
-            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
-            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
-            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
-            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
-            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
-            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731" />
+            <rect x="2" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="11" y="9" width="4" height="4" fill="#47e268" />
+            <rect x="19" y="8" width="5" height="4" fill="#47e268" />
+            <rect x="2" y="2" width="28" height="2" fill="#74a333" />
+            <rect x="2" y="10" width="28" height="20" fill="#866043" />
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33" />
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33" />
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33" />
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2" />
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268" />
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0" />
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff" />
           </svg>
         </div>
         <div>
@@ -3285,7 +3409,8 @@ textarea,
         <button class="mc-btn" onclick="window.App.resetData()" title="Kosongkan data">
           🗑️ RESET
         </button>
-        <button class="mc-btn mc-btn-gold" id="login-btn" onclick="window.KeuanganAuth.logout()" title="Logout akun owner">
+        <button class="mc-btn mc-btn-gold" id="login-btn" onclick="window.KeuanganAuth.logout()"
+          title="Logout akun owner">
           <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
         </button>
       </div>
@@ -3295,13 +3420,9 @@ textarea,
     <section class="mc-box chat-box">
       <div class="chat-input-bar">
         <span class="chat-prompt-symbol">&gt;</span>
-        <input 
-          type="text" 
-          id="chat-input" 
-          class="chat-text-input" 
-          placeholder="Ketik catatan uang / pulsa / transfer... (contoh: jual pulsa 10k ke budi 12k bayar tempo, masuk 50k di dana, beli makan 15k)" 
-          autocomplete="off"
-        >
+        <input type="text" id="chat-input" class="chat-text-input"
+          placeholder="Ketik catatan uang / pulsa / transfer... (contoh: jual pulsa 10k ke budi 12k bayar tempo, masuk 50k di dana, beli makan 15k)"
+          autocomplete="off">
         <button class="mc-btn mc-btn-green" onclick="window.App.submitChat()">
           ENTER [CATAT]
         </button>
@@ -3310,7 +3431,8 @@ textarea,
 
     <!-- MINECRAFT NAVIGATION BAR (TABS VIEW) -->
     <nav class="mc-nav-bar" id="mc-nav-bar">
-      <button class="mc-nav-btn active" id="nav-btn-dashboard" data-tab="dashboard" onclick="window.App.switchTab('dashboard')">
+      <button class="mc-nav-btn active" id="nav-btn-dashboard" data-tab="dashboard"
+        onclick="window.App.switchTab('dashboard')">
         <span class="nav-icon">💎</span>
         <span>SALDO &amp; CATATAN</span>
       </button>
@@ -3348,10 +3470,10 @@ textarea,
           <div class="grand-total-header">
             <span class="grand-total-label" style="display:flex; align-items:center; gap:8px;">
               <svg viewBox="0 0 28 28" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8L8 3H20L25 8V23H3V8Z" fill="#0284c7" stroke="#0369a1" stroke-width="2"/>
-                <polygon points="14,6 21,11 14,21 7,11" fill="#38bdf8"/>
-                <polygon points="14,8 18,11 14,18 10,11" fill="#bae6fd"/>
-                <circle cx="14" cy="11" r="2" fill="#ffffff"/>
+                <path d="M3 8L8 3H20L25 8V23H3V8Z" fill="#0284c7" stroke="#0369a1" stroke-width="2" />
+                <polygon points="14,6 21,11 14,21 7,11" fill="#38bdf8" />
+                <polygon points="14,8 18,11 14,18 10,11" fill="#bae6fd" />
+                <circle cx="14" cy="11" r="2" fill="#ffffff" />
               </svg>
               <span>TOTAL SEMUA UANG (KAS RIIL + PIUTANG):</span>
             </span>
@@ -3367,9 +3489,9 @@ textarea,
             <span class="stat-label">
               <span style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" fill="#10b981" stroke="#047857" stroke-width="2"/>
-                  <polygon points="12,5 17,9 17,15 12,19 7,15 7,9" fill="#34d399"/>
-                  <polygon points="12,8 14,10 14,14 12,16 10,14 10,10" fill="#ffffff"/>
+                  <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" fill="#10b981" stroke="#047857" stroke-width="2" />
+                  <polygon points="12,5 17,9 17,15 12,19 7,15 7,9" fill="#34d399" />
+                  <polygon points="12,8 14,10 14,14 12,16 10,14 10,10" fill="#ffffff" />
                 </svg>
                 <span>Kas di Tangan</span>
               </span>
@@ -3384,20 +3506,26 @@ textarea,
             <span class="stat-label">
               <span style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C10 6 7 8 7 13C7 17 9.5 21 12 21C14.5 21 17 17 17 13C17 8 14 6 12 2Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
-                  <path d="M12 7C11 9 9.5 11 9.5 14C9.5 16.5 10.8 19 12 19C13.2 19 14.5 16.5 14.5 14C14.5 11 13 9 12 7Z" fill="#fbbf24"/>
-                  <path d="M12 12C11.5 13 11 14 11 15.5C11 17 11.5 18 12 18C12.5 18 13 17 13 15.5C13 14 12.5 13 12 12Z" fill="#ffffff"/>
+                  <path d="M12 2C10 6 7 8 7 13C7 17 9.5 21 12 21C14.5 21 17 17 17 13C17 8 14 6 12 2Z" fill="#f59e0b"
+                    stroke="#b45309" stroke-width="2" />
+                  <path d="M12 7C11 9 9.5 11 9.5 14C9.5 16.5 10.8 19 12 19C13.2 19 14.5 16.5 14.5 14C14.5 11 13 9 12 7Z"
+                    fill="#fbbf24" />
+                  <path d="M12 12C11.5 13 11 14 11 15.5C11 17 11.5 18 12 18C12.5 18 13 17 13 15.5C13 14 12.5 13 12 12Z"
+                    fill="#ffffff" />
                 </svg>
                 <span>Modal Kios</span>
               </span>
               <div class="mini-btn-group">
-                <button class="mc-btn mc-btn-green" style="padding: 2px 7px; font-size: 8px;" onclick="window.App.tambahModalPrompt()" title="Tambah Modal Pulsa">+</button>
-                <button class="mc-btn mc-btn-gold" style="padding: 2px 7px; font-size: 8px;" onclick="window.App.openPulsaModal()" title="Pengaturan Modal">⚙️</button>
+                <button class="mc-btn mc-btn-green" style="padding: 2px 7px; font-size: 8px;"
+                  onclick="window.App.tambahModalPrompt()" title="Tambah Modal Pulsa">+</button>
+                <button class="mc-btn mc-btn-gold" style="padding: 2px 7px; font-size: 8px;"
+                  onclick="window.App.openPulsaModal()" title="Pengaturan Modal">⚙️</button>
               </div>
             </span>
             <div id="total-uang-panas" class="stat-val-orange">Rp 0</div>
             <span class="stat-subtext">MODAL OPERASIONAL JUALAN PULSA</span>
-            <span id="uang-panas-reserved-subtext" style="display:none; font-size:0.68rem; color:#f59e0b; font-weight:700; margin-top:3px; line-height:1.3;"></span>
+            <span id="uang-panas-reserved-subtext"
+              style="display:none; font-size:0.68rem; color:#f59e0b; font-weight:700; margin-top:3px; line-height:1.3;"></span>
           </div>
 
           <!-- 3. Uang Akan Datang (Hutang Orang / Piutang) -->
@@ -3405,12 +3533,12 @@ textarea,
             <span class="stat-label">
               <span style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="5" y="2" width="14" height="3" fill="#d97706" rx="1"/>
-                  <rect x="5" y="19" width="14" height="3" fill="#d97706" rx="1"/>
-                  <path d="M7 5L12 11L17 5" stroke="#f59e0b" stroke-width="2" fill="none"/>
-                  <path d="M7 19L12 13L17 19" stroke="#f59e0b" stroke-width="2" fill="none"/>
-                  <polygon points="12,11 14,8 10,8" fill="#fbbf24"/>
-                  <polygon points="12,15 15,18 9,18" fill="#fbbf24"/>
+                  <rect x="5" y="2" width="14" height="3" fill="#d97706" rx="1" />
+                  <rect x="5" y="19" width="14" height="3" fill="#d97706" rx="1" />
+                  <path d="M7 5L12 11L17 5" stroke="#f59e0b" stroke-width="2" fill="none" />
+                  <path d="M7 19L12 13L17 19" stroke="#f59e0b" stroke-width="2" fill="none" />
+                  <polygon points="12,11 14,8 10,8" fill="#fbbf24" />
+                  <polygon points="12,15 15,18 9,18" fill="#fbbf24" />
                 </svg>
                 <span>Piutang</span>
               </span>
@@ -3425,13 +3553,10 @@ textarea,
       <!-- SECTION: TABEL RIWAYAT TRANSAKSI -->
       <section class="mc-box">
         <div class="table-header-controls">
-          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-yellow);">📜 BUKU CATATAN TRANSAKSI:</span>
-          <input 
-            type="text" 
-            class="mc-search-input" 
-            placeholder="Cari transaksi / nama..." 
-            oninput="window.App.onSearch(this.value)"
-          >
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-yellow);">📜 BUKU CATATAN
+            TRANSAKSI:</span>
+          <input type="text" class="mc-search-input" placeholder="Cari transaksi / nama..."
+            oninput="window.App.onSearch(this.value)">
         </div>
 
         <div class="mc-table-wrap">
@@ -3474,7 +3599,8 @@ textarea,
             <button class="mc-btn mc-btn-green" onclick="window.App.tambahModalPrompt()" title="Tambah Modal Pulsa">
               ➕ TAMBAH MODAL
             </button>
-            <button class="mc-btn mc-btn-gold" onclick="window.App.openPulsaModal()" title="Pengaturan & Ukur Modal Pulsa">
+            <button class="mc-btn mc-btn-gold" onclick="window.App.openPulsaModal()"
+              title="Pengaturan & Ukur Modal Pulsa">
               ⚙️ ATUR MODAL
             </button>
           </div>
@@ -3496,14 +3622,18 @@ textarea,
           <div class="pulsa-stat-card cuan-border">
             <span class="pulsa-stat-label">💎 CUAN AKTIF TERSISA</span>
             <div id="pulsa-profit-amt" class="pulsa-stat-val" style="color: var(--mc-emerald);">Rp 0</div>
-            <span id="pulsa-cuan-subtext" style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 3px;">Akumulasi Laba: Rp 0</span>
+            <span id="pulsa-cuan-subtext"
+              style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 3px;">Akumulasi Laba: Rp 0</span>
           </div>
         </div>
 
         <!-- BUKU PELANGGAN KIOS PULSA (RIWAYAT & STATUS HUTANG PER ORANG) -->
-        <div class="pulsa-customers-section" style="margin-top: 14px; border-top: 2px dashed rgba(255, 255, 255, 0.12); padding-top: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
-            <span style="font-weight: 800; font-size: 0.82rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+        <div class="pulsa-customers-section"
+          style="margin-top: 14px; border-top: 2px dashed rgba(255, 255, 255, 0.12); padding-top: 12px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+            <span
+              style="font-weight: 800; font-size: 0.82rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
               <span>👥</span> BUKU PELANGGAN KIOS PULSA (KLIK NAMA UNTUK LIHAT RIWAYAT):
             </span>
             <span style="font-size: 0.72rem; color: #94a3b8;">Lacak total uang keluar &amp; sisa hutang per orang</span>
@@ -3534,12 +3664,14 @@ textarea,
       <!-- SECTION: KATALOG PRODUK KIOS (TERHUBUNG KE BUYER) -->
       <section class="mc-box" style="margin-top: 14px;">
         <div class="table-header-controls">
-          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-diamond);">📦 PRODUK KATALOG KIOS (TERHUBUNG KE BUYER):</span>
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-diamond);">📦 PRODUK KATALOG
+            KIOS (TERHUBUNG KE BUYER):</span>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="mc-btn mc-btn-green" onclick="window.App.openProductModal()" title="Tambah produk baru">
               ➕ TAMBAH PRODUK
             </button>
-            <button class="mc-btn mc-btn-purple" onclick="window.App.switchTab('products')" title="Buka Tab Pengaturan Lengkap">
+            <button class="mc-btn mc-btn-purple" onclick="window.App.switchTab('products')"
+              title="Buka Tab Pengaturan Lengkap">
               ⚙️ PENGATURAN LENGKAP
             </button>
           </div>
@@ -3552,9 +3684,11 @@ textarea,
       <!-- SECTION: PESANAN PELANGGAN (BUYER) -->
       <section class="mc-box" id="owner-orders-section" style="margin-top: 14px;">
         <div class="table-header-controls">
-          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-gold);">🛒 PESANAN PELANGGAN (BUYER):</span>
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-gold);">🛒 PESANAN PELANGGAN
+            (BUYER):</span>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="mc-btn mc-btn-purple" onclick="window.App.addProductPrompt()" title="Tambah produk ke katalog buyer">
+            <button class="mc-btn mc-btn-purple" onclick="window.App.addProductPrompt()"
+              title="Tambah produk ke katalog buyer">
               + PRODUK
             </button>
             <button class="mc-btn" onclick="window.App.refreshOwnerOrders()" title="Muat ulang pesanan">
@@ -3604,10 +3738,14 @@ textarea,
               <span>📅</span> ARUS KAS (<span id="recap-period-name">BULAN INI</span>):
             </span>
             <div class="recap-tabs">
-              <button class="recap-tab-btn" data-period="today" onclick="window.App.setRecapPeriod('today')">☀️ HARI INI</button>
-              <button class="recap-tab-btn active" data-period="month" onclick="window.App.setRecapPeriod('month')">🌙 BULAN INI</button>
-              <button class="recap-tab-btn" data-period="year" onclick="window.App.setRecapPeriod('year')">🗓️ TAHUN INI</button>
-              <button class="recap-tab-btn" data-period="all" onclick="window.App.setRecapPeriod('all')">🌐 SEMUA</button>
+              <button class="recap-tab-btn" data-period="today" onclick="window.App.setRecapPeriod('today')">☀️ HARI
+                INI</button>
+              <button class="recap-tab-btn active" data-period="month" onclick="window.App.setRecapPeriod('month')">🌙
+                BULAN INI</button>
+              <button class="recap-tab-btn" data-period="year" onclick="window.App.setRecapPeriod('year')">🗓️ TAHUN
+                INI</button>
+              <button class="recap-tab-btn" data-period="all" onclick="window.App.setRecapPeriod('all')">🌐
+                SEMUA</button>
             </div>
           </div>
           <div class="recap-metrics-grid">
@@ -3650,14 +3788,17 @@ textarea,
           <span class="debt-panel-title">
             <span>⚔️</span> DAFTAR ORANG NGEHUTANG KE KAMU (UANG AKAN DATANG):
           </span>
-          <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.85;">BISA KONFIRMASI CICIL / LUNAS DI SINI</span>
+          <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.85;">BISA KONFIRMASI CICIL / LUNAS DI
+            SINI</span>
         </div>
         <div id="debtors-grid" class="debtors-grid">
           <!-- Populated dynamically (Gilang: Rp 226.000 -> [Bayar / Cicil]) -->
         </div>
         <div id="debt-empty-state" class="debt-empty-state" style="display: none;">
           <div style="font-size: 2rem; margin-bottom: 6px;">🛡️</div>
-          <div style="font-family: var(--mc-pixel-font); font-size: 9.5px; color: var(--mc-emerald); margin-bottom: 6px;">SEMUA HUTANG LUNAS!</div>
+          <div
+            style="font-family: var(--mc-pixel-font); font-size: 9.5px; color: var(--mc-emerald); margin-bottom: 6px;">
+            SEMUA HUTANG LUNAS!</div>
           <div>Tidak ada teman yang berhutang ke kamu saat ini. Semua piutang aman terkendali!</div>
         </div>
       </section>
@@ -3687,7 +3828,8 @@ textarea,
     <!-- TAB 6: KATALOG & HARGA PRODUK (OWNER CONTROL) -->
     <div id="tab-products" class="mc-tab-view">
       <section class="mc-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
           <div>
             <h3 style="margin: 0; font-family: var(--mc-pixel-font); font-size: 1.05rem; color: var(--mc-gold);">
               📦 PENGATURAN KATALOG &amp; HARGA PRODUK
@@ -3707,13 +3849,18 @@ textarea,
         </div>
 
         <!-- Info Card: Modal Pokok vs Jatah Admin -->
-        <div style="background: rgba(15, 23, 42, 0.65); border: 2px dashed #0284c7; border-radius: 6px; padding: 12px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.45;">
-          <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+        <div
+          style="background: rgba(15, 23, 42, 0.65); border: 2px dashed #0284c7; border-radius: 6px; padding: 12px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.45;">
+          <div
+            style="font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
             <span>💡</span> ATURAN PERHITUNGAN MODAL &amp; ADMIN:
           </div>
-          <div>• <strong>Harga Buyer = Modal Pokok + Jatah Admin</strong> (contoh: Modal Rp 10.000 + Admin Rp 4.000 = Total Rp 14.000).</div>
-          <div>• <strong>Hanya Modal Pokok yang mengurangi saldo Kios!</strong> Jatah Admin tidak memotong modal dan langsung jadi laba bersihmu saat di-ACC.</div>
-          <div>• Gunakan tombol ⬆️ / ⬇️ di kolom <em>Posisi</em> untuk memindah urutan produk yang pertama kali dilihat pembeli.</div>
+          <div>• <strong>Harga Buyer = Modal Pokok + Jatah Admin</strong> (contoh: Modal Rp 10.000 + Admin Rp 4.000 =
+            Total Rp 14.000).</div>
+          <div>• <strong>Hanya Modal Pokok yang mengurangi saldo Kios!</strong> Jatah Admin tidak memotong modal dan
+            langsung jadi laba bersihmu saat di-ACC.</div>
+          <div>• Gunakan tombol ⬆️ / ⬇️ di kolom <em>Posisi</em> untuk memindah urutan produk yang pertama kali dilihat
+            pembeli.</div>
         </div>
 
         <!-- Table of Products -->
@@ -3753,19 +3900,23 @@ textarea,
       <div class="pulsa-modal-summary">
         <div class="pulsa-modal-card">
           <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 800;">MODAL KIOS AKTIF</span>
-          <div id="modal-info-uangpanas" style="color: #fb923c; font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp 0</div>
+          <div id="modal-info-uangpanas"
+            style="color: #fb923c; font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp 0</div>
           <span style="font-size: 0.7rem; opacity: 0.75;">Saldo Modal Operasional Jualan</span>
         </div>
         <div class="pulsa-modal-card">
           <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 800;">TOTAL LABA PULSA</span>
-          <div id="modal-info-cuan" style="color: var(--mc-emerald); font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp 0</div>
+          <div id="modal-info-cuan"
+            style="color: var(--mc-emerald); font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp
+            0</div>
           <span style="font-size: 0.7rem; opacity: 0.75;">Keuntungan Bersih Terkumpul</span>
         </div>
       </div>
 
       <!-- Quick Add Modal -->
       <div style="display: flex; gap: 8px;">
-        <button class="mc-btn mc-btn-green" style="flex: 1;" onclick="window.App.closePulsaModal(); window.App.tambahModalPrompt();" title="Tambah Modal Pulsa">
+        <button class="mc-btn mc-btn-green" style="flex: 1;"
+          onclick="window.App.closePulsaModal(); window.App.tambahModalPrompt();" title="Tambah Modal Pulsa">
           ➕ TAMBAH SALDO MODAL
         </button>
       </div>
@@ -3773,7 +3924,8 @@ textarea,
       <!-- Set Modal Pokok Awal -->
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">SET MODAL POKOK / DEPOSIT PULSA (RP):</label>
-        <span style="font-size: 0.74rem; opacity: 0.75;">Berapa modal pokok yang biasa kamu siapkan untuk deposit pulsa? (misal: 100000 atau 300000)</span>
+        <span style="font-size: 0.74rem; opacity: 0.75;">Berapa modal pokok yang biasa kamu siapkan untuk deposit pulsa?
+          (misal: 100000 atau 300000)</span>
         <input type="number" id="input-base-modal" class="modal-input" placeholder="0">
         <button class="mc-btn mc-btn-gold" style="margin-top: 4px; padding: 7px;" onclick="window.App.saveBaseModal()">
           💾 SIMPAN MODAL POKOK
@@ -3796,11 +3948,13 @@ textarea,
       </div>
 
       <div style="font-size: 0.88rem; font-weight: 600;">
-        Sisa hutang saat ini: <strong id="modal-remaining-amt" style="color: var(--mc-gold); font-family: var(--mc-pixel-font); font-size: 0.9rem;">Rp 0</strong>
+        Sisa hutang saat ini: <strong id="modal-remaining-amt"
+          style="color: var(--mc-gold); font-family: var(--mc-pixel-font); font-size: 0.9rem;">Rp 0</strong>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.85;">BERAPA YANG DIBAYAR DULU? (BISA CICIL / LUNAS):</label>
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.85;">BERAPA YANG DIBAYAR DULU? (BISA CICIL /
+          LUNAS):</label>
         <input type="number" id="modal-pay-amount" class="modal-input" placeholder="0">
       </div>
 
@@ -3833,11 +3987,13 @@ textarea,
       <div class="hero-stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 6px;">
         <div class="stat-card" style="padding: 10px;">
           <span class="stat-label">💰 TOTAL BELI PULSA</span>
-          <div id="cust-modal-total-spend" style="font-size: 1rem; color: #4de0eb; font-family: var(--mc-pixel-font);">Rp 0</div>
+          <div id="cust-modal-total-spend" style="font-size: 1rem; color: #4de0eb; font-family: var(--mc-pixel-font);">
+            Rp 0</div>
         </div>
         <div class="stat-card" style="padding: 10px;">
           <span class="stat-label">⏳ SISA HUTANG SAAT INI</span>
-          <div id="cust-modal-debt" style="font-size: 1rem; color: #f59e0b; font-family: var(--mc-pixel-font);">Rp 0 0 0</div>
+          <div id="cust-modal-debt" style="font-size: 1rem; color: #f59e0b; font-family: var(--mc-pixel-font);">Rp 0 0 0
+          </div>
         </div>
       </div>
       <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; margin-top: 4px;">
@@ -3884,24 +4040,38 @@ textarea,
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <label style="font-size: 0.82rem; font-weight: 700; color: #fb923c;">🔥 MODAL POKOK KIOS (RP):</label>
           <span style="font-size: 0.72rem; opacity: 0.75;">Yang dipotong dari saldo modal</span>
-          <input type="number" id="prod-modal" class="modal-input" placeholder="10000" oninput="window.App.calcProductModalPreview()">
+          <input type="number" id="prod-modal" class="modal-input" placeholder="10000"
+            oninput="window.App.calcProductModalPreview()">
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 0.82rem; font-weight: 700; color: var(--mc-emerald);">💎 JATAH ADMIN / CUAN (RP):</label>
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--mc-emerald);">💎 JATAH ADMIN / CUAN
+            (RP):</label>
           <span style="font-size: 0.72rem; opacity: 0.75;">Keuntungan bersih owner</span>
-          <input type="number" id="prod-admin" class="modal-input" placeholder="4000" oninput="window.App.calcProductModalPreview()">
+          <input type="number" id="prod-admin" class="modal-input" placeholder="4000"
+            oninput="window.App.calcProductModalPreview()">
         </div>
       </div>
 
       <!-- Preview Total Price -->
-      <div style="background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+      <div
+        style="background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;">TOTAL HARGA JUAL BUYER:</span>
-        <span id="prod-total-preview" style="font-family: var(--mc-pixel-font); font-size: 1.15rem; color: var(--mc-gold);">Rp 0</span>
+        <span id="prod-total-preview"
+          style="font-family: var(--mc-pixel-font); font-size: 1.15rem; color: var(--mc-gold);">Rp 0</span>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">DESKRIPSI / KETERANGAN TAMBAHAN:</label>
-        <input type="text" id="prod-desc" class="modal-input" placeholder="Contoh: Saldo DANA 10.000 langsung masuk (admin 4k)">
+        <input type="text" id="prod-desc" class="modal-input"
+          placeholder="Contoh: Saldo DANA 10.000 langsung masuk (admin 4k)">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">KATEGORI PRODUK (TAB BUYER):</label>
+        <select id="prod-category" class="modal-select">
+          <option value="pulsa">📶 Pulsa / Kuota / Token</option>
+          <option value="dana">💳 Saldo DANA / E-Wallet</option>
+        </select>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -4533,6 +4703,7 @@ textarea,
       sourceWallet: row.source_wallet || payload.sourceWallet || null,
       isColdMoney: row.is_cold_money || payload.isColdMoney || false,
       isTambahModal: row.is_tambah_modal || payload.isTambahModal || false,
+      isTambahModalRiil: Boolean(payload.isTambahModalRiil),
       isKurangiModal: row.is_kurangi_modal || payload.isKurangiModal || false,
       isSetorModal: row.is_setor_modal || payload.isSetorModal || false
     });
@@ -5327,6 +5498,9 @@ textarea,
     loadOwnerData,
     saveAllNow,
     saveAllDebounced,
+    deleteTransaction,
+    deleteQuest,
+    clearOwnerRows,
     publishModal,
     publishModalNow,
     getPublicStatus,
@@ -5564,28 +5738,57 @@ textarea,
     }
   }
 
-  function renderProducts(products) {
+  let catalogProducts = [];
+  let catalogTab = 'all';
+
+  // Tentukan produk masuk tab PULSA atau SALDO DANA. Kolom `category` adalah
+  // sumber utama; kalau data lama belum punya kategori, tebak dari nama.
+  function productCategory(product) {
+    const raw = String(product?.category || '').toLowerCase().trim();
+    if (['dana', 'saldo', 'ewallet', 'e-wallet', 'saldo-dana'].includes(raw)) return 'dana';
+    if (['pulsa', 'kuota', 'token', 'data'].includes(raw)) return 'pulsa';
+
+    const name = String(product?.name || '').toLowerCase();
+    const looksDana = /(dana|saldo|ovo|gopay|shopeewallet|shopeepay|ewallet|e-wallet)/.test(name);
+    const looksPulsa = /(pulsa|kuota|token|paket data|\bdata\b|pln|listrik|voucher|diamond|game)/.test(name);
+    if (looksDana && !looksPulsa) return 'dana';
+    return 'pulsa';
+  }
+
+  const CATALOG_TAB_LABEL = { all: 'SEMUA', pulsa: 'PULSA', dana: 'SALDO DANA' };
+
+  function renderCatalog() {
     const container = el('buyer-products');
     if (!container) return;
 
-    if (!products.length) {
+    const filtered = catalogTab === 'all'
+      ? catalogProducts
+      : catalogProducts.filter((product) => productCategory(product) === catalogTab);
+
+    if (!filtered.length) {
+      const label = CATALOG_TAB_LABEL[catalogTab] || 'SEMUA';
       container.innerHTML = `
         <div class="buyer-empty">
-          Belum ada produk di katalog. Kamu tetap bisa mengirim pesanan custom di form sebelah.
+          ${catalogProducts.length === 0
+            ? 'Belum ada produk di katalog. Kamu tetap bisa mengirim pesanan custom di form sebelah.'
+            : `Belum ada produk ${label.toLowerCase()} di katalog saat ini. Coba tab lain ya.`}
         </div>
       `;
       return;
     }
 
-    container.innerHTML = products.map((product) => {
+    container.innerHTML = filtered.map((product) => {
       const admin = (product.admin_fee !== undefined && product.admin_fee !== null)
         ? Math.max(0, Number(product.admin_fee) || 0)
         : (window.KeuanganDB?.extractAdminFee ? window.KeuanganDB.extractAdminFee(product) : 0);
       const modalNeeded = Math.max(0, product.price - admin);
+      const cat = productCategory(product);
+      const catLabel = cat === 'dana' ? '💳 SALDO DANA' : '📶 PULSA';
       return `
-      <div class="buyer-product-card">
+      <div class="buyer-product-card" data-product-cat="${cat}">
         <div class="buyer-product-info">
           <strong>${esc(product.name)}</strong>
+          <span class="buyer-product-cat buyer-product-cat-${cat}">${catLabel}</span>
           ${product.description ? `<span>${esc(product.description)}</span>` : ''}
           ${admin > 0 ? `
             <div style="display:flex; gap:6px; align-items:center; margin-top:3px; flex-wrap:wrap;">
@@ -5610,10 +5813,31 @@ textarea,
 
     container.querySelectorAll('[data-order-product]').forEach((button) => {
       button.addEventListener('click', () => {
-        const product = products.find((item) => item.id === button.dataset.orderProduct);
+        const product = catalogProducts.find((item) => item.id === button.dataset.orderProduct);
         if (product) openOrderModal(product);
       });
     });
+  }
+
+  function wireCatalogTabs() {
+    const tabs = el('buyer-catalog-tabs');
+    if (!tabs) return;
+    tabs.querySelectorAll('[data-catalog-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        catalogTab = btn.dataset.catalogTab || 'all';
+        tabs.querySelectorAll('[data-catalog-tab]').forEach((other) => {
+          const active = other === btn;
+          other.classList.toggle('active', active);
+          other.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        renderCatalog();
+      });
+    });
+  }
+
+  function renderProducts(products) {
+    catalogProducts = Array.isArray(products) ? products : [];
+    renderCatalog();
   }
 
   async function refreshProducts() {
@@ -6439,6 +6663,7 @@ textarea,
       wireForm();
       wireOrderModal();
       wireProfileModal();
+      wireCatalogTabs();
 
       el('buyer-refresh')?.addEventListener('click', async () => {
         toast('Memuat ulang data...', 'gold');
@@ -7491,7 +7716,10 @@ textarea,
 
       state.remoteReady = true;
       writeLocalData();
-      window.KeuanganDB.publishModal(calculateBalances().uangPanas);
+      // Jangan publish ulang modal saat load. Nilai modal sudah tersimpan di
+      // public_status; kalau dipublish dari state lokal yang belum lengkap
+      // (mis. tab lama / cache kosong), modal kios bisa tiba-tiba jadi 0.
+      // Perubahan modal selalu dipublish eksplisit oleh aksi owner di bawah.
     } catch (e) {
       console.warn('Gagal memuat data Supabase, memakai cache lokal:', e);
       state.remoteReady = false;
@@ -7546,11 +7774,17 @@ textarea,
       const loc = item.location;
       const amt = Number(item.amount) || 0;
 
-      // 1. Rebalancing internal modal (tambah modal dari THR / kurangi modal / alihkan ke uang dingin)
-      // Kas fisik/rekening tetap utuh di dompet/DANA, hanya statusnya dialokasikan ke modal / uang dingin
+      // 1. Rebalancing internal modal / Tambah modal dari uang riil
+      // Jika dari UANG RIIL: kas fisik di dompet/DANA benar-benar bertambah (+amt)!
+      // Jika dari UANG DINGIN: kas fisik tetap, hanya statusnya dialokasikan ke modal.
       if (item.isTambahModal || item.isKurangiModal) {
         if (item.isTambahModal) totalTambahModal += amt;
         if (item.isKurangiModal) totalKurangiModal += amt;
+
+        // TAMBAH MODAL DARI UANG RIIL: kas fisik dompet/DANA bertambah
+        if (item.isTambahModalRiil && balances[loc] !== undefined) {
+          balances[loc] += amt;
+        }
       }
       // 1B. Pengeluaran langsung dari Uang Panas / Modal (beli barang dari uang panas):
       // Mengurangi kas di dompet/DANA DAN mengurangi modal, sehingga Uang Dingin TIDAK berkurang!
@@ -7678,6 +7912,12 @@ textarea,
         c.sisaHutang = Math.max(0, debtors[cName] || 0);
         c.isLunas = c.sisaHutang === 0;
       }
+    });
+
+    // Saldo dompet tidak boleh tampil minus. Kalau ada pengeluaran lama yang
+    // melebihi isi dompet, potong sampai Rp 0 supaya total kas tidak negatif.
+    ['DANA', 'GoPay', 'Dompet'].forEach((wallet) => {
+      if ((balances[wallet] || 0) < 0) balances[wallet] = 0;
     });
 
     const totalRiil = (balances['DANA'] || 0) + (balances['GoPay'] || 0) + (balances['Dompet'] || 0);
@@ -8351,8 +8591,13 @@ textarea,
         const detectedLoc = detectCategoryWithTypo(raw);
         const wallet = detectedLoc && detectedLoc !== 'Uang Akan Datang (Hutang)' ? detectedLoc : 'DANA';
 
+        // Deteksi apakah eksplisit dari uang dingin atau uang riil
+        const isExplicitCold = /\b(?:dari\s*uang\s*dingin|alihkan|oper|pindah(?:kan)?\s*ke)\b/i.test(lower);
+        const isRealMoney = !isExplicitCold; // Default: tambah modal dianggap uang riil baru
+
         return {
           isTambahModal: true,
+          isRealMoney: isRealMoney,
           amount: amounts[0].val,
           wallet: wallet
         };
@@ -9378,8 +9623,19 @@ textarea,
             return;
           }
 
-          const amountToDeduct = Math.min(uangPanas, Math.max(1, Math.round(uangPanas * res.fraction)));
           const wallet = res.wallet || 'Dompet';
+          const walletBal = Math.max(0, Number(balances[wallet]) || 0);
+          const amountToDeduct = Math.min(
+            Math.max(0, walletBal),
+            Math.min(uangPanas, Math.max(1, Math.round(uangPanas * res.fraction)))
+          );
+
+          if (amountToDeduct <= 0) {
+            showToast(`⚠️ Saldo ${wallet} kamu saat ini Rp 0, tidak ada uang yang bisa diambil dari dompet modal.`, 'gold');
+            inputEl.value = '';
+            inputEl.focus();
+            return;
+          }
 
           state.items.push({
             id: 'item-' + Date.now(),
@@ -9603,16 +9859,37 @@ textarea,
         return;
       }
 
-      // 3. Kasus Tambah Modal Pulsa Manual / Alokasi dari Uang Dingin
+      // 3. Kasus Tambah Modal Pulsa Manual (Uang Riil vs Uang Dingin)
       if (res.isTambahModal) {
+        const isReal = res.isRealMoney !== false;
+        const currentBal = calculateBalances();
+        const availableCold = Math.max(0, currentBal.uangDingin);
+
+        // Hanya batasi jika sengaja dialihkan dari Uang Dingin
+        if (!isReal && res.amount > availableCold) {
+          AudioEngine.play('hurt');
+          Fx.burst(null, null, 'redstone');
+          showToast(
+            `❌ Tambah modal gagal: uang dingin yang belum dialokasikan cuma ${formatRupiah(availableCold)}. ` +
+            `Ketik "tambah modal ${formatRupiah(res.amount)} dari uang riil" jika ini setoran uang baru dari luar.`,
+            'danger'
+          );
+          return;
+        }
+
+        const desc = isReal
+          ? `Tambah Modal dari Uang Riil (${res.wallet})`
+          : `Tambah Modal (${formatRupiah(res.amount)}) dari Uang Dingin`;
+
         state.items.push({
           id: 'item-' + Date.now(),
           date: new Date().toISOString(),
           type: 'in',
           amount: res.amount,
-          desc: `Tambah Modal (${formatRupiah(res.amount)}) dari Uang Dingin`,
+          desc: desc,
           location: res.wallet,
-          isTambahModal: true
+          isTambahModal: true,
+          isTambahModalRiil: isReal
         });
         saveData();
         render();
@@ -9620,8 +9897,12 @@ textarea,
         inputEl.focus();
         AudioEngine.play('trade');
         Fx.burst(null, null, 'trade');
-        const { uangPanas, uangDingin } = calculateBalances();
-        showToast(`➕ Dompet Modal (Saldo Panas) bertambah ${formatRupiah(res.amount)}! Total Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+        const { uangPanas, uangDingin, totalRiil } = calculateBalances();
+        if (isReal) {
+          showToast(`➕ Dompet Modal bertambah ${formatRupiah(res.amount)} dari UANG RIIL ke ${res.wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
+        } else {
+          showToast(`➕ Dompet Modal (Saldo Panas) bertambah ${formatRupiah(res.amount)} dialihkan dari Uang Dingin! Total Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+        }
         return;
       }
 
@@ -9924,6 +10205,16 @@ textarea,
         danger: true
       });
       if (!ok) return;
+
+      if (window.KeuanganDB?.deleteQuest && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+        try {
+          await window.KeuanganDB.deleteQuest(id);
+        } catch (err) {
+          showToast('Gagal menghapus target di server: ' + (err?.message || 'Coba lagi.'), 'danger');
+          return;
+        }
+      }
+
       state.quests = state.quests.filter(q => q.id !== id);
       saveData();
       render();
@@ -9969,7 +10260,7 @@ textarea,
         inputMode: 'numeric',
         required: true,
         requiredMessage: 'Nominal wajib diisi.',
-        okText: 'TAMBAH'
+        okText: 'LANJUT'
       });
       if (inputStr === null) return;
 
@@ -9979,7 +10270,21 @@ textarea,
         return;
       }
 
-      window.App.submitTambahModalDirect(amt, 'DANA');
+      // Tanya Sumber Modal: Uang Riil (Fresh Topup) vs Uang Dingin (Rebalancing)
+      const isRealMoney = await uiConfirm({
+        title: '💎 SUMBER MODAL',
+        message:
+          `Tambah modal ${formatRupiah(amt)}.\n\n` +
+          `Pilih sumber uang untuk modal kios ini:\n\n` +
+          `• [💵 DARI UANG RIIL]: Setor / top-up uang baru dari luar (bank/cash) ke DANA. Saldo kas fisik & Modal Kios bertambah!\n\n` +
+          `• [🧊 DARI UANG DINGIN]: Alihkan uang dingin / tabungan pribadi yang sudah ada di aplikasi ke modal kios.`,
+        okText: '💵 DARI UANG RIIL',
+        cancelText: '🧊 DARI UANG DINGIN',
+        danger: false
+      });
+
+      // Jika klik OK = true (Uang Riil), jika Cancel = false (Uang Dingin)
+      window.App.submitTambahModalDirect(amt, 'DANA', Boolean(isRealMoney));
     },
 
     kurangiModalPrompt: async function () {
@@ -10007,25 +10312,62 @@ textarea,
       window.App.submitKurangiModalDirect(amt, 'DANA');
     },
 
-    submitTambahModalDirect: async function (amt, wallet) {
+    submitTambahModalDirect: async function (amt, wallet = 'DANA', isRealMoney = true) {
+      const nominal = Math.max(0, Math.round(Number(amt) || 0));
+      if (nominal <= 0) {
+        showToast('Nominal tambah modal tidak valid!', 'danger');
+        return;
+      }
+
+      const current = calculateBalances();
+      const availableCash = Math.max(0, current.uangDingin);
+
+      // Hanya validasi batas uang dingin JIKA sumbernya dialihkan dari Uang Dingin
+      if (!isRealMoney && nominal > availableCash) {
+        AudioEngine.play('hurt');
+        Fx.burst(null, null, 'redstone');
+        showToast(
+          `❌ Gagal: Uang dingin yang tersedia cuma ${formatRupiah(availableCash)}. ` +
+          `Pilih opsi "DARI UANG RIIL" jika ini setoran/top-up modal baru dari luar.`,
+          'danger'
+        );
+        return;
+      }
+
+      const desc = isRealMoney
+        ? `Tambah Modal dari Uang Riil (${wallet})`
+        : `Tambah Modal (${formatRupiah(nominal)}) dari Uang Dingin`;
+
       state.items.push({
         id: 'item-' + Date.now(),
         date: new Date().toISOString(),
         type: 'in',
-        amount: amt,
-        desc: `Tambah Modal Pulsa (${wallet})`,
+        amount: nominal,
+        desc: desc,
         location: wallet,
-        isTambahModal: true
+        isTambahModal: true,
+        isTambahModalRiil: Boolean(isRealMoney)
       });
       saveData();
       render();
       AudioEngine.play('trade');
       Fx.burst(null, null, 'trade');
-      showToast(`➕ Berhasil tambah modal ${formatRupiah(amt)} di ${wallet}! Modal bertambah.`, 'gold');
+
+      const { uangPanas, totalRiil, uangDingin } = calculateBalances();
+      if (isRealMoney) {
+        showToast(`➕ Berhasil tambah modal ${formatRupiah(nominal)} dari UANG RIIL ke ${wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
+      } else {
+        showToast(`➕ Berhasil alihkan ${formatRupiah(nominal)} dari Uang Dingin ke Modal Kios! Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+      }
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
           await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+        } catch (e) {
+          console.warn('Gagal publish modal instan:', e);
+        }
+      }
+    },
         } catch (e) {
           console.warn('Gagal publish modal instan:', e);
         }
@@ -10280,6 +10622,16 @@ textarea,
         danger: true
       });
       if (!ok) return;
+
+      if (window.KeuanganDB?.deleteTransaction && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+        try {
+          await window.KeuanganDB.deleteTransaction(id);
+        } catch (err) {
+          showToast('Gagal menghapus transaksi di server: ' + (err?.message || 'Coba lagi.'), 'danger');
+          return;
+        }
+      }
+
       state.items = state.items.filter(i => i.id !== id);
       saveData();
       render();
@@ -10358,6 +10710,9 @@ textarea,
 
         if (window.KeuanganDB && window.KeuanganDB.isOwnerContext()) {
           try {
+            if (window.KeuanganDB.clearOwnerRows) {
+              await window.KeuanganDB.clearOwnerRows();
+            }
             await window.KeuanganDB.publishModalNow(0);
             const cancelled = await window.KeuanganDB.cancelAllPendingOrders('Reset data kios oleh owner');
             if (cancelled > 0) {
@@ -10716,7 +11071,7 @@ textarea,
           desc: itemDesc,
           location: isDebt ? 'Uang Akan Datang (Hutang)' : destWallet,
           debtorName: isDebt ? buyerName : null,
-          sourceWallet: 'DANA',
+          sourceWallet: destWallet,
           isPulsa: true,
           isDebt: isDebt,
           pulsaCustomer: buyerName,
@@ -10769,7 +11124,17 @@ textarea,
       }
 
       // Rollback jika sebelumnya sudah terlanjur di-ACC dan tercatat di pembukuan
-      if (state.items.some(it => it.orderId === orderId)) {
+      const rollbackItems = state.items.filter(it => it.orderId === orderId);
+      if (rollbackItems.length > 0) {
+        if (window.KeuanganDB?.deleteTransaction && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+          for (const it of rollbackItems) {
+            try {
+              await window.KeuanganDB.deleteTransaction(it.id);
+            } catch (err) {
+              console.warn('Gagal hapus ledger rollback:', err);
+            }
+          }
+        }
         state.items = state.items.filter(it => it.orderId !== orderId);
         saveData();
         render();
@@ -10835,6 +11200,7 @@ textarea,
       const descEl = document.getElementById('prod-desc');
       const activeEl = document.getElementById('prod-active');
       const sortEl = document.getElementById('prod-sort');
+      const categoryEl = document.getElementById('prod-category');
 
       if (id && state.ownerCatalog) {
         const prod = state.ownerCatalog.find(p => String(p.id) === String(id));
@@ -10847,6 +11213,7 @@ textarea,
           if (descEl) descEl.value = prod.description || '';
           if (activeEl) activeEl.value = String(prod.active !== false);
           if (sortEl) sortEl.value = prod.sort_order || 1;
+          if (categoryEl) categoryEl.value = prod.category === 'dana' ? 'dana' : 'pulsa';
           this.calcProductModalPreview();
           modal.classList.add('active');
           return;
@@ -10862,6 +11229,7 @@ textarea,
       if (descEl) descEl.value = '';
       if (activeEl) activeEl.value = 'true';
       if (sortEl) sortEl.value = (state.ownerCatalog ? state.ownerCatalog.length + 1 : 1);
+      if (categoryEl) categoryEl.value = 'pulsa';
       this.calcProductModalPreview();
       modal.classList.add('active');
     },
@@ -10894,6 +11262,7 @@ textarea,
       const desc = String(document.getElementById('prod-desc')?.value || '').trim();
       const active = document.getElementById('prod-active')?.value !== 'false';
       const sortOrder = parseInt(document.getElementById('prod-sort')?.value || '1', 10);
+      const category = document.getElementById('prod-category')?.value === 'dana' ? 'dana' : 'pulsa';
 
       if (!name) {
         showToast('Nama produk wajib diisi!', 'danger');
@@ -10912,7 +11281,8 @@ textarea,
             admin_fee: adminVal,
             description: desc,
             active,
-            sort_order: sortOrder
+            sort_order: sortOrder,
+            category
           });
           showToast(`✅ Produk "${name}" berhasil diperbarui!`, 'success');
         } else {
@@ -10922,7 +11292,8 @@ textarea,
             admin_fee: adminVal,
             description: desc,
             active,
-            sort_order: sortOrder
+            sort_order: sortOrder,
+            category
           });
           showToast(`✅ Produk baru "${name}" ditambahkan (${formatRupiah(price)})!`, 'success');
         }
@@ -11199,9 +11570,10 @@ textarea,
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').catch(() => { });
       });
     }
   </script>
 </body>
+
 </html>

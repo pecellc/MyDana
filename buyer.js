@@ -210,28 +210,57 @@
     }
   }
 
-  function renderProducts(products) {
+  let catalogProducts = [];
+  let catalogTab = 'all';
+
+  // Tentukan produk masuk tab PULSA atau SALDO DANA. Kolom `category` adalah
+  // sumber utama; kalau data lama belum punya kategori, tebak dari nama.
+  function productCategory(product) {
+    const raw = String(product?.category || '').toLowerCase().trim();
+    if (['dana', 'saldo', 'ewallet', 'e-wallet', 'saldo-dana'].includes(raw)) return 'dana';
+    if (['pulsa', 'kuota', 'token', 'data'].includes(raw)) return 'pulsa';
+
+    const name = String(product?.name || '').toLowerCase();
+    const looksDana = /(dana|saldo|ovo|gopay|shopeewallet|shopeepay|ewallet|e-wallet)/.test(name);
+    const looksPulsa = /(pulsa|kuota|token|paket data|\bdata\b|pln|listrik|voucher|diamond|game)/.test(name);
+    if (looksDana && !looksPulsa) return 'dana';
+    return 'pulsa';
+  }
+
+  const CATALOG_TAB_LABEL = { all: 'SEMUA', pulsa: 'PULSA', dana: 'SALDO DANA' };
+
+  function renderCatalog() {
     const container = el('buyer-products');
     if (!container) return;
 
-    if (!products.length) {
+    const filtered = catalogTab === 'all'
+      ? catalogProducts
+      : catalogProducts.filter((product) => productCategory(product) === catalogTab);
+
+    if (!filtered.length) {
+      const label = CATALOG_TAB_LABEL[catalogTab] || 'SEMUA';
       container.innerHTML = `
         <div class="buyer-empty">
-          Belum ada produk di katalog. Kamu tetap bisa mengirim pesanan custom di form sebelah.
+          ${catalogProducts.length === 0
+            ? 'Belum ada produk di katalog. Kamu tetap bisa mengirim pesanan custom di form sebelah.'
+            : `Belum ada produk ${label.toLowerCase()} di katalog saat ini. Coba tab lain ya.`}
         </div>
       `;
       return;
     }
 
-    container.innerHTML = products.map((product) => {
+    container.innerHTML = filtered.map((product) => {
       const admin = (product.admin_fee !== undefined && product.admin_fee !== null)
         ? Math.max(0, Number(product.admin_fee) || 0)
         : (window.KeuanganDB?.extractAdminFee ? window.KeuanganDB.extractAdminFee(product) : 0);
       const modalNeeded = Math.max(0, product.price - admin);
+      const cat = productCategory(product);
+      const catLabel = cat === 'dana' ? '💳 SALDO DANA' : '📶 PULSA';
       return `
-      <div class="buyer-product-card">
+      <div class="buyer-product-card" data-product-cat="${cat}">
         <div class="buyer-product-info">
           <strong>${esc(product.name)}</strong>
+          <span class="buyer-product-cat buyer-product-cat-${cat}">${catLabel}</span>
           ${product.description ? `<span>${esc(product.description)}</span>` : ''}
           ${admin > 0 ? `
             <div style="display:flex; gap:6px; align-items:center; margin-top:3px; flex-wrap:wrap;">
@@ -256,10 +285,31 @@
 
     container.querySelectorAll('[data-order-product]').forEach((button) => {
       button.addEventListener('click', () => {
-        const product = products.find((item) => item.id === button.dataset.orderProduct);
+        const product = catalogProducts.find((item) => item.id === button.dataset.orderProduct);
         if (product) openOrderModal(product);
       });
     });
+  }
+
+  function wireCatalogTabs() {
+    const tabs = el('buyer-catalog-tabs');
+    if (!tabs) return;
+    tabs.querySelectorAll('[data-catalog-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        catalogTab = btn.dataset.catalogTab || 'all';
+        tabs.querySelectorAll('[data-catalog-tab]').forEach((other) => {
+          const active = other === btn;
+          other.classList.toggle('active', active);
+          other.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        renderCatalog();
+      });
+    });
+  }
+
+  function renderProducts(products) {
+    catalogProducts = Array.isArray(products) ? products : [];
+    renderCatalog();
   }
 
   async function refreshProducts() {
@@ -1085,6 +1135,7 @@
       wireForm();
       wireOrderModal();
       wireProfileModal();
+      wireCatalogTabs();
 
       el('buyer-refresh')?.addEventListener('click', async () => {
         toast('Memuat ulang data...', 'gold');

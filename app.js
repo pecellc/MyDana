@@ -1020,7 +1020,10 @@
 
       state.remoteReady = true;
       writeLocalData();
-      window.KeuanganDB.publishModal(calculateBalances().uangPanas);
+      // Jangan publish ulang modal saat load. Nilai modal sudah tersimpan di
+      // public_status; kalau dipublish dari state lokal yang belum lengkap
+      // (mis. tab lama / cache kosong), modal kios bisa tiba-tiba jadi 0.
+      // Perubahan modal selalu dipublish eksplisit oleh aksi owner di bawah.
     } catch (e) {
       console.warn('Gagal memuat data Supabase, memakai cache lokal:', e);
       state.remoteReady = false;
@@ -1075,11 +1078,17 @@
       const loc = item.location;
       const amt = Number(item.amount) || 0;
 
-      // 1. Rebalancing internal modal (tambah modal dari THR / kurangi modal / alihkan ke uang dingin)
-      // Kas fisik/rekening tetap utuh di dompet/DANA, hanya statusnya dialokasikan ke modal / uang dingin
+      // 1. Rebalancing internal modal / Tambah modal dari uang riil
+      // Jika dari UANG RIIL: kas fisik di dompet/DANA benar-benar bertambah (+amt)!
+      // Jika dari UANG DINGIN: kas fisik tetap, hanya statusnya dialokasikan ke modal.
       if (item.isTambahModal || item.isKurangiModal) {
         if (item.isTambahModal) totalTambahModal += amt;
         if (item.isKurangiModal) totalKurangiModal += amt;
+
+        // TAMBAH MODAL DARI UANG RIIL: kas fisik dompet/DANA bertambah
+        if (item.isTambahModalRiil && balances[loc] !== undefined) {
+          balances[loc] += amt;
+        }
       }
       // 1B. Pengeluaran langsung dari Uang Panas / Modal (beli barang dari uang panas):
       // Mengurangi kas di dompet/DANA DAN mengurangi modal, sehingga Uang Dingin TIDAK berkurang!
@@ -1207,6 +1216,12 @@
         c.sisaHutang = Math.max(0, debtors[cName] || 0);
         c.isLunas = c.sisaHutang === 0;
       }
+    });
+
+    // Saldo dompet tidak boleh tampil minus. Kalau ada pengeluaran lama yang
+    // melebihi isi dompet, potong sampai Rp 0 supaya total kas tidak negatif.
+    ['DANA', 'GoPay', 'Dompet'].forEach((wallet) => {
+      if ((balances[wallet] || 0) < 0) balances[wallet] = 0;
     });
 
     const totalRiil = (balances['DANA'] || 0) + (balances['GoPay'] || 0) + (balances['Dompet'] || 0);
@@ -1880,8 +1895,13 @@
         const detectedLoc = detectCategoryWithTypo(raw);
         const wallet = detectedLoc && detectedLoc !== 'Uang Akan Datang (Hutang)' ? detectedLoc : 'DANA';
 
+        // Deteksi apakah eksplisit dari uang dingin atau uang riil
+        const isExplicitCold = /\b(?:dari\s*uang\s*dingin|alihkan|oper|pindah(?:kan)?\s*ke)\b/i.test(lower);
+        const isRealMoney = !isExplicitCold; // Default: tambah modal dianggap uang riil baru
+
         return {
           isTambahModal: true,
+          isRealMoney: isRealMoney,
           amount: amounts[0].val,
           wallet: wallet
         };
@@ -2907,8 +2927,19 @@
             return;
           }
 
-          const amountToDeduct = Math.min(uangPanas, Math.max(1, Math.round(uangPanas * res.fraction)));
           const wallet = res.wallet || 'Dompet';
+          const walletBal = Math.max(0, Number(balances[wallet]) || 0);
+          const amountToDeduct = Math.min(
+            Math.max(0, walletBal),
+            Math.min(uangPanas, Math.max(1, Math.round(uangPanas * res.fraction)))
+          );
+
+          if (amountToDeduct <= 0) {
+            showToast(`⚠️ Saldo ${wallet} kamu saat ini Rp 0, tidak ada uang yang bisa diambil dari dompet modal.`, 'gold');
+            inputEl.value = '';
+            inputEl.focus();
+            return;
+          }
 
           state.items.push({
             id: 'item-' + Date.now(),
@@ -3132,16 +3163,37 @@
         return;
       }
 
-      // 3. Kasus Tambah Modal Pulsa Manual / Alokasi dari Uang Dingin
+      // 3. Kasus Tambah Modal Pulsa Manual (Uang Riil vs Uang Dingin)
       if (res.isTambahModal) {
+        const isReal = res.isRealMoney !== false;
+        const currentBal = calculateBalances();
+        const availableCold = Math.max(0, currentBal.uangDingin);
+
+        // Hanya batasi jika sengaja dialihkan dari Uang Dingin
+        if (!isReal && res.amount > availableCold) {
+          AudioEngine.play('hurt');
+          Fx.burst(null, null, 'redstone');
+          showToast(
+            `❌ Tambah modal gagal: uang dingin yang belum dialokasikan cuma ${formatRupiah(availableCold)}. ` +
+            `Ketik "tambah modal ${formatRupiah(res.amount)} dari uang riil" jika ini setoran uang baru dari luar.`,
+            'danger'
+          );
+          return;
+        }
+
+        const desc = isReal
+          ? `Tambah Modal dari Uang Riil (${res.wallet})`
+          : `Tambah Modal (${formatRupiah(res.amount)}) dari Uang Dingin`;
+
         state.items.push({
           id: 'item-' + Date.now(),
           date: new Date().toISOString(),
           type: 'in',
           amount: res.amount,
-          desc: `Tambah Modal (${formatRupiah(res.amount)}) dari Uang Dingin`,
+          desc: desc,
           location: res.wallet,
-          isTambahModal: true
+          isTambahModal: true,
+          isTambahModalRiil: isReal
         });
         saveData();
         render();
@@ -3149,8 +3201,12 @@
         inputEl.focus();
         AudioEngine.play('trade');
         Fx.burst(null, null, 'trade');
-        const { uangPanas, uangDingin } = calculateBalances();
-        showToast(`➕ Dompet Modal (Saldo Panas) bertambah ${formatRupiah(res.amount)}! Total Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+        const { uangPanas, uangDingin, totalRiil } = calculateBalances();
+        if (isReal) {
+          showToast(`➕ Dompet Modal bertambah ${formatRupiah(res.amount)} dari UANG RIIL ke ${res.wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
+        } else {
+          showToast(`➕ Dompet Modal (Saldo Panas) bertambah ${formatRupiah(res.amount)} dialihkan dari Uang Dingin! Total Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+        }
         return;
       }
 
@@ -3453,6 +3509,16 @@
         danger: true
       });
       if (!ok) return;
+
+      if (window.KeuanganDB?.deleteQuest && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+        try {
+          await window.KeuanganDB.deleteQuest(id);
+        } catch (err) {
+          showToast('Gagal menghapus target di server: ' + (err?.message || 'Coba lagi.'), 'danger');
+          return;
+        }
+      }
+
       state.quests = state.quests.filter(q => q.id !== id);
       saveData();
       render();
@@ -3498,7 +3564,7 @@
         inputMode: 'numeric',
         required: true,
         requiredMessage: 'Nominal wajib diisi.',
-        okText: 'TAMBAH'
+        okText: 'LANJUT'
       });
       if (inputStr === null) return;
 
@@ -3508,7 +3574,21 @@
         return;
       }
 
-      window.App.submitTambahModalDirect(amt, 'DANA');
+      // Tanya Sumber Modal: Uang Riil (Fresh Topup) vs Uang Dingin (Rebalancing)
+      const isRealMoney = await uiConfirm({
+        title: '💎 SUMBER MODAL',
+        message:
+          `Tambah modal ${formatRupiah(amt)}.\n\n` +
+          `Pilih sumber uang untuk modal kios ini:\n\n` +
+          `• [💵 DARI UANG RIIL]: Setor / top-up uang baru dari luar (bank/cash) ke DANA. Saldo kas fisik & Modal Kios bertambah!\n\n` +
+          `• [🧊 DARI UANG DINGIN]: Alihkan uang dingin / tabungan pribadi yang sudah ada di aplikasi ke modal kios.`,
+        okText: '💵 DARI UANG RIIL',
+        cancelText: '🧊 DARI UANG DINGIN',
+        danger: false
+      });
+
+      // Jika klik OK = true (Uang Riil), jika Cancel = false (Uang Dingin)
+      window.App.submitTambahModalDirect(amt, 'DANA', Boolean(isRealMoney));
     },
 
     kurangiModalPrompt: async function () {
@@ -3536,25 +3616,62 @@
       window.App.submitKurangiModalDirect(amt, 'DANA');
     },
 
-    submitTambahModalDirect: async function (amt, wallet) {
+    submitTambahModalDirect: async function (amt, wallet = 'DANA', isRealMoney = true) {
+      const nominal = Math.max(0, Math.round(Number(amt) || 0));
+      if (nominal <= 0) {
+        showToast('Nominal tambah modal tidak valid!', 'danger');
+        return;
+      }
+
+      const current = calculateBalances();
+      const availableCash = Math.max(0, current.uangDingin);
+
+      // Hanya validasi batas uang dingin JIKA sumbernya dialihkan dari Uang Dingin
+      if (!isRealMoney && nominal > availableCash) {
+        AudioEngine.play('hurt');
+        Fx.burst(null, null, 'redstone');
+        showToast(
+          `❌ Gagal: Uang dingin yang tersedia cuma ${formatRupiah(availableCash)}. ` +
+          `Pilih opsi "DARI UANG RIIL" jika ini setoran/top-up modal baru dari luar.`,
+          'danger'
+        );
+        return;
+      }
+
+      const desc = isRealMoney
+        ? `Tambah Modal dari Uang Riil (${wallet})`
+        : `Tambah Modal (${formatRupiah(nominal)}) dari Uang Dingin`;
+
       state.items.push({
         id: 'item-' + Date.now(),
         date: new Date().toISOString(),
         type: 'in',
-        amount: amt,
-        desc: `Tambah Modal Pulsa (${wallet})`,
+        amount: nominal,
+        desc: desc,
         location: wallet,
-        isTambahModal: true
+        isTambahModal: true,
+        isTambahModalRiil: Boolean(isRealMoney)
       });
       saveData();
       render();
       AudioEngine.play('trade');
       Fx.burst(null, null, 'trade');
-      showToast(`➕ Berhasil tambah modal ${formatRupiah(amt)} di ${wallet}! Modal bertambah.`, 'gold');
+
+      const { uangPanas, totalRiil, uangDingin } = calculateBalances();
+      if (isRealMoney) {
+        showToast(`➕ Berhasil tambah modal ${formatRupiah(nominal)} dari UANG RIIL ke ${wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
+      } else {
+        showToast(`➕ Berhasil alihkan ${formatRupiah(nominal)} dari Uang Dingin ke Modal Kios! Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+      }
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
           await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+        } catch (e) {
+          console.warn('Gagal publish modal instan:', e);
+        }
+      }
+    },
         } catch (e) {
           console.warn('Gagal publish modal instan:', e);
         }
@@ -3809,6 +3926,16 @@
         danger: true
       });
       if (!ok) return;
+
+      if (window.KeuanganDB?.deleteTransaction && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+        try {
+          await window.KeuanganDB.deleteTransaction(id);
+        } catch (err) {
+          showToast('Gagal menghapus transaksi di server: ' + (err?.message || 'Coba lagi.'), 'danger');
+          return;
+        }
+      }
+
       state.items = state.items.filter(i => i.id !== id);
       saveData();
       render();
@@ -3887,6 +4014,9 @@
 
         if (window.KeuanganDB && window.KeuanganDB.isOwnerContext()) {
           try {
+            if (window.KeuanganDB.clearOwnerRows) {
+              await window.KeuanganDB.clearOwnerRows();
+            }
             await window.KeuanganDB.publishModalNow(0);
             const cancelled = await window.KeuanganDB.cancelAllPendingOrders('Reset data kios oleh owner');
             if (cancelled > 0) {
@@ -4245,7 +4375,7 @@
           desc: itemDesc,
           location: isDebt ? 'Uang Akan Datang (Hutang)' : destWallet,
           debtorName: isDebt ? buyerName : null,
-          sourceWallet: 'DANA',
+          sourceWallet: destWallet,
           isPulsa: true,
           isDebt: isDebt,
           pulsaCustomer: buyerName,
@@ -4298,7 +4428,17 @@
       }
 
       // Rollback jika sebelumnya sudah terlanjur di-ACC dan tercatat di pembukuan
-      if (state.items.some(it => it.orderId === orderId)) {
+      const rollbackItems = state.items.filter(it => it.orderId === orderId);
+      if (rollbackItems.length > 0) {
+        if (window.KeuanganDB?.deleteTransaction && window.KeuanganDB.isOwnerContext?.() && state.remoteReady) {
+          for (const it of rollbackItems) {
+            try {
+              await window.KeuanganDB.deleteTransaction(it.id);
+            } catch (err) {
+              console.warn('Gagal hapus ledger rollback:', err);
+            }
+          }
+        }
         state.items = state.items.filter(it => it.orderId !== orderId);
         saveData();
         render();
@@ -4364,6 +4504,7 @@
       const descEl = document.getElementById('prod-desc');
       const activeEl = document.getElementById('prod-active');
       const sortEl = document.getElementById('prod-sort');
+      const categoryEl = document.getElementById('prod-category');
 
       if (id && state.ownerCatalog) {
         const prod = state.ownerCatalog.find(p => String(p.id) === String(id));
@@ -4376,6 +4517,7 @@
           if (descEl) descEl.value = prod.description || '';
           if (activeEl) activeEl.value = String(prod.active !== false);
           if (sortEl) sortEl.value = prod.sort_order || 1;
+          if (categoryEl) categoryEl.value = prod.category === 'dana' ? 'dana' : 'pulsa';
           this.calcProductModalPreview();
           modal.classList.add('active');
           return;
@@ -4391,6 +4533,7 @@
       if (descEl) descEl.value = '';
       if (activeEl) activeEl.value = 'true';
       if (sortEl) sortEl.value = (state.ownerCatalog ? state.ownerCatalog.length + 1 : 1);
+      if (categoryEl) categoryEl.value = 'pulsa';
       this.calcProductModalPreview();
       modal.classList.add('active');
     },
@@ -4423,6 +4566,7 @@
       const desc = String(document.getElementById('prod-desc')?.value || '').trim();
       const active = document.getElementById('prod-active')?.value !== 'false';
       const sortOrder = parseInt(document.getElementById('prod-sort')?.value || '1', 10);
+      const category = document.getElementById('prod-category')?.value === 'dana' ? 'dana' : 'pulsa';
 
       if (!name) {
         showToast('Nama produk wajib diisi!', 'danger');
@@ -4441,7 +4585,8 @@
             admin_fee: adminVal,
             description: desc,
             active,
-            sort_order: sortOrder
+            sort_order: sortOrder,
+            category
           });
           showToast(`✅ Produk "${name}" berhasil diperbarui!`, 'success');
         } else {
@@ -4451,7 +4596,8 @@
             admin_fee: adminVal,
             description: desc,
             active,
-            sort_order: sortOrder
+            sort_order: sortOrder,
+            category
           });
           showToast(`✅ Produk baru "${name}" ditambahkan (${formatRupiah(price)})!`, 'success');
         }

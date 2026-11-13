@@ -2172,6 +2172,80 @@ html.auth-pending #auth-screen {
   color: #64748b;
 }
 
+.buyer-catalog-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.buyer-catalog-tab {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  font-family: var(--mc-pixel-font);
+  font-size: 7.5px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-bottom-color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+}
+
+.buyer-catalog-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.buyer-catalog-tab:active {
+  transform: translateY(1px);
+}
+
+.buyer-catalog-tab.active {
+  background: rgba(71, 226, 104, 0.18);
+  border-color: var(--mc-emerald);
+  color: #d1fae5;
+  box-shadow: inset 0 0 0 1px rgba(71, 226, 104, 0.25);
+}
+
+[data-theme="day"] .buyer-catalog-tab {
+  color: #475569;
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="day"] .buyer-catalog-tab.active {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: #059669;
+}
+
+.buyer-product-cat {
+  align-self: flex-start;
+  font-size: 0.62rem !important;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+
+.buyer-product-cat-pulsa {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.buyer-product-cat-dana {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
 .buyer-products,
 .buyer-orders {
   display: flex;

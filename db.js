@@ -79,6 +79,7 @@
       sourceWallet: row.source_wallet || payload.sourceWallet || null,
       isColdMoney: row.is_cold_money || payload.isColdMoney || false,
       isTambahModal: row.is_tambah_modal || payload.isTambahModal || false,
+      isTambahModalRiil: Boolean(payload.isTambahModalRiil),
       isKurangiModal: row.is_kurangi_modal || payload.isKurangiModal || false,
       isSetorModal: row.is_setor_modal || payload.isSetorModal || false
     });
@@ -873,6 +874,9 @@
     loadOwnerData,
     saveAllNow,
     saveAllDebounced,
+    deleteTransaction,
+    deleteQuest,
+    clearOwnerRows,
     publishModal,
     publishModalNow,
     getPublicStatus,

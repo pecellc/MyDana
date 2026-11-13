@@ -73,6 +73,20 @@ Yang dibuat:
 
 RLS memastikan buyer tidak bisa membaca transaksi, quest, atau total saldo owner.
 
+### Sudah pernah pasang schema sebelumnya?
+
+Jalankan juga file migrasi terbaru di `supabase/migrations/` lewat SQL Editor,
+berurutan:
+
+| Migrasi | Isi |
+|---|---|
+| `20261113000000_fix_modal_logic.sql` | validasi modal pokok (harga - admin), RPC ACC atomik |
+| `20261113010000_reserve_pending_confirmed.sql` | modal tertahan dihitung dari order `pending` **dan** `confirmed` |
+
+Tanpa migrasi terakhir, saat owner meng-ACC pesanan modal yang tertahan akan
+terlepas dan saldo modal di panel buyer terlihat naik padahal pesanan masih
+berjalan.
+
 ---
 
 ## 4. Buat akun owner
@@ -185,7 +199,12 @@ Buyer memakai email internal `username@keuanganku.app`, jadi tidak perlu verifik
 1. Login username + password owner.
 2. Aplikasi lama tampil seperti biasa.
 3. Setiap transaksi disimpan ke cache lokal **dan** Supabase (debounce ±0,5 detik).
-4. Saldo modal (`uang panas`) otomatis dipublikasikan ke `public_status`.
+4. Tombol **Tambah Modal** memindahkan uang dingin yang sudah ada menjadi modal.
+   Modal tidak bisa dibuat dari udara: kalau uang dingin kurang, catat dulu
+   pemasukan (mis. "tambah 100k"), baru pindahkan ke modal.
+5. Saldo modal dipublikasikan ke `public_status` saat owner mengubah modal,
+   ACC/menyelesaikan pesanan, atau mencatat transaksi. Aplikasi tidak menimpa
+   modal dengan angka 0 hanya karena tab baru dibuka.
 
 ### Buyer
 1. Buka web → **DAFTAR** → isi username + password.
@@ -203,6 +222,9 @@ Buyer memakai email internal `username@keuanganku.app`, jadi tidak perlu verifik
 ## 7b. Alur pesanan buyer (modal, pembayaran, ACC/TOLAK)
 
 1. Buyer membuka toko, melihat **saldo modal** dan katalog.
+   Katalog punya tab **SEMUA / PULSA / SALDO DANA**; kategori diatur owner saat
+   menambah atau mengedit produk (kolom `category`). Kalau produk lama belum
+   punya kategori, aplikasi menebaknya dari nama produk.
 2. Buyer mengisi pesanan:
    - nama produk / nominal,
    - **kategori pembayaran**: DANA (satu-satunya metode di UI saat ini; order lama dengan metode lain tetap tampil & didukung),
@@ -211,7 +233,10 @@ Buyer memakai email internal `username@keuanganku.app`, jadi tidak perlu verifik
 3. **Validasi memakai MODAL POKOK (harga jual - jatah admin), bukan harga total.** Dicek dua lapis:
    - di browser (pesan langsung, tanpa request),
    - di database lewat trigger `enforce_order_modal()` + RPC `accept_order()` (tidak bisa diakali).
-   Pesanan `pending`/`confirmed` lain ikut mengurangi saldo tersedia. Contoh: produk Rp 14.000 dengan modal Rp 10.000 dan admin Rp 4.000 tetap bisa dipesan kalau modal tersedia Rp 10.000.
+   Pesanan `pending` **dan** `confirmed` lain ikut mengurangi saldo tersedia
+   (modal baru dilepas setelah order `completed`/`cancelled`). Contoh: produk
+   Rp 14.000 dengan modal Rp 10.000 dan admin Rp 4.000 tetap bisa dipesan kalau
+   modal tersedia Rp 10.000.
 4. Pesanan masuk ke tab **KIOS PULSA** milik owner (realtime).
 5. Owner menekan:
    - **ACC** → wajib mengisi keterangan untuk buyer (contoh: "Diterima, pulsa dikirim 5 menit lagi").
