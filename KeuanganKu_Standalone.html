@@ -7774,17 +7774,12 @@ textarea,
       const loc = item.location;
       const amt = Number(item.amount) || 0;
 
-      // 1. Rebalancing internal modal / Tambah modal dari uang riil
-      // Jika dari UANG RIIL: kas fisik di dompet/DANA benar-benar bertambah (+amt)!
-      // Jika dari UANG DINGIN: kas fisik tetap, hanya statusnya dialokasikan ke modal.
+      // 1. Rebalancing internal modal dari Uang Riil:
+      // Saldo kas riil di dompet/DANA TIDAK ditambah lagi (karena uang riil sudah ada di balances[loc] sejak dicatat).
+      // Hanya totalTambahModal / totalKurangiModal yang disesuaikan.
       if (item.isTambahModal || item.isKurangiModal) {
         if (item.isTambahModal) totalTambahModal += amt;
         if (item.isKurangiModal) totalKurangiModal += amt;
-
-        // TAMBAH MODAL DARI UANG RIIL: kas fisik dompet/DANA bertambah
-        if (item.isTambahModalRiil && balances[loc] !== undefined) {
-          balances[loc] += amt;
-        }
       }
       // 1B. Pengeluaran langsung dari Uang Panas / Modal (beli barang dari uang panas):
       // Mengurangi kas di dompet/DANA DAN mengurangi modal, sehingga Uang Dingin TIDAK berkurang!
@@ -8574,52 +8569,53 @@ textarea,
       }
     }
 
-    // B. Alihkan dari Uang Dingin / THR KE DOMPET MODAL / UANG PANAS (tambah modal dari uang thr / uang dingin)
-    const isColdToHot = (
+    // B. Tambah Modal Pulsa (dari Uang Riil)
+    const isModalAdd = (
       /\b(?:tambah|isi|topup|alokasi|masuk(?:kan)?)\b/i.test(lower) &&
       /\b(?:modal|uang\s*p[a-z]*n[a-z]*s|saldo\s*p[a-z]*n[a-z]*s|dompet\s*modal)\b/i.test(lower) &&
       !/\bdari\s*(?:uang\s*p[a-z]*n[a-z]*s|saldo\s*p[a-z]*n[a-z]*s|modal|dompet\s*modal)\b/i.test(lower)
     ) || (
       /\b(?:pindah(?:kan)?|alihkan|oper)\b/i.test(lower) &&
       /\b(?:ke|masuk)\s*(?:modal|uang\s*p[a-z]*n[a-z]*s|dompet\s*modal)\b/i.test(lower)
+    ) || (
+      /\bmodal\b/i.test(lower) &&
+      /\bdari\s*uang\s*r(?:i{1,2}|e)l\b/i.test(lower)
     );
 
-    if (isColdToHot) {
+    if (isModalAdd) {
       const amounts = extractAllAmounts(lower);
       if (amounts.length > 0) {
         if (amounts[0].val <= 0) return { error: 'Nominal tambah modal harus lebih dari Rp 0!' };
         const detectedLoc = detectCategoryWithTypo(raw);
-        const wallet = detectedLoc && detectedLoc !== 'Uang Akan Datang (Hutang)' ? detectedLoc : 'DANA';
-
-        // Deteksi apakah eksplisit dari uang dingin atau uang riil
-        const isExplicitCold = /\b(?:dari\s*uang\s*dingin|alihkan|oper|pindah(?:kan)?\s*ke)\b/i.test(lower);
-        const isRealMoney = !isExplicitCold; // Default: tambah modal dianggap uang riil baru
+        const walletSpecified = Boolean(detectedLoc && detectedLoc !== 'Uang Akan Datang (Hutang)');
+        const wallet = walletSpecified ? detectedLoc : 'DANA';
 
         return {
           isTambahModal: true,
-          isRealMoney: isRealMoney,
           amount: amounts[0].val,
-          wallet: wallet
+          wallet: wallet,
+          walletSpecified: walletSpecified
         };
       }
     }
 
-    // C. Tambah Uang Dingin Langsung (Pemasukan Uang Dingin dari luar)
-    const isStandaloneColdIncome = /\b(?:tambah|isi|masuk(?:kan)?|dapat|dapet|terima)\s*(?:uang\s*dingin|saldo\s*dingin)\b/i.test(lower) &&
-      !/\bdari\s*(?:uang\s*p[a-z]*n[a-z]*s|saldo\s*p[a-z]*n[a-z]*s|modal)\b/i.test(lower);
+    // C. Tambah Uang Riil / Uang Dingin Langsung (Pemasukan Kas Fisik dari luar)
+    const isStandaloneRealOrColdIncome = /\b(?:tambah|isi|masuk(?:kan)?|dapat|dapet|terima)\s*(?:uang\s*r(?:i{1,2}|e)l|saldo\s*r(?:i{1,2}|e)l|uang\s*dingin|saldo\s*dingin)\b/i.test(lower) &&
+      !/\b(?:modal|uang\s*p[a-z]*n[a-z]*s|saldo\s*p[a-z]*n[a-z]*s)\b/i.test(lower);
 
-    if (isStandaloneColdIncome) {
+    if (isStandaloneRealOrColdIncome) {
       const amounts = extractAllAmounts(lower);
       if (amounts.length > 0) {
-        if (amounts[0].val <= 0) return { error: 'Nominal uang dingin harus lebih dari Rp 0!' };
+        if (amounts[0].val <= 0) return { error: 'Nominal uang riil harus lebih dari Rp 0!' };
         const detectedLoc = detectCategoryWithTypo(raw);
         const wallet = detectedLoc && detectedLoc !== 'Uang Akan Datang (Hutang)' ? detectedLoc : 'DANA';
+        const isColdOnly = /\b(?:uang\s*dingin|saldo\s*dingin)\b/i.test(lower);
 
         return {
           type: 'in',
           amount: amounts[0].val,
           location: wallet,
-          desc: 'Tambah Uang Dingin',
+          desc: isColdOnly ? 'Tambah Uang Dingin' : `Tambah Uang Riil (${wallet})`,
           isColdMoney: true
         };
       }
@@ -9502,7 +9498,7 @@ textarea,
   // GLOBAL ACTIONS
   // ===================================================================
   window.App = {
-    submitChat: function () {
+    submitChat: async function () {
       const inputEl = document.getElementById('chat-input');
       if (!inputEl) return;
 
@@ -9859,49 +9855,78 @@ textarea,
         return;
       }
 
-      // 3. Kasus Tambah Modal Pulsa Manual (Uang Riil vs Uang Dingin)
+      // 3. Kasus Tambah Modal Pulsa dari Uang Riil
       if (res.isTambahModal) {
-        const isReal = res.isRealMoney !== false;
+        const nominal = res.amount;
         const currentBal = calculateBalances();
-        const availableCold = Math.max(0, currentBal.uangDingin);
 
-        // Hanya batasi jika sengaja dialihkan dari Uang Dingin
-        if (!isReal && res.amount > availableCold) {
+        // Tentukan dompet: jika user menyebutkan dompet spesifik (misal "di dana"), pakai itu.
+        // Jika tidak disebut, cari dompet yang memiliki saldo uang riil cukup.
+        let targetWallet = res.wallet;
+        if (!res.walletSpecified) {
+          const priority = ['DANA', 'GoPay', 'Dompet'];
+          const found = priority.find(w => (currentBal.balances[w] || 0) >= nominal);
+          if (found) {
+            targetWallet = found;
+          } else {
+            targetWallet = priority.reduce((maxW, w) => 
+              (currentBal.balances[w] || 0) > (currentBal.balances[maxW] || 0) ? w : maxW, 'DANA');
+          }
+        }
+
+        const saldoWallet = currentBal.balances[targetWallet] || 0;
+        const sisaUangRiilBebas = Math.max(0, currentBal.uangDingin);
+
+        // LOGIKA: IF UANG RIIL NOT ENOUGH = DECLINE!
+        if (saldoWallet < nominal || sisaUangRiilBebas < nominal) {
           AudioEngine.play('hurt');
           Fx.burst(null, null, 'redstone');
-          showToast(
-            `❌ Tambah modal gagal: uang dingin yang belum dialokasikan cuma ${formatRupiah(availableCold)}. ` +
-            `Ketik "tambah modal ${formatRupiah(res.amount)} dari uang riil" jika ini setoran uang baru dari luar.`,
-            'danger'
-          );
+
+          let failReason = '';
+          if (currentBal.totalRiil <= 0) {
+            failReason = `Kamu belum punya uang riil sama sekali (Kas di Tangan: Rp 0). Silakan tambah uang riil terlebih dahulu (contoh: "tambah uang ril ${formatRupiah(nominal)} di ${targetWallet}").`;
+          } else if (saldoWallet < nominal) {
+            failReason = `Saldo uang riil di ${targetWallet} cuma ${formatRupiah(saldoWallet)}, tidak cukup untuk dijadikan modal ${formatRupiah(nominal)}!`;
+          } else {
+            failReason = `Sisa uang riil bebas kamu cuma ${formatRupiah(sisaUangRiilBebas)}. Uang riil kamu yang lain sudah dialokasikan ke modal (${formatRupiah(currentBal.uangPanas)} dari total kas ${formatRupiah(currentBal.totalRiil)}).`;
+          }
+
+          showToast(`❌ Tambah Modal Ditolak: ${failReason}`, 'danger');
           return;
         }
 
-        const desc = isReal
-          ? `Tambah Modal dari Uang Riil (${res.wallet})`
-          : `Tambah Modal (${formatRupiah(res.amount)}) dari Uang Dingin`;
-
+        // LOGIKA: IF UANG RIIL ENOUGH = MODAL NAMBAH!
         state.items.push({
           id: 'item-' + Date.now(),
           date: new Date().toISOString(),
           type: 'in',
-          amount: res.amount,
-          desc: desc,
-          location: res.wallet,
+          amount: nominal,
+          desc: `Tambah Modal dari Uang Riil (${targetWallet})`,
+          location: targetWallet,
           isTambahModal: true,
-          isTambahModalRiil: isReal
+          isTambahModalRiil: true
         });
+
         saveData();
         render();
         inputEl.value = '';
         inputEl.focus();
         AudioEngine.play('trade');
         Fx.burst(null, null, 'trade');
+
         const { uangPanas, uangDingin, totalRiil } = calculateBalances();
-        if (isReal) {
-          showToast(`➕ Dompet Modal bertambah ${formatRupiah(res.amount)} dari UANG RIIL ke ${res.wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
-        } else {
-          showToast(`➕ Dompet Modal (Saldo Panas) bertambah ${formatRupiah(res.amount)} dialihkan dari Uang Dingin! Total Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
+        showToast(
+          `➕ Berhasil tambah modal ${formatRupiah(nominal)} dari Uang Riil di ${targetWallet}! ` +
+          `Modal Kios: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)} • Total Kas Riil: ${formatRupiah(totalRiil)}.`,
+          'gold'
+        );
+
+        if (window.KeuanganDB?.publishModalNow) {
+          try {
+            await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+          } catch (e) {
+            console.warn('Gagal publish modal instan:', e);
+          }
         }
         return;
       }
@@ -10252,15 +10277,15 @@ textarea,
     tambahModalPrompt: async function () {
       AudioEngine.play('click');
       const inputStr = await uiPrompt({
-        title: '➕ TAMBAH MODAL KIOS',
-        message: 'Berapa nominal modal yang mau ditambahkan ke Dompet Modal?',
-        hint: 'Contoh: 50000, 50 ribu, atau 100k. Dana masuk lewat DANA.',
+        title: '➕ TAMBAH MODAL DARI UANG RIIL',
+        message: 'Berapa nominal modal yang mau dialokasikan dari Uang Riil di DANA?',
+        hint: 'Modal diambil dari kas riil yang tersedia. Contoh: 50000, 50k, atau 100k.',
         inputLabel: 'NOMINAL MODAL (RP)',
         placeholder: '50000',
         inputMode: 'numeric',
         required: true,
         requiredMessage: 'Nominal wajib diisi.',
-        okText: 'LANJUT'
+        okText: 'TAMBAH MODAL'
       });
       if (inputStr === null) return;
 
@@ -10270,21 +10295,7 @@ textarea,
         return;
       }
 
-      // Tanya Sumber Modal: Uang Riil (Fresh Topup) vs Uang Dingin (Rebalancing)
-      const isRealMoney = await uiConfirm({
-        title: '💎 SUMBER MODAL',
-        message:
-          `Tambah modal ${formatRupiah(amt)}.\n\n` +
-          `Pilih sumber uang untuk modal kios ini:\n\n` +
-          `• [💵 DARI UANG RIIL]: Setor / top-up uang baru dari luar (bank/cash) ke DANA. Saldo kas fisik & Modal Kios bertambah!\n\n` +
-          `• [🧊 DARI UANG DINGIN]: Alihkan uang dingin / tabungan pribadi yang sudah ada di aplikasi ke modal kios.`,
-        okText: '💵 DARI UANG RIIL',
-        cancelText: '🧊 DARI UANG DINGIN',
-        danger: false
-      });
-
-      // Jika klik OK = true (Uang Riil), jika Cancel = false (Uang Dingin)
-      window.App.submitTambahModalDirect(amt, 'DANA', Boolean(isRealMoney));
+      await window.App.submitTambahModalDirect(amt, 'DANA');
     },
 
     kurangiModalPrompt: async function () {
@@ -10312,41 +10323,45 @@ textarea,
       window.App.submitKurangiModalDirect(amt, 'DANA');
     },
 
-    submitTambahModalDirect: async function (amt, wallet = 'DANA', isRealMoney = true) {
+    submitTambahModalDirect: async function (amt, wallet = 'DANA') {
       const nominal = Math.max(0, Math.round(Number(amt) || 0));
       if (nominal <= 0) {
         showToast('Nominal tambah modal tidak valid!', 'danger');
         return;
       }
 
-      const current = calculateBalances();
-      const availableCash = Math.max(0, current.uangDingin);
+      const currentBal = calculateBalances();
+      const saldoWallet = currentBal.balances[wallet] || 0;
+      const sisaUangRiilBebas = Math.max(0, currentBal.uangDingin);
 
-      // Hanya validasi batas uang dingin JIKA sumbernya dialihkan dari Uang Dingin
-      if (!isRealMoney && nominal > availableCash) {
+      // LOGIKA: IF UANG RIIL NOT ENOUGH = DECLINE!
+      if (saldoWallet < nominal || sisaUangRiilBebas < nominal) {
         AudioEngine.play('hurt');
         Fx.burst(null, null, 'redstone');
-        showToast(
-          `❌ Gagal: Uang dingin yang tersedia cuma ${formatRupiah(availableCash)}. ` +
-          `Pilih opsi "DARI UANG RIIL" jika ini setoran/top-up modal baru dari luar.`,
-          'danger'
-        );
+
+        let failReason = '';
+        if (currentBal.totalRiil <= 0) {
+          failReason = `Kamu belum punya uang riil sama sekali (Kas di Tangan: Rp 0). Silakan tambah uang riil terlebih dahulu (contoh: "tambah uang ril ${formatRupiah(nominal)} di ${wallet}").`;
+        } else if (saldoWallet < nominal) {
+          failReason = `Saldo uang riil di ${wallet} cuma ${formatRupiah(saldoWallet)}, tidak cukup untuk modal ${formatRupiah(nominal)}!`;
+        } else {
+          failReason = `Sisa uang riil bebas (uang dingin) kamu cuma ${formatRupiah(sisaUangRiilBebas)}. Uang riil kamu yang lain sudah dialokasikan ke modal (${formatRupiah(currentBal.uangPanas)} dari total kas ${formatRupiah(currentBal.totalRiil)}).`;
+        }
+
+        showToast(`❌ Tambah Modal Ditolak (Saldo Kurang): ${failReason}`, 'danger');
         return;
       }
 
-      const desc = isRealMoney
-        ? `Tambah Modal dari Uang Riil (${wallet})`
-        : `Tambah Modal (${formatRupiah(nominal)}) dari Uang Dingin`;
-
+      // LOGIKA: IF UANG RIIL ENOUGH = MODAL NAMBAH!
       state.items.push({
         id: 'item-' + Date.now(),
         date: new Date().toISOString(),
         type: 'in',
         amount: nominal,
-        desc: desc,
+        desc: `Tambah Modal dari Uang Riil (${wallet})`,
         location: wallet,
         isTambahModal: true,
-        isTambahModalRiil: Boolean(isRealMoney)
+        isTambahModalRiil: true
       });
       saveData();
       render();
@@ -10354,11 +10369,11 @@ textarea,
       Fx.burst(null, null, 'trade');
 
       const { uangPanas, totalRiil, uangDingin } = calculateBalances();
-      if (isRealMoney) {
-        showToast(`➕ Berhasil tambah modal ${formatRupiah(nominal)} dari UANG RIIL ke ${wallet}! Modal Kios: ${formatRupiah(uangPanas)} • Kas Fisik: ${formatRupiah(totalRiil)}.`, 'gold');
-      } else {
-        showToast(`➕ Berhasil alihkan ${formatRupiah(nominal)} dari Uang Dingin ke Modal Kios! Modal: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)}.`, 'gold');
-      }
+      showToast(
+        `➕ Berhasil tambah modal ${formatRupiah(nominal)} dari Uang Riil ke ${wallet}! ` +
+        `Modal Kios: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)} • Total Kas Riil: ${formatRupiah(totalRiil)}.`,
+        'gold'
+      );
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
