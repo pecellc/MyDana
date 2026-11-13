@@ -3672,11 +3672,6 @@
         }
       }
     },
-        } catch (e) {
-          console.warn('Gagal publish modal instan:', e);
-        }
-      }
-    },
 
     submitKurangiModalDirect: async function (amt, wallet) {
       const curBal = calculateBalances();
