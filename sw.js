@@ -1,5 +1,5 @@
 // KeuanganKu Lightweight PWA Service Worker
-const CACHE_NAME = 'keuanganku-v2';
+const CACHE_NAME = 'keuanganku-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
