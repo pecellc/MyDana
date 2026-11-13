@@ -1,0 +1,16 @@
+# Logs & temp
+*.log
+test_write.txt
+
+# Project memory & credentials (private)
+GEMINI.md
+PROJECT_MEMORY.md
+
+# OS metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Node
+node_modules/

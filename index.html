@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>KeuanganKu - Minecraft Sky Edition</title>
+  <meta name="theme-color" content="#1e3a5f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='8' fill='%235b8731'/%3E%3Crect x='2' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='11' y='9' width='4' height='4' fill='%2347e268'/%3E%3Crect x='19' y='8' width='5' height='4' fill='%2347e268'/%3E%3Crect x='2' y='2' width='28' height='2' fill='%2374a333'/%3E%3Crect x='2' y='10' width='28' height='20' fill='%23866043'/%3E%3Crect x='5' y='13' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='22' y='14' width='4' height='4' fill='%236d4c33'/%3E%3Crect x='10' y='23' width='5' height='4' fill='%236d4c33'/%3E%3Crect x='20' y='24' width='4' height='4' fill='%23573d26'/%3E%3Crect x='2' y='2' width='28' height='28' stroke='%231c2612' stroke-width='2' fill='none'/%3E%3Cpolygon points='16,14 22,21 16,28 10,21' fill='%2347e268'/%3E%3Cpolygon points='16,16 20,21 16,26 12,21' fill='%23a7f3d0'/%3E%3Cpolygon points='16,18 18,21 16,24 14,21' fill='%23ffffff'/%3E%3C/svg%3E">
+  <script>document.documentElement.classList.add('auth-pending');</script>
+</head>
+<body>
+
+  <!-- ================= AUTH SCREEN (SUPABASE) ================= -->
+  <div id="auth-screen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="auth-brand-logo">
+          <svg viewBox="0 0 32 32" width="46" height="46" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
+            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
+            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
+            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+          </svg>
+        </span>
+        <h1>KEUANGANKU</h1>
+        <p>Kios Pulsa &amp; Catatan Keuangan</p>
+      </div>
+
+      <!-- Setup awal jika supabase-config.js belum diisi -->
+      <div id="auth-setup" class="auth-setup" hidden>
+        <p class="auth-note">
+          Supabase belum dikonfigurasi. Tempel <strong>Project URL</strong> dan
+          <strong>anon key</strong> dari Supabase Dashboard &rarr; Project Settings &rarr; API.
+        </p>
+        <form id="setup-form" class="auth-form">
+          <label for="setup-url">PROJECT URL</label>
+          <input id="setup-url" class="modal-input" type="url" placeholder="https://xxxx.supabase.co" required>
+          <label for="setup-key">ANON / PUBLISHABLE KEY</label>
+          <input id="setup-key" class="modal-input" type="text" placeholder="eyJ..." required>
+          <button class="mc-btn mc-btn-green" type="submit">SIMPAN &amp; MUAT ULANG</button>
+        </form>
+      </div>
+
+      <div id="auth-forms">
+        <div class="auth-tabs">
+          <button type="button" id="tab-login" class="auth-tab active">MASUK</button>
+          <button type="button" id="tab-register" class="auth-tab">DAFTAR</button>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <label for="login-username">USERNAME</label>
+          <input id="login-username" class="modal-input" type="text" autocomplete="username" placeholder="username" maxlength="24" required>
+          <label for="login-password">PASSWORD</label>
+          <input id="login-password" class="modal-input" type="password" autocomplete="current-password" placeholder="••••••••" required>
+          <button class="mc-btn mc-btn-green" type="submit">🔑 MASUK</button>
+        </form>
+
+        <form id="register-form" class="auth-form" hidden>
+          <label for="register-username">USERNAME BARU</label>
+          <input id="register-username" class="modal-input" type="text" autocomplete="username" placeholder="3-24 huruf kecil/angka/titik" maxlength="24" required>
+          <label for="register-password">PASSWORD</label>
+          <input id="register-password" class="modal-input" type="password" autocomplete="new-password" placeholder="minimal 6 karakter" minlength="6" required>
+          <label for="register-confirm">ULANGI PASSWORD</label>
+          <input id="register-confirm" class="modal-input" type="password" autocomplete="new-password" placeholder="ulangi password" minlength="6" required>
+          <button class="mc-btn mc-btn-green" type="submit">BUAT AKUN BUYER</button>
+          <p class="auth-hint">Satu IP hanya boleh memiliki satu akun.</p>
+        </form>
+
+        <div id="auth-error" class="auth-error" hidden></div>
+
+        <p class="auth-foot">
+          Owner memakai akun yang sudah dibuat di Supabase.<br>
+          Pelanggan baru bisa langsung membuat akun sendiri.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BUYER APP (PELANGGAN) ================= -->
+  <section id="buyer-app" class="buyer-shell" hidden>
+    <header class="buyer-header">
+      <div class="buyer-brand">
+        <span class="buyer-logo">
+          <svg viewBox="0 0 32 32" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
+            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
+            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
+            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+          </svg>
+        </span>
+        <div>
+          <h1>KEUANGANKU STORE</h1>
+          <p>KIOS PULSA &amp; SALDO</p>
+        </div>
+      </div>
+      <div class="buyer-header-right">
+        <div class="buyer-profile-badge" id="buyer-profile-badge-btn" title="Klik untuk atur profil & akun">
+          <div class="buyer-avatar-wrapper">
+            <img id="buyer-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;">
+            <span id="buyer-avatar-placeholder" class="buyer-avatar-placeholder">👤</span>
+            <span class="buyer-avatar-edit-icon" title="Atur Profil">⚙️</span>
+          </div>
+          <div class="buyer-profile-info">
+            <span class="buyer-user"><strong id="buyer-username">-</strong></span>
+            <span class="buyer-profile-role-tag">⚙️ Profil &amp; Akun</span>
+          </div>
+          <input type="file" id="buyer-avatar-file-input" accept="image/*" style="display:none;">
+        </div>
+        <button class="mc-btn" id="buyer-sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro" type="button">
+          🔊 SFX: ON
+        </button>
+        <button class="mc-btn" id="buyer-bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM" type="button">
+          <span class="bgm-icon">🎵</span> BGM: OFF
+        </button>
+        <button class="mc-btn mc-btn-diamond" id="buyer-refresh" type="button">🔄 REFRESH</button>
+        <button class="mc-btn mc-btn-redstone" id="buyer-logout" type="button">🚪 KELUAR</button>
+      </div>
+    </header>
+
+    <!-- NOTIFIKASI PERMISSION BAR (BUYER) -->
+    <div id="buyer-notif-permission-bar" class="buyer-notif-bar" style="display:none; margin-bottom:14px;">
+      <div style="font-size:0.8rem; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.15rem;">🔔</span>
+        <span><strong>Aktifkan Notifikasi Pengingat?</strong> Dapatkan info saat pulsa di-ACC dan pengingat tempo otomatis agar tidak lupa menyisihkan uang.</span>
+      </div>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button class="mc-btn mc-btn-green" id="btn-enable-notif" type="button" style="padding:5px 12px; font-size:0.75rem;">AKTIFKAN NOTIFIKASI</button>
+        <button class="mc-btn" id="btn-dismiss-notif" type="button" style="padding:5px 9px; font-size:0.75rem;">NANTI SAJA</button>
+      </div>
+    </div>
+
+    <div class="buyer-grid">
+      <div class="buyer-card buyer-balance-card">
+        <span class="buyer-card-label">🔥 SALDO MODAL KIOS (UANG PANAS)</span>
+        <div id="buyer-modal-balance" class="buyer-balance-val">Rp 0</div>
+        <p class="buyer-hint">
+          Saldo modal yang <strong>bisa kamu pakai</strong> untuk pesanan.
+        </p>
+        <span id="buyer-modal-hint" class="buyer-updated">-</span><br>
+        <span id="buyer-modal-updated" class="buyer-updated">-</span>
+      </div>
+
+      <!-- KOTAK MOTIVASI & PENGINGAT TEMPO BUYER -->
+      <div id="buyer-tempo-motivation-box" style="display:none;" class="buyer-card buyer-tempo-card">
+        <!-- Diisi dinamis lewat buyer.js -->
+      </div>
+
+      <div class="buyer-card">
+        <span class="buyer-card-label">🛒 PRODUK TERSEDIA</span>
+        <div id="buyer-products" class="buyer-products">Memuat produk...</div>
+      </div>
+
+      <div class="buyer-card">
+        <span class="buyer-card-label">📝 PESAN CUSTOM / TOP UP</span>
+        <form id="buyer-order-form" class="buyer-form">
+          <p class="buyer-form-hint">
+            Saldo modal kios tersedia: <strong id="buyer-form-modal">Rp 0</strong><br>
+            Pesanan yang nominalnya melebihi saldo modal akan otomatis ditolak.
+          </p>
+          <label class="buyer-form-label" for="buyer-order-name">PRODUK / NOMINAL</label>
+          <input id="buyer-order-name" class="modal-input" type="text" placeholder="Nama produk / nominal pulsa" required>
+          <label class="buyer-form-label" for="buyer-order-amount">NOMINAL (Rp)</label>
+          <input id="buyer-order-amount" class="modal-input" type="number" min="1" step="1" placeholder="Nominal (Rp)" required>
+          <label class="buyer-form-label" for="buyer-order-payment">💳 METODE PEMBAYARAN <span style="color:var(--mc-redstone);">*</span></label>
+          <select id="buyer-order-payment" class="modal-input">
+            <option value="dana">📱 DANA (Transfer Online)</option>
+            <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
+          </select>
+          <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+            💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
+          </div>
+          <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
+          <select id="buyer-order-timing" class="modal-input">
+            <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
+          </select>
+          <div id="buyer-due-motivational-tip" style="display:none; font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border-left:3px solid #38bdf8; padding:7px 10px; margin-top:5px; border-radius:3px; line-height:1.45;"></div>
+          <label class="buyer-form-label" for="buyer-order-notes">CATATAN</label>
+          <textarea id="buyer-order-notes" class="modal-input" rows="2" placeholder="Catatan (opsional): nomor tujuan, provider, dll."></textarea>
+          <button class="mc-btn mc-btn-green" type="submit">KIRIM PESANAN</button>
+        </form>
+      </div>
+
+      <div class="buyer-card buyer-orders-card">
+        <span class="buyer-card-label">📦 PESANAN SAYA</span>
+        <div id="buyer-orders" class="buyer-orders">Belum ada pesanan.</div>
+      </div>
+    </div>
+
+    <!-- MINECRAFT MODAL: NOTIFIKASI PESANAN MASUK (BUYER) -->
+    <div id="buyer-order-alert-modal" class="mc-modal-overlay">
+      <div class="mc-modal-box" style="max-width: 500px; width: 92%; border-color: var(--mc-emerald); box-shadow: inset 2px 2px 0 var(--panel-border-light), 0 0 28px rgba(71, 226, 104, 0.45);">
+        <div class="mc-modal-title" style="color: var(--mc-emerald); display: flex; align-items: center; gap: 8px;">
+          <span>🎉</span> <span>PESANAN KAMU TELAH DIPROSES!</span>
+        </div>
+        <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 8px;">
+          Owner kios telah menyetujui (ACC) / memperbarui pesananmu:
+        </div>
+        <div id="buyer-order-alert-content" style="display: flex; flex-direction: column; gap: 8px; margin: 10px 0; max-height: 320px; overflow-y: auto;">
+          <!-- Diisi otomatis lewat buyer.js -->
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+          <button class="mc-btn mc-btn-green" id="buyer-order-alert-close" type="button" style="padding: 8px 18px; font-weight: bold;">
+            👍 SIAP, TERIMA KASIH!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINECRAFT MODAL: POPUP PESAN PRODUK (BUYER) -->
+    <div id="buyer-order-modal" class="mc-modal-overlay">
+      <div class="mc-modal-box buyer-popup-box">
+        <div class="mc-modal-title" style="color: var(--mc-diamond); display: flex; align-items: center; justify-content: space-between;">
+          <span style="display:flex; align-items:center; gap:8px;">
+            <span>🛒</span> <span id="buyer-popup-title">PESAN PRODUK</span>
+          </span>
+          <button type="button" id="buyer-popup-close-x" class="mc-modal-close-btn" title="Tutup">✕</button>
+        </div>
+
+        <!-- Detail Produk & Rincian Modal/Admin -->
+        <div class="buyer-popup-product-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+            <div>
+              <strong id="buyer-popup-prod-name" style="font-size: 1rem; color: #fff;">-</strong>
+              <div id="buyer-popup-prod-desc" style="font-size: 0.74rem; color: #94a3b8; margin-top: 2px;"></div>
+            </div>
+            <div id="buyer-popup-prod-price" style="font-family: var(--mc-pixel-font); font-size: 11px; color: var(--mc-diamond); text-align: right; flex-shrink: 0;">Rp 0</div>
+          </div>
+          <div class="buyer-popup-pills" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="badge-modal-cost" style="font-size: 0.7rem; background: rgba(251,146,60,0.18); color: #fb923c; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(251,146,60,0.3);">
+              🔥 Modal Kios: <strong id="buyer-popup-prod-modal">Rp 0</strong>
+            </span>
+            <span class="badge-admin-fee" style="font-size: 0.7rem; background: rgba(71,226,104,0.18); color: var(--mc-emerald); padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(71,226,104,0.3);">
+              💎 Admin: <strong id="buyer-popup-prod-admin">Rp 0</strong>
+            </span>
+            <span id="buyer-popup-modal-status" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;">
+              <!-- CUKUP / KURANG -->
+            </span>
+          </div>
+        </div>
+
+        <!-- Form Pemesanan -->
+        <form id="buyer-popup-form" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+          <div>
+            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP / ID AKUN TUJUAN <span style="color:var(--mc-redstone);">*</span></label>
+            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890 / ID Game" required autocomplete="tel">
+            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor tujuan pengisian pulsa / kuota / saldo transfer.</span>
+          </div>
+
+          <div>
+            <label class="buyer-form-label" for="buyer-popup-payment">💳 METODE PEMBAYARAN <span style="color:var(--mc-redstone);">*</span></label>
+            <select id="buyer-popup-payment" class="modal-input">
+              <option value="dana">📱 DANA (Transfer Online)</option>
+              <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
+            </select>
+            <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+              💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
+            </div>
+          </div>
+
+          <div>
+            <label class="buyer-form-label" for="buyer-popup-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI) <span style="color:var(--mc-redstone);">*</span></label>
+            <select id="buyer-popup-timing" class="modal-input">
+              <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
+            </select>
+            <div id="buyer-popup-due-tip" style="display:none; font-size: 0.74rem; color: #38bdf8; background: rgba(56,189,248,0.12); border-left: 3px solid #38bdf8; padding: 6px 9px; margin-top: 5px; border-radius: 3px; line-height: 1.4;"></div>
+          </div>
+
+          <div>
+            <label class="buyer-form-label" for="buyer-popup-notes">📝 CATATAN TAMBAHAN (OPSIONAL)</label>
+            <textarea id="buyer-popup-notes" class="modal-input" rows="2" placeholder="Catatan tambahan: provider, waktu pengiriman, dll."></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+            <button class="mc-btn mc-btn-dark" id="buyer-popup-cancel" type="button">BATAL</button>
+            <button class="mc-btn mc-btn-green" id="buyer-popup-submit" type="submit">🛒 KIRIM PESANAN</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MINECRAFT MODAL: POPUP PENGATURAN PROFIL BUYER -->
+    <div id="buyer-profile-modal" class="mc-modal-overlay">
+      <div class="mc-modal-box buyer-popup-box">
+        <div class="mc-modal-title" style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
+          <span style="display:flex; align-items:center; gap:8px;">
+            <span>👤</span> <span>PENGATURAN PROFIL &amp; AKUN</span>
+          </span>
+          <button type="button" id="buyer-profile-modal-close-x" class="mc-modal-close-btn" title="Tutup">✕</button>
+        </div>
+
+        <!-- Avatar & User Banner -->
+        <div class="buyer-profile-banner">
+          <div class="buyer-profile-avatar-big-wrap">
+            <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;">
+            <span id="buyer-profile-modal-avatar-placeholder" class="buyer-avatar-placeholder" style="font-size:2rem;">👤</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <strong id="buyer-profile-modal-username" style="font-size:1.05rem; color:#fff;">-</strong>
+              <span class="badge-buyer-role">🛒 PEMBELI</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+              <button class="mc-btn mc-btn-diamond" type="button" id="buyer-profile-change-avatar-btn" style="padding:5px 10px; font-size:7.5px;">📷 GANTI FOTO</button>
+              <button class="mc-btn mc-btn-dark" type="button" id="buyer-profile-remove-avatar-btn" style="padding:5px 10px; font-size:7.5px;">🗑️ HAPUS FOTO</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pengaturan Form Profil -->
+        <form id="buyer-profile-form" style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
+          <div>
+            <label class="buyer-form-label" for="buyer-profile-phone-input">📱 NOMOR HP SAYA (DEFAULT)</label>
+            <input id="buyer-profile-phone-input" class="modal-input" type="tel" placeholder="Contoh: 081234567890" autocomplete="tel">
+            <span style="font-size:0.68rem; color:#94a3b8; display:block; margin-top:3px;">
+              💡 Nomor HP ini akan otomatis terisi setiap kali kamu memesan pulsa.
+            </span>
+          </div>
+
+          <!-- Statistik Transaksi Pembeli -->
+          <div class="buyer-stats-grid">
+            <div class="buyer-stat-card">
+              <span class="buyer-stat-title">📦 TOTAL PESANAN</span>
+              <strong id="buyer-stat-total-orders" class="buyer-stat-value">0</strong>
+            </div>
+            <div class="buyer-stat-card">
+              <span class="buyer-stat-title">✅ SELESAI / ACC</span>
+              <strong id="buyer-stat-completed-orders" class="buyer-stat-value" style="color:var(--mc-emerald);">0</strong>
+            </div>
+            <div class="buyer-stat-card">
+              <span class="buyer-stat-title">⏳ TEMPO AKTIF</span>
+              <strong id="buyer-stat-active-tempo" class="buyer-stat-value" style="color:var(--mc-gold);">Rp 0</strong>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap:wrap;">
+            <button class="mc-btn mc-btn-redstone" id="buyer-profile-logout-btn" type="button">🚪 KELUAR / LOGOUT</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="mc-btn mc-btn-dark" id="buyer-profile-cancel-btn" type="button">TUTUP</button>
+              <button class="mc-btn mc-btn-green" type="submit">💾 SIMPAN PENGATURAN</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Authentic Minecraft Sky Backdrop (Clouds, Sun/Moon & Mountains) -->
+  <div class="mc-sky-backdrop">
+    <div class="mc-celestial-body" id="mc-celestial"></div>
+    <div class="mc-pixel-cloud cloud-1"></div>
+    <div class="mc-pixel-cloud cloud-2"></div>
+    <div class="mc-pixel-cloud cloud-3"></div>
+    <div class="mc-pixel-cloud cloud-4"></div>
+    <div class="mc-mountain-ridge"></div>
+  </div>
+
+  <!-- 60FPS Pixel Confetti & Particle Canvas -->
+  <canvas id="mc-fx-canvas"></canvas>
+
+  <!-- Minecraft Advancement / Challenge Complete Popup Banner -->
+  <div id="mc-advancement-banner" class="mc-advancement-banner" onclick="this.classList.remove('active')">
+    <div class="advancement-icon" id="advancement-icon">🏆</div>
+    <div class="advancement-text">
+      <div class="advancement-heading" id="advancement-heading">CHALLENGE COMPLETE!</div>
+      <div class="advancement-title" id="advancement-title">PEMASUKAN MASUK!</div>
+    </div>
+  </div>
+
+  <div class="container" id="owner-app">
+    <!-- Header -->
+    <header class="mc-header">
+      <div class="mc-brand">
+        <div class="mc-logo-block">
+          <svg viewBox="0 0 32 32" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="28" height="8" fill="#5b8731"/>
+            <rect x="2" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="11" y="9" width="4" height="4" fill="#47e268"/>
+            <rect x="19" y="8" width="5" height="4" fill="#47e268"/>
+            <rect x="2" y="2" width="28" height="2" fill="#74a333"/>
+            <rect x="2" y="10" width="28" height="20" fill="#866043"/>
+            <rect x="5" y="13" width="4" height="4" fill="#6d4c33"/>
+            <rect x="22" y="14" width="4" height="4" fill="#6d4c33"/>
+            <rect x="10" y="23" width="5" height="4" fill="#6d4c33"/>
+            <rect x="2" y="2" width="28" height="28" stroke="#1c2612" stroke-width="2"/>
+            <polygon points="16,14 22,21 16,28 10,21" fill="#47e268"/>
+            <polygon points="16,16 20,21 16,26 12,21" fill="#a7f3d0"/>
+            <polygon points="16,18 18,21 16,24 14,21" fill="#ffffff"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="mc-title">KEUANGANKU [MC EDITION] ⚔️</h1>
+          <p class="mc-sub">BUKU KAS PRIBADI &amp; KIOS PULSA MINECRAFT EDITION</p>
+        </div>
+      </div>
+      <div class="header-buttons">
+        <button class="mc-btn" id="sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro">
+          🔊 SFX: ON
+        </button>
+        <button class="mc-btn" id="bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM">
+          <span class="bgm-icon">🎵</span> BGM: OFF
+        </button>
+        <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
+          🌞 SIANG
+        </button>
+        <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
+          📥 EXCEL
+        </button>
+        <button class="mc-btn" onclick="window.App.resetData()" title="Kosongkan data">
+          🗑️ RESET
+        </button>
+        <button class="mc-btn mc-btn-gold" id="login-btn" onclick="window.KeuanganAuth.logout()" title="Logout akun owner">
+          <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- UNIVERSAL MINECRAFT CHAT PROMPT BAR -->
+    <section class="mc-box chat-box">
+      <div class="chat-input-bar">
+        <span class="chat-prompt-symbol">&gt;</span>
+        <input 
+          type="text" 
+          id="chat-input" 
+          class="chat-text-input" 
+          placeholder="Ketik catatan uang / pulsa / transfer... (contoh: jual pulsa 10k ke budi 12k bayar tempo, masuk 50k di dana, beli makan 15k)" 
+          autocomplete="off"
+        >
+        <button class="mc-btn mc-btn-green" onclick="window.App.submitChat()">
+          ENTER [CATAT]
+        </button>
+      </div>
+    </section>
+
+    <!-- MINECRAFT NAVIGATION BAR (TABS VIEW) -->
+    <nav class="mc-nav-bar" id="mc-nav-bar">
+      <button class="mc-nav-btn active" id="nav-btn-dashboard" data-tab="dashboard" onclick="window.App.switchTab('dashboard')">
+        <span class="nav-icon">💎</span>
+        <span>SALDO &amp; CATATAN</span>
+      </button>
+      <button class="mc-nav-btn" id="nav-btn-kios" data-tab="kios" onclick="window.App.switchTab('kios')">
+        <span class="nav-icon">🏪</span>
+        <span>KIOS PULSA &amp; MODAL</span>
+        <span id="nav-badge-kios" class="mc-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="mc-nav-btn" id="nav-btn-products" data-tab="products" onclick="window.App.switchTab('products')">
+        <span class="nav-icon">📦</span>
+        <span>KATALOG &amp; HARGA</span>
+      </button>
+      <button class="mc-nav-btn" id="nav-btn-recap" data-tab="recap" onclick="window.App.switchTab('recap')">
+        <span class="nav-icon">📊</span>
+        <span>ARUS KAS &amp; GRAFIK</span>
+      </button>
+      <button class="mc-nav-btn" id="nav-btn-debt" data-tab="debt" onclick="window.App.switchTab('debt')">
+        <span class="nav-icon">⏳</span>
+        <span>PIUTANG / HUTANG</span>
+        <span id="nav-badge-debt" class="mc-nav-badge" style="display: none;">0</span>
+      </button>
+      <button class="mc-nav-btn" id="nav-btn-quest" data-tab="quest" onclick="window.App.switchTab('quest')">
+        <span class="nav-icon">🏆</span>
+        <span>WISHLIST QUESTS</span>
+        <span id="nav-badge-quest" class="mc-nav-badge" style="display: none;">0</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: DASHBOARD (SALDO 4 PILAR & TABEL RIWAYAT TRANSAKSI) -->
+    <div id="tab-dashboard" class="mc-tab-view active">
+      <!-- SECTION 1: RINGKASAN SALDO & 3 PILAR KEUANGAN -->
+      <section class="mc-box">
+        <!-- GRAND TOTAL: TOTAL ASET RIIL + PIUTANG -->
+        <div class="grand-total-hero">
+          <div class="grand-total-header">
+            <span class="grand-total-label" style="display:flex; align-items:center; gap:8px;">
+              <svg viewBox="0 0 28 28" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 8L8 3H20L25 8V23H3V8Z" fill="#0284c7" stroke="#0369a1" stroke-width="2"/>
+                <polygon points="14,6 21,11 14,21 7,11" fill="#38bdf8"/>
+                <polygon points="14,8 18,11 14,18 10,11" fill="#bae6fd"/>
+                <circle cx="14" cy="11" r="2" fill="#ffffff"/>
+              </svg>
+              <span>TOTAL SEMUA UANG (KAS RIIL + PIUTANG):</span>
+            </span>
+            <span class="grand-total-tag">SEMUA ASET</span>
+          </div>
+          <div id="total-semua" class="grand-total-val">Rp 0</div>
+        </div>
+
+        <!-- 3 PILAR KEUANGAN UTAMA (KAS RIIL, MODAL KIOS, PIUTANG) -->
+        <div class="hero-stats-grid" style="margin-top: 14px;">
+          <!-- 1. Uang Riil (Kas di Tangan) -->
+          <div class="stat-card card-riil">
+            <span class="stat-label">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" fill="#10b981" stroke="#047857" stroke-width="2"/>
+                  <polygon points="12,5 17,9 17,15 12,19 7,15 7,9" fill="#34d399"/>
+                  <polygon points="12,8 14,10 14,14 12,16 10,14 10,10" fill="#ffffff"/>
+                </svg>
+                <span>Kas di Tangan</span>
+              </span>
+              <span style="font-size: 0.7rem; color: #4de0eb; font-weight: 800;">DANA+GOPAY+DOMPET</span>
+            </span>
+            <div id="total-riil" class="stat-val-cyan">Rp 0</div>
+            <span class="stat-subtext">TOTAL SALDO FISIK &amp; E-WALLET</span>
+          </div>
+
+          <!-- 2. Uang Panas (Dompet Modal Pulsa) -->
+          <div class="stat-card card-panas">
+            <span class="stat-label">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C10 6 7 8 7 13C7 17 9.5 21 12 21C14.5 21 17 17 17 13C17 8 14 6 12 2Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                  <path d="M12 7C11 9 9.5 11 9.5 14C9.5 16.5 10.8 19 12 19C13.2 19 14.5 16.5 14.5 14C14.5 11 13 9 12 7Z" fill="#fbbf24"/>
+                  <path d="M12 12C11.5 13 11 14 11 15.5C11 17 11.5 18 12 18C12.5 18 13 17 13 15.5C13 14 12.5 13 12 12Z" fill="#ffffff"/>
+                </svg>
+                <span>Modal Kios</span>
+              </span>
+              <div class="mini-btn-group">
+                <button class="mc-btn mc-btn-green" style="padding: 2px 7px; font-size: 8px;" onclick="window.App.tambahModalPrompt()" title="Tambah Modal Pulsa">+</button>
+                <button class="mc-btn mc-btn-gold" style="padding: 2px 7px; font-size: 8px;" onclick="window.App.openPulsaModal()" title="Pengaturan Modal">⚙️</button>
+              </div>
+            </span>
+            <div id="total-uang-panas" class="stat-val-orange">Rp 0</div>
+            <span class="stat-subtext">MODAL OPERASIONAL JUALAN PULSA</span>
+            <span id="uang-panas-reserved-subtext" style="display:none; font-size:0.68rem; color:#f59e0b; font-weight:700; margin-top:3px; line-height:1.3;"></span>
+          </div>
+
+          <!-- 3. Uang Akan Datang (Hutang Orang / Piutang) -->
+          <div class="stat-card card-hutang">
+            <span class="stat-label">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="5" y="2" width="14" height="3" fill="#d97706" rx="1"/>
+                  <rect x="5" y="19" width="14" height="3" fill="#d97706" rx="1"/>
+                  <path d="M7 5L12 11L17 5" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                  <path d="M7 19L12 13L17 19" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                  <polygon points="12,11 14,8 10,8" fill="#fbbf24"/>
+                  <polygon points="12,15 15,18 9,18" fill="#fbbf24"/>
+                </svg>
+                <span>Piutang</span>
+              </span>
+              <span style="font-size: 0.7rem; color: #f5a623; font-weight: 800;">HUTANG ORANG</span>
+            </span>
+            <div id="total-akandatang" class="stat-val-gold">Rp 0</div>
+            <span class="stat-subtext">UANG YANG BELUM DIBAYAR PEMBELI</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: TABEL RIWAYAT TRANSAKSI -->
+      <section class="mc-box">
+        <div class="table-header-controls">
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-yellow);">📜 BUKU CATATAN TRANSAKSI:</span>
+          <input 
+            type="text" 
+            class="mc-search-input" 
+            placeholder="Cari transaksi / nama..." 
+            oninput="window.App.onSearch(this.value)"
+          >
+        </div>
+
+        <div class="mc-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>WAKTU &amp; JAM (WIB)</th>
+                <th>KETERANGAN</th>
+                <th>KATEGORI</th>
+                <th>JENIS</th>
+                <th>JUMLAH (RP)</th>
+                <th style="text-align: right;">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="items-table-body">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: KIOS PULSA & DOMPET MODAL -->
+    <div id="tab-kios" class="mc-tab-view">
+      <section class="mc-box pulsa-kios-box enchanted-shimmer">
+        <div class="pulsa-kios-header">
+          <div class="pulsa-kios-title">
+            <span class="pulsa-badge-icon">🏪</span>
+            <div>
+              <div style="font-family: var(--mc-pixel-font); font-size: 10px; color: var(--mc-emerald);">
+                KIOS PULSA &amp; DOMPET MODAL [TRADING POST]
+              </div>
+              <div style="font-size: 0.72rem; opacity: 0.8; font-weight: 600;">
+                MODAL OPERASIONAL KIOS PULSA (REALTIME SINKRON KE AKUN BUYER)
+              </div>
+            </div>
+          </div>
+          <div class="pulsa-kios-actions">
+            <button class="mc-btn mc-btn-green" onclick="window.App.tambahModalPrompt()" title="Tambah Modal Pulsa">
+              ➕ TAMBAH MODAL
+            </button>
+            <button class="mc-btn mc-btn-gold" onclick="window.App.openPulsaModal()" title="Pengaturan & Ukur Modal Pulsa">
+              ⚙️ ATUR MODAL
+            </button>
+          </div>
+        </div>
+
+        <div class="pulsa-stats-grid">
+          <div class="pulsa-stat-card">
+            <span class="pulsa-stat-label">📦 TOTAL PULSA TERJUAL</span>
+            <div id="pulsa-count" class="pulsa-stat-val" style="color: #ffffff;">0 Trx</div>
+          </div>
+          <div class="pulsa-stat-card">
+            <span class="pulsa-stat-label">💰 TOTAL OMSET</span>
+            <div id="pulsa-omset" class="pulsa-stat-val" style="color: var(--mc-diamond);">Rp 0</div>
+          </div>
+          <div class="pulsa-stat-card flame-border">
+            <span class="pulsa-stat-label">🔥 DOMPET MODAL (UANG PANAS)</span>
+            <div id="pulsa-modal-amt" class="pulsa-stat-val" style="color: #fb923c;">Rp 0</div>
+          </div>
+          <div class="pulsa-stat-card cuan-border">
+            <span class="pulsa-stat-label">💎 CUAN AKTIF TERSISA</span>
+            <div id="pulsa-profit-amt" class="pulsa-stat-val" style="color: var(--mc-emerald);">Rp 0</div>
+            <span id="pulsa-cuan-subtext" style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 3px;">Akumulasi Laba: Rp 0</span>
+          </div>
+        </div>
+
+        <!-- BUKU PELANGGAN KIOS PULSA (RIWAYAT & STATUS HUTANG PER ORANG) -->
+        <div class="pulsa-customers-section" style="margin-top: 14px; border-top: 2px dashed rgba(255, 255, 255, 0.12); padding-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+            <span style="font-weight: 800; font-size: 0.82rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+              <span>👥</span> BUKU PELANGGAN KIOS PULSA (KLIK NAMA UNTUK LIHAT RIWAYAT):
+            </span>
+            <span style="font-size: 0.72rem; color: #94a3b8;">Lacak total uang keluar &amp; sisa hutang per orang</span>
+          </div>
+          <div class="mc-table-wrapper" style="max-height: 240px; overflow-y: auto;">
+            <table class="mc-table">
+              <thead>
+                <tr>
+                  <th>PELANGGAN</th>
+                  <th>TOTAL BELI PULSA</th>
+                  <th>SISA HUTANG</th>
+                  <th>STATUS</th>
+                  <th>AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="pulsa-customers-table-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #777; padding: 16px;">
+                    Belum ada pelanggan pulsa tercatat. Ketik misalnya: <code>gilang beli pulsa 28k admin 3k</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: KATALOG PRODUK KIOS (TERHUBUNG KE BUYER) -->
+      <section class="mc-box" style="margin-top: 14px;">
+        <div class="table-header-controls">
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-diamond);">📦 PRODUK KATALOG KIOS (TERHUBUNG KE BUYER):</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="mc-btn mc-btn-green" onclick="window.App.openProductModal()" title="Tambah produk baru">
+              ➕ TAMBAH PRODUK
+            </button>
+            <button class="mc-btn mc-btn-purple" onclick="window.App.switchTab('products')" title="Buka Tab Pengaturan Lengkap">
+              ⚙️ PENGATURAN LENGKAP
+            </button>
+          </div>
+        </div>
+        <div id="kios-tab-products-preview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+          <span style="font-size: 0.75rem; color: #94a3b8;">Memuat katalog produk...</span>
+        </div>
+      </section>
+
+      <!-- SECTION: PESANAN PELANGGAN (BUYER) -->
+      <section class="mc-box" id="owner-orders-section" style="margin-top: 14px;">
+        <div class="table-header-controls">
+          <span style="font-family: var(--mc-pixel-font); font-size: 9px; color: var(--mc-gold);">🛒 PESANAN PELANGGAN (BUYER):</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="mc-btn mc-btn-purple" onclick="window.App.addProductPrompt()" title="Tambah produk ke katalog buyer">
+              + PRODUK
+            </button>
+            <button class="mc-btn" onclick="window.App.refreshOwnerOrders()" title="Muat ulang pesanan">
+              🔄 REFRESH
+            </button>
+          </div>
+        </div>
+
+        <p id="owner-orders-modal-summary" class="buyer-hint" style="margin: 0 0 8px; font-size: 0.76rem;">
+          Modal tersedia: -
+        </p>
+
+        <div class="mc-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>WAKTU</th>
+                <th>BUYER</th>
+                <th>PRODUK / PESANAN</th>
+                <th>NOMINAL</th>
+                <th>PEMBAYARAN</th>
+                <th>CATATAN BUYER</th>
+                <th>KETERANGAN</th>
+                <th>STATUS</th>
+                <th style="text-align: right;">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="owner-orders-body">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 20px; color: #777;">
+                  Memuat pesanan...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 3: REKAP ARUS KAS & GRAFIK SEBARAN -->
+    <div id="tab-recap" class="mc-tab-view">
+      <div class="two-col-grid">
+        <!-- KOLOM KIRI: REKAP ARUS KAS (HARI INI, BULAN INI, TAHUN INI, SEMUA) -->
+        <section class="mc-box recap-box">
+          <div class="recap-header">
+            <span class="recap-title">
+              <span>📅</span> ARUS KAS (<span id="recap-period-name">BULAN INI</span>):
+            </span>
+            <div class="recap-tabs">
+              <button class="recap-tab-btn" data-period="today" onclick="window.App.setRecapPeriod('today')">☀️ HARI INI</button>
+              <button class="recap-tab-btn active" data-period="month" onclick="window.App.setRecapPeriod('month')">🌙 BULAN INI</button>
+              <button class="recap-tab-btn" data-period="year" onclick="window.App.setRecapPeriod('year')">🗓️ TAHUN INI</button>
+              <button class="recap-tab-btn" data-period="all" onclick="window.App.setRecapPeriod('all')">🌐 SEMUA</button>
+            </div>
+          </div>
+          <div class="recap-metrics-grid">
+            <div class="recap-metric-card">
+              <span class="recap-metric-label">🟢 PEMASUKAN</span>
+              <div id="recap-income" class="recap-metric-val" style="color: var(--mc-emerald);">+ Rp 0</div>
+            </div>
+            <div class="recap-metric-card">
+              <span class="recap-metric-label">🔴 PENGELUARAN</span>
+              <div id="recap-expense" class="recap-metric-val" style="color: var(--mc-redstone);">- Rp 0</div>
+            </div>
+            <div class="recap-metric-card">
+              <span class="recap-metric-label">💎 ARUS KAS BERSIH</span>
+              <div id="recap-net" class="recap-metric-val" style="color: var(--mc-diamond);">Rp 0</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- KOLOM KANAN: GRAFIK SEBARAN UANG (MINECRAFT HUD) -->
+        <section class="mc-box">
+          <div class="chart-section-title">
+            <span>📊</span> SEBARAN UANG &amp; STATUS PIUTANG:
+          </div>
+          <div class="chart-grid">
+            <div class="chart-canvas-wrapper">
+              <canvas id="mc-chart-canvas" width="200" height="170"></canvas>
+            </div>
+            <div id="chart-bars-list" class="chart-bars-list">
+              <!-- Populated dynamically: XP progress bars -->
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- TAB 4: BUKU PIUTANG / HUTANG -->
+    <div id="tab-debt" class="mc-tab-view">
+      <section id="debt-panel" class="debt-panel">
+        <div class="debt-panel-header">
+          <span class="debt-panel-title">
+            <span>⚔️</span> DAFTAR ORANG NGEHUTANG KE KAMU (UANG AKAN DATANG):
+          </span>
+          <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.85;">BISA KONFIRMASI CICIL / LUNAS DI SINI</span>
+        </div>
+        <div id="debtors-grid" class="debtors-grid">
+          <!-- Populated dynamically (Gilang: Rp 226.000 -> [Bayar / Cicil]) -->
+        </div>
+        <div id="debt-empty-state" class="debt-empty-state" style="display: none;">
+          <div style="font-size: 2rem; margin-bottom: 6px;">🛡️</div>
+          <div style="font-family: var(--mc-pixel-font); font-size: 9.5px; color: var(--mc-emerald); margin-bottom: 6px;">SEMUA HUTANG LUNAS!</div>
+          <div>Tidak ada teman yang berhutang ke kamu saat ini. Semua piutang aman terkendali!</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 5: WISHLIST QUESTS -->
+    <div id="tab-quest" class="mc-tab-view">
+      <section class="quest-box">
+        <div class="quest-header">
+          <span class="quest-title">
+            <span>🏆</span> QUEST: TARGET BELI BARANG (MILESTONE WISHLIST):
+          </span>
+          <button class="mc-btn mc-btn-purple" onclick="window.App.openAddQuestModal()">
+            + TAMBAH TARGET
+          </button>
+        </div>
+
+        <!-- Proteksi Uang Dingin vs Uang Panas pada Wishlist -->
+        <div id="quest-money-notice-container" style="margin-bottom: 4px;"></div>
+
+        <div id="quest-items-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 6: KATALOG & HARGA PRODUK (OWNER CONTROL) -->
+    <div id="tab-products" class="mc-tab-view">
+      <section class="mc-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <h3 style="margin: 0; font-family: var(--mc-pixel-font); font-size: 1.05rem; color: var(--mc-gold);">
+              📦 PENGATURAN KATALOG &amp; HARGA PRODUK
+            </h3>
+            <span style="font-size: 0.78rem; opacity: 0.85;">
+              Atur harga jual, modal pokok pulsa, jatah admin, posisi urutan, dan kontrol produk yang tampil ke buyer.
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="mc-btn mc-btn-green" onclick="window.App.openProductModal()">
+              ➕ TAMBAH PRODUK BARU
+            </button>
+            <button class="mc-btn" onclick="window.App.refreshProductsTab()">
+              🔄 REFRESH KATALOG
+            </button>
+          </div>
+        </div>
+
+        <!-- Info Card: Modal Pokok vs Jatah Admin -->
+        <div style="background: rgba(15, 23, 42, 0.65); border: 2px dashed #0284c7; border-radius: 6px; padding: 12px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.45;">
+          <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>💡</span> ATURAN PERHITUNGAN MODAL &amp; ADMIN:
+          </div>
+          <div>• <strong>Harga Buyer = Modal Pokok + Jatah Admin</strong> (contoh: Modal Rp 10.000 + Admin Rp 4.000 = Total Rp 14.000).</div>
+          <div>• <strong>Hanya Modal Pokok yang mengurangi saldo Kios!</strong> Jatah Admin tidak memotong modal dan langsung jadi laba bersihmu saat di-ACC.</div>
+          <div>• Gunakan tombol ⬆️ / ⬇️ di kolom <em>Posisi</em> untuk memindah urutan produk yang pertama kali dilihat pembeli.</div>
+        </div>
+
+        <!-- Table of Products -->
+        <div class="mc-table-wrapper">
+          <table class="mc-table">
+            <thead>
+              <tr>
+                <th style="width: 85px; text-align: center;">POSISI</th>
+                <th>NAMA PRODUK</th>
+                <th style="text-align: right;">MODAL POKOK</th>
+                <th style="text-align: right;">JATAH ADMIN</th>
+                <th style="text-align: right;">HARGA BUYER</th>
+                <th style="text-align: center;">STATUS TAMPIL</th>
+                <th style="text-align: center; width: 150px;">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="owner-products-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 20px;">
+                  Memuat katalog produk...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- MINECRAFT MODAL: PENGATURAN DOMPET MODAL PULSA -->
+  <div id="mc-pulsa-modal" class="mc-modal-overlay">
+    <div class="mc-modal-box">
+      <div class="mc-modal-title">
+        🔥 PENGATURAN MODAL KIOS PULSA
+      </div>
+
+      <div class="pulsa-modal-summary">
+        <div class="pulsa-modal-card">
+          <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 800;">MODAL KIOS AKTIF</span>
+          <div id="modal-info-uangpanas" style="color: #fb923c; font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp 0</div>
+          <span style="font-size: 0.7rem; opacity: 0.75;">Saldo Modal Operasional Jualan</span>
+        </div>
+        <div class="pulsa-modal-card">
+          <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 800;">TOTAL LABA PULSA</span>
+          <div id="modal-info-cuan" style="color: var(--mc-emerald); font-family: var(--mc-pixel-font); font-size: 1.15rem; margin-top: 4px;">Rp 0</div>
+          <span style="font-size: 0.7rem; opacity: 0.75;">Keuntungan Bersih Terkumpul</span>
+        </div>
+      </div>
+
+      <!-- Quick Add Modal -->
+      <div style="display: flex; gap: 8px;">
+        <button class="mc-btn mc-btn-green" style="flex: 1;" onclick="window.App.closePulsaModal(); window.App.tambahModalPrompt();" title="Tambah Modal Pulsa">
+          ➕ TAMBAH SALDO MODAL
+        </button>
+      </div>
+
+      <!-- Set Modal Pokok Awal -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">SET MODAL POKOK / DEPOSIT PULSA (RP):</label>
+        <span style="font-size: 0.74rem; opacity: 0.75;">Berapa modal pokok yang biasa kamu siapkan untuk deposit pulsa? (misal: 100000 atau 300000)</span>
+        <input type="number" id="input-base-modal" class="modal-input" placeholder="0">
+        <button class="mc-btn mc-btn-gold" style="margin-top: 4px; padding: 7px;" onclick="window.App.saveBaseModal()">
+          💾 SIMPAN MODAL POKOK
+        </button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button class="mc-btn" onclick="window.App.closePulsaModal()">
+          TUTUP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINECRAFT MODAL: KONFIRMASI BAYAR / CICIL HUTANG -->
+  <div id="mc-debt-modal" class="mc-modal-overlay">
+    <div class="mc-modal-box">
+      <div class="mc-modal-title">
+        💰 KONFIRMASI BAYAR HUTANG: <span id="modal-debtor-name" style="color: var(--mc-gold);"></span>
+      </div>
+
+      <div style="font-size: 0.88rem; font-weight: 600;">
+        Sisa hutang saat ini: <strong id="modal-remaining-amt" style="color: var(--mc-gold); font-family: var(--mc-pixel-font); font-size: 0.9rem;">Rp 0</strong>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.85;">BERAPA YANG DIBAYAR DULU? (BISA CICIL / LUNAS):</label>
+        <input type="number" id="modal-pay-amount" class="modal-input" placeholder="0">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.85;">UANGNYA DITERIMA MASUK KE MANA?:</label>
+        <select id="modal-dest-wallet" class="modal-select">
+          <option value="DANA">📱 DANA</option>
+          <option value="GoPay">📱 GoPay</option>
+          <option value="Dompet">💵 Dompet (Uang Fisik / Tunai)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button class="mc-btn" onclick="window.App.closeModal()">
+          BATAL
+        </button>
+        <button class="mc-btn mc-btn-green" onclick="window.App.confirmPaymentSubmit()">
+          ⛏️ TERIMA UANG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINECRAFT MODAL: RIWAYAT TRANSAKSI PELANGGAN -->
+  <div id="mc-customer-history-modal" class="mc-modal-overlay">
+    <div class="mc-modal-box" style="max-width: 580px;">
+      <div class="mc-modal-title">
+        📜 BUKU RIWAYAT PELANGGAN: <span id="cust-modal-name" style="color: var(--mc-gold);"></span>
+      </div>
+      <div class="hero-stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 6px;">
+        <div class="stat-card" style="padding: 10px;">
+          <span class="stat-label">💰 TOTAL BELI PULSA</span>
+          <div id="cust-modal-total-spend" style="font-size: 1rem; color: #4de0eb; font-family: var(--mc-pixel-font);">Rp 0</div>
+        </div>
+        <div class="stat-card" style="padding: 10px;">
+          <span class="stat-label">⏳ SISA HUTANG SAAT INI</span>
+          <div id="cust-modal-debt" style="font-size: 1rem; color: #f59e0b; font-family: var(--mc-pixel-font);">Rp 0 0 0</div>
+        </div>
+      </div>
+      <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; margin-top: 4px;">
+        DAFTAR CATATAN TRANSAKSI PELANGGAN INI:
+      </div>
+      <div class="mc-table-wrapper" style="max-height: 250px; overflow-y: auto;">
+        <table class="mc-table">
+          <thead>
+            <tr>
+              <th>WAKTU</th>
+              <th>KETERANGAN</th>
+              <th>NOMINAL</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="cust-modal-table-body">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button class="mc-btn" onclick="window.App.closeCustomerHistoryModal()">
+          TUTUP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINECRAFT MODAL: TAMBAH / EDIT PRODUK KATALOG -->
+  <div id="mc-product-modal" class="mc-modal-overlay">
+    <div class="mc-modal-box" style="max-width: 520px;">
+      <div class="mc-modal-title" id="prod-modal-title">
+        📦 TAMBAH PRODUK BARU
+      </div>
+
+      <input type="hidden" id="prod-edit-id" value="">
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">NAMA PRODUK:</label>
+        <input type="text" id="prod-name" class="modal-input" placeholder="Contoh: Saldo DANA 10k, Pulsa Tsel 15k, dll">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 700; color: #fb923c;">🔥 MODAL POKOK KIOS (RP):</label>
+          <span style="font-size: 0.72rem; opacity: 0.75;">Yang dipotong dari saldo modal</span>
+          <input type="number" id="prod-modal" class="modal-input" placeholder="10000" oninput="window.App.calcProductModalPreview()">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--mc-emerald);">💎 JATAH ADMIN / CUAN (RP):</label>
+          <span style="font-size: 0.72rem; opacity: 0.75;">Keuntungan bersih owner</span>
+          <input type="number" id="prod-admin" class="modal-input" placeholder="4000" oninput="window.App.calcProductModalPreview()">
+        </div>
+      </div>
+
+      <!-- Preview Total Price -->
+      <div style="background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;">TOTAL HARGA JUAL BUYER:</span>
+        <span id="prod-total-preview" style="font-family: var(--mc-pixel-font); font-size: 1.15rem; color: var(--mc-gold);">Rp 0</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">DESKRIPSI / KETERANGAN TAMBAHAN:</label>
+        <input type="text" id="prod-desc" class="modal-input" placeholder="Contoh: Saldo DANA 10.000 langsung masuk (admin 4k)">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">VISIBILITAS BUYER:</label>
+          <select id="prod-active" class="modal-select">
+            <option value="true">🟢 Tampilkan ke Buyer</option>
+            <option value="false">👁️‍🗨️ Sembunyikan dari Buyer</option>
+          </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 700; opacity: 0.9;">NOMOR URUTAN (SORT ORDER):</label>
+          <input type="number" id="prod-sort" class="modal-input" placeholder="1" value="1">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button class="mc-btn" onclick="window.App.closeProductModal()">
+          BATAL
+        </button>
+        <button class="mc-btn mc-btn-green" onclick="window.App.saveProductModal()">
+          💾 SIMPAN PRODUK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THEME DIALOG: pengganti prompt() / confirm() bawaan browser -->
+  <div id="app-dialog-overlay" class="mc-modal-overlay" role="presentation">
+    <div class="mc-modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
+      <div class="mc-modal-title" id="app-dialog-title">KONFIRMASI</div>
+      <div class="app-dialog-message" id="app-dialog-message"></div>
+      <div class="app-dialog-field" id="app-dialog-field">
+        <label class="app-dialog-label" id="app-dialog-label" for="app-dialog-input">NILAI</label>
+        <input id="app-dialog-input" class="modal-input" type="text" autocomplete="off">
+        <select id="app-dialog-select" class="modal-input" style="display:none;"></select>
+        <div class="app-dialog-hint" id="app-dialog-hint"></div>
+        <div class="app-dialog-error" id="app-dialog-error"></div>
+      </div>
+      <div class="app-dialog-actions">
+        <button class="mc-btn mc-btn-dark" id="app-dialog-cancel" type="button">BATAL</button>
+        <button class="mc-btn mc-btn-green" id="app-dialog-ok" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toast-box" class="mc-toast-box"></div>
+
+  <!-- Supabase client (CDN) + modul aplikasi -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="db.js"></script>
+  <script src="buyer.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

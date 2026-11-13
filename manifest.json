@@ -1,0 +1,18 @@
+{
+  "name": "KeuanganKu Store - Kios Pulsa & Catatan Keuangan",
+  "short_name": "KeuanganKu",
+  "description": "Kios Pulsa & Catatan Keuangan Minecraft Edition",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#14532d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

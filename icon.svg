@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="skyGlow" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#2d5588"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- App Background -->
+  <rect width="512" height="512" rx="110" fill="url(#skyGlow)"/>
+  <rect width="512" height="512" rx="110" fill="none" stroke="#38bdf8" stroke-width="8" stroke-opacity="0.3"/>
+
+  <!-- Isometric Pixel Minecraft Grass Block -->
+  <g transform="translate(106, 90) scale(9.5)" filter="url(#shadow)">
+    <!-- Top Face (Grass) -->
+    <polygon points="16,4 30,11 16,18 2,11" fill="#5b8731" stroke="#2e4a15" stroke-width="0.8"/>
+    <polygon points="16,6 27,11.5 16,17 5,11.5" fill="#74a333"/>
+    
+    <!-- Grass Details -->
+    <rect x="14" y="9" width="3" height="2" fill="#47e268" transform="skewX(-45) rotate(25)"/>
+    <rect x="18" y="11" width="3" height="2" fill="#86efac" transform="skewX(-45) rotate(25)"/>
+
+    <!-- Left Face (Dirt) -->
+    <polygon points="2,11 16,18 16,30 2,23" fill="#866043" stroke="#2e4a15" stroke-width="0.8"/>
+    <!-- Left Grass Drips -->
+    <polygon points="2,11 16,18 16,21 13,20 11,22 8,19 6,21 2,15" fill="#5b8731"/>
+
+    <!-- Right Face (Darker Dirt) -->
+    <polygon points="16,18 30,11 30,23 16,30" fill="#6d4c33" stroke="#2e4a15" stroke-width="0.8"/>
+    <!-- Right Grass Drips -->
+    <polygon points="16,18 30,11 30,15 27,20 24,19 21,22 18,20 16,21" fill="#4a6e27"/>
+
+    <!-- Embedded Emerald Gem in Front Center -->
+    <polygon points="16,18 21,24 16,30 11,24" fill="#047857" stroke="#064e3b" stroke-width="0.5"/>
+    <polygon points="16,19 20,24 16,29 12,24" fill="#10b981"/>
+    <polygon points="16,20 19,24 16,28 13,24" fill="#47e268"/>
+    <polygon points="16,21 18,23 16,25 14,23" fill="#ffffff"/>
+  </g>
+</svg>
