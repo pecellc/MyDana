@@ -3137,11 +3137,12 @@ textarea,
             required>
           <label class="buyer-form-label" for="buyer-order-payment">💳 METODE PEMBAYARAN <span
               style="color:var(--mc-redstone);">*</span></label>
-          <input type="hidden" id="buyer-order-payment" value="dana">
-          <div class="buyer-payment-static" id="buyer-order-payment-display" aria-label="Kategori pembayaran: DANA">
-            <span class="buyer-payment-icon">📱</span>
-            <span class="buyer-payment-name">DANA</span>
-            <span class="buyer-payment-note">Transfer online • hanya DANA</span>
+          <select id="buyer-order-payment" class="modal-input">
+            <option value="dana">📱 DANA (Transfer Online)</option>
+            <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
+          </select>
+          <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+            💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
           </div>
           <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
           <select id="buyer-order-timing" class="modal-input">
@@ -3238,11 +3239,12 @@ textarea,
           <div>
             <label class="buyer-form-label" for="buyer-popup-payment">💳 METODE PEMBAYARAN <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <input type="hidden" id="buyer-popup-payment" value="dana">
-            <div class="buyer-payment-static" id="buyer-popup-payment-display" aria-label="Kategori pembayaran: DANA">
-              <span class="buyer-payment-icon">📱</span>
-              <span class="buyer-payment-name">DANA</span>
-              <span class="buyer-payment-note">Transfer online • hanya DANA</span>
+            <select id="buyer-popup-payment" class="modal-input">
+              <option value="dana">📱 DANA (Transfer Online)</option>
+              <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
+            </select>
+            <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+              💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
             </div>
           </div>
 
