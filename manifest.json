@@ -1,5 +1,5 @@
 {
-  "id": "/keuanganku-store/",
+  "id": "?source=pwa",
   "name": "MyDana - Kios Pulsa & Catatan Keuangan",
   "short_name": "MyDana",
   "description": "Kios Pulsa & Catatan Keuangan Minecraft Edition HUD",
@@ -20,6 +20,12 @@
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
