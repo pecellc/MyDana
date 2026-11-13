@@ -1,6 +1,8 @@
 # Logs & temp
 *.log
 test_write.txt
+gen-assets.ps1
+gen-icons.ps1
 
 # Project memory & credentials (private)
 GEMINI.md

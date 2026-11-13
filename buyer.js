@@ -64,7 +64,7 @@
           if (perm === 'granted') {
             toast('🔔 Notifikasi browser berhasil diaktifkan!', 'success');
             bar.style.display = 'none';
-            sendBrowserNotification('KeuanganKu Store', 'Notifikasi aktif! Kamu akan diingatkan saat pesanan di-ACC dan saat mendekati jatuh tempo.');
+            sendBrowserNotification('MyDana', 'Notifikasi aktif! Kamu akan diingatkan saat pesanan di-ACC dan saat mendekati jatuh tempo.');
           } else {
             bar.style.display = 'none';
           }

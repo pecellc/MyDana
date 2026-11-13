@@ -1,18 +1,59 @@
 {
-  "name": "KeuanganKu Store - Kios Pulsa & Catatan Keuangan",
-  "short_name": "KeuanganKu",
-  "description": "Kios Pulsa & Catatan Keuangan Minecraft Edition",
+  "id": "/keuanganku-store/",
+  "name": "MyDana - Kios Pulsa & Catatan Keuangan",
+  "short_name": "MyDana",
+  "description": "Kios Pulsa & Catatan Keuangan Minecraft Edition HUD",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1e3a5f",
-  "theme_color": "#14532d",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a5f",
   "orientation": "portrait",
+  "categories": [
+    "finance",
+    "business",
+    "utilities"
+  ],
   "icons": [
     {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "icon.svg",
-      "sizes": "192x192 512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "MyDana Kios Pulsa HUD di HP"
+    },
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "MyDana Dashboard Pemilik di Laptop"
     }
   ]
 }
