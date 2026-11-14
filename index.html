@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -219,6 +219,26 @@
           <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
             💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
           </div>
+          <div id="buyer-order-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
+            📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
+          </div>
+          <div id="buyer-order-proof-group" style="margin-top: 6px;">
+            <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>📸 BUKTI TRANSFER (SS DANA)</span>
+              <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
+            </label>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="file" id="buyer-order-proof-file" accept="image/*" style="display:none;">
+              <button type="button" class="mc-btn mc-btn-diamond" id="buyer-order-proof-btn" style="padding:6px 12px; font-size:7.5px;">
+                📁 PILIH FOTO / SS
+              </button>
+              <span id="buyer-order-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
+            </div>
+            <div id="buyer-order-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
+              <img id="buyer-order-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
+              <button type="button" id="buyer-order-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
+            </div>
+          </div>
           <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
           <select id="buyer-order-timing" class="modal-input">
             <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
@@ -321,6 +341,26 @@
             <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
               💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
             </div>
+            <div id="buyer-popup-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
+              📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
+            </div>
+            <div id="buyer-popup-proof-group" style="margin-top: 6px;">
+              <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>📸 BUKTI TRANSFER (SS DANA)</span>
+                <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
+              </label>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="file" id="buyer-popup-proof-file" accept="image/*" style="display:none;">
+                <button type="button" class="mc-btn mc-btn-diamond" id="buyer-popup-proof-btn" style="padding:6px 12px; font-size:7.5px;">
+                  📁 PILIH FOTO / SS
+                </button>
+                <span id="buyer-popup-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
+              </div>
+              <div id="buyer-popup-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
+                <img id="buyer-popup-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
+                <button type="button" id="buyer-popup-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -418,6 +458,46 @@
             </div>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- MINECRAFT MODAL: KIRIM / GANTI BUKTI TRANSFER (BUYER) -->
+    <div id="buyer-proof-upload-modal" class="mc-modal-overlay">
+      <div class="mc-modal-box buyer-popup-box" style="max-width: 480px; width: 95%;">
+        <div class="mc-modal-title"
+          style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
+          <span style="display:flex; align-items:center; gap:8px;">
+            <span>📸</span> <span>KIRIM BUKTI TRANSFER</span>
+          </span>
+          <button type="button" id="buyer-proof-upload-close-x" class="mc-modal-close-btn" title="Tutup">✕</button>
+        </div>
+
+        <p style="font-size: 0.78rem; color: #cbd5e1; margin: 0 0 10px; line-height: 1.45;">
+          Upload screenshot bukti transfer DANA kamu. Owner kios akan meninjau bukti ini dan meng-ACC uang masuk agar pesananmu beres/lunas.
+        </p>
+
+        <div style="background: rgba(15, 23, 42, 0.7); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem;">
+          <div style="color: #94a3b8; font-size:0.72rem; margin-bottom: 2px;">Pesanan:</div>
+          <strong id="buyer-proof-order-desc" style="color: #f8fafc; font-size: 0.88rem;">-</strong>
+        </div>
+
+        <input type="file" id="buyer-proof-modal-file-input" accept="image/*" style="display:none;">
+
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+          <button type="button" class="mc-btn mc-btn-diamond" id="buyer-proof-modal-select-btn" style="padding: 7px 14px; font-size: 8px;">
+            📁 PILIH FOTO / SS
+          </button>
+          <span id="buyer-proof-modal-file-name" style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">Atau tekan Ctrl+V untuk tempel SS</span>
+        </div>
+
+        <div id="buyer-proof-modal-preview-wrap" style="display: none; margin-bottom: 12px; text-align: center; background: #000; border: 2px solid var(--mc-gold); border-radius: 4px; padding: 6px; max-height: 240px; overflow: hidden;">
+          <img id="buyer-proof-modal-preview-img" src="" alt="Preview Bukti Transfer" style="max-height: 220px; max-width: 100%; object-fit: contain;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <button type="button" class="mc-btn mc-btn-dark" id="buyer-proof-modal-cancel">BATAL</button>
+          <button type="button" class="mc-btn mc-btn-green" id="buyer-proof-modal-submit" disabled>📤 KIRIM BUKTI KE OWNER</button>
+        </div>
       </div>
     </div>
   </section>
@@ -779,23 +859,22 @@
         </p>
 
         <div class="mc-table-wrap">
-          <table>
+          <table class="mc-orders-table">
             <thead>
               <tr>
-                <th>WAKTU</th>
-                <th>BUYER</th>
-                <th>PRODUK / PESANAN</th>
-                <th>NOMINAL</th>
-                <th>PEMBAYARAN</th>
-                <th>CATATAN BUYER</th>
-                <th>KETERANGAN</th>
-                <th>STATUS</th>
-                <th style="text-align: right;">AKSI</th>
+                <th style="min-width: 140px; text-align: center;" class="table-col-action">⚡ AKSI</th>
+                <th style="min-width: 105px;">STATUS</th>
+                <th style="min-width: 110px;">BUYER</th>
+                <th style="min-width: 140px;">PRODUK / NOMINAL</th>
+                <th style="min-width: 160px;">PEMBAYARAN &amp; BUKTI TF</th>
+                <th style="min-width: 130px;">CATATAN BUYER</th>
+                <th style="min-width: 130px;">KETERANGAN OWNER</th>
+                <th style="min-width: 110px;">WAKTU</th>
               </tr>
             </thead>
             <tbody id="owner-orders-body">
               <tr>
-                <td colspan="9" style="text-align: center; padding: 20px; color: #777;">
+                <td colspan="8" style="text-align: center; padding: 20px; color: #777;">
                   Memuat pesanan...
                 </td>
               </tr>
@@ -1172,6 +1251,44 @@
         <button class="mc-btn mc-btn-green" onclick="window.App.saveProductModal()">
           💾 SIMPAN PRODUK
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINECRAFT MODAL: TINJAU BUKTI TRANSFER SCREENSHOT (OWNER & BUYER) -->
+  <div id="mc-proof-viewer-modal" class="mc-modal-overlay">
+    <div class="mc-modal-box" style="max-width: 520px; width: 95%;">
+      <div class="mc-modal-title" style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span>📸</span> <span>TINJAU BUKTI TRANSFER</span>
+        </span>
+        <button type="button" class="mc-modal-close-btn" onclick="window.App?.closeProofViewer ? window.App.closeProofViewer() : (document.getElementById('mc-proof-viewer-modal').classList.remove('active'))">✕</button>
+      </div>
+
+      <div style="background: rgba(15, 23, 42, 0.75); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+          <span style="color: #94a3b8;">Pembeli:</span>
+          <strong id="proof-viewer-buyer" style="color: #f8fafc;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+          <span style="color: #94a3b8;">Pesanan:</span>
+          <strong id="proof-viewer-product" style="color: #f8fafc;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+          <span style="color: #94a3b8;">Nominal Transfer:</span>
+          <strong id="proof-viewer-amount" style="color: var(--mc-gold); font-size: 0.95rem;">-</strong>
+        </div>
+      </div>
+
+      <!-- Frame Gambar Screenshot Bukti TF -->
+      <div style="background: #000; border: 3px solid var(--mc-gold); border-radius: 4px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 220px; max-height: 60vh; margin-bottom: 14px; position: relative;">
+        <img id="proof-viewer-img" src="" alt="Bukti Transfer" style="max-width: 100%; max-height: 60vh; object-fit: contain; display: block;">
+        <div id="proof-viewer-empty" style="display:none; color:#fbbf24; font-size:0.8rem; padding: 20px; text-align: center;">Belum ada gambar bukti transfer</div>
+      </div>
+
+      <!-- Tombol Aksi di Modal Tinjauan Bukti TF -->
+      <div id="proof-viewer-actions" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Populated dynamically -->
       </div>
     </div>
   </div>

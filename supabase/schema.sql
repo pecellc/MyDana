@@ -326,6 +326,7 @@ create table if not exists public.orders (
   product_name text not null,
   amount numeric not null default 0 check (amount >= 0),
   admin_fee numeric not null default 0 check (admin_fee >= 0),
+  payment_proof text,
   status text not null default 'pending'
     check (status in ('pending', 'confirmed', 'completed', 'cancelled')),
   notes text default '',
@@ -354,6 +355,7 @@ alter table public.orders add column if not exists owner_note text;
 alter table public.orders add column if not exists responded_at timestamptz;
 alter table public.orders add column if not exists responded_by uuid references auth.users(id) on delete set null;
 alter table public.orders add column if not exists admin_fee numeric not null default 0;
+alter table public.orders add column if not exists payment_proof text;
 
 -- Pesanan ditolak otomatis kalau MODAL POKOK (di luar jatah admin) melebihi
 -- saldo modal kios. Reserved dihitung dari modal pokok order pending+confirmed.

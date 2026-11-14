@@ -4308,13 +4308,35 @@
           const status = statusMap[order.status] || { label: order.status, badge: 'badge-category' };
           const method = paymentMap[order.payment_method] || 'Cash';
           const isDanaNow = order.payment_method === 'dana' && order.pay_timing === 'now';
+          const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
+          const hasProof = !!proof;
+
+          let proofHtml = '';
+          if (hasProof) {
+            proofHtml = `
+              <div style="margin-top:4px;">
+                <button type="button" class="mc-btn mc-btn-diamond" style="padding:4px 8px; font-size:7.5px; display:inline-flex; align-items:center; gap:4px;" onclick="window.App.viewProof('${order.id}')" title="Klik untuk meninjau screenshot bukti transfer">
+                  📸 LIHAT BUKTI TF
+                </button>
+              </div>
+            `;
+          } else if (order.payment_method === 'dana' || order.pay_timing === 'later') {
+            proofHtml = `
+              <div style="margin-top:4px; font-size:0.68rem; color:#fbbf24;">
+                ⚠️ Belum ada bukti TF (Nyicil)
+              </div>
+            `;
+          }
+
           const payHtml = order.pay_timing === 'later'
             ? `${escapeHtml(method)}<br><span style="color:#fbbf24;">⏰ ${escapeHtml(fmtDay(order.due_date))}</span>`
             : (isDanaNow 
-                ? `${escapeHtml(method)}<br><span style="color:#38bdf8;font-size:0.68rem;font-weight:700;">(Cek DANA)</span>`
+                ? `${escapeHtml(method)}<br><span style="color:#38bdf8;font-size:0.68rem;font-weight:700;">(DANA Online)</span>`
                 : `${escapeHtml(method)}<br><span style="color:#94a3b8;">sekarang</span>`);
 
           let actions = '';
+          const loggedItem = state.items.find(it => it.orderId === order.id);
+          const isDebtOrder = loggedItem ? !!loggedItem.isDebt : (order.pay_timing === 'later' || order.payment_method === 'cash');
 
           if (order.status === 'pending') {
             const hasExplicitAdmin =
@@ -4334,40 +4356,52 @@
             }
             if (orderProfit > Number(order.amount)) orderProfit = Number(order.amount);
             const orderNeededModal = Math.max(0, Number(order.amount) - orderProfit);
-            // Jangan bandingkan dengan `modal` (sudah dipotong order ini sendiri).
-            // Cukup cek terhadap total modal: kalau modal pokok order ini lebih
-            // besar dari seluruh saldo, memang mustahil. Sisanya biar DB yang
-            // memutuskan (termasuk pesanan lain yang masih tertahan).
             const enough = orderNeededModal <= totalModal + 0.5;
+
             actions = `
-              <button class="mc-btn mc-btn-green" style="padding:3px 7px;font-size:7px;${enough ? '' : 'opacity:.4;cursor:not-allowed;'}"
-                ${enough ? '' : `disabled title="Modal pokok ${formatRupiah(orderNeededModal)} melebihi total modal ${formatRupiah(totalModal)}"`}
-                onclick="window.App.acceptOrder('${order.id}')">ACC</button>
-              <button class="mc-btn" style="padding:3px 7px;font-size:7px;background:#991b1b;color:#fff;margin-left:3px;"
-                onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+              <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                <button class="mc-btn mc-btn-green mc-btn-acc-lg" style="${enough ? '' : 'opacity:.4;cursor:not-allowed;'}"
+                  ${enough ? '' : `disabled title="Modal pokok ${formatRupiah(orderNeededModal)} melebihi total modal ${formatRupiah(totalModal)}"`}
+                  onclick="window.App.acceptOrder('${order.id}')">ACC</button>
+                <button class="mc-btn mc-btn-decline-lg"
+                  onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+              </div>
             `;
           } else if (order.status === 'confirmed') {
             actions = `
-              <button class="mc-btn mc-btn-gold" style="padding:3px 7px;font-size:7px;"
-                onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
-              <button class="mc-btn" style="padding:3px 7px;font-size:7px;background:#991b1b;color:#fff;margin-left:3px;"
-                onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+              <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                ${isDebtOrder ? `
+                  <button class="mc-btn mc-btn-green" style="padding:6px 10px; font-size:7.5px; font-weight:700; background:#059669;"
+                    onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA sudah masuk, selesaikan piutang">
+                    💰 ACC UANG MASUK
+                  </button>
+                ` : ''}
+                <button class="mc-btn mc-btn-gold" style="padding:6px 10px; font-size:7.5px;"
+                  onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
+                <button class="mc-btn mc-btn-decline-lg" style="padding:6px 8px; font-size:7.5px;"
+                  onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+              </div>
             `;
           } else {
-            actions = '<span style="color:#64748b;font-size:0.7rem;">-</span>';
+            actions = '<span style="color:#64748b;font-size:0.75rem;">-</span>';
           }
 
           html += `
             <tr>
-              <td style="white-space:nowrap;">${formatDateTime(order.created_at)}</td>
+              <td class="table-col-action" style="white-space:nowrap; text-align:center;">${actions}</td>
+              <td style="white-space:nowrap;"><span class="${status.badge}">${status.label}</span></td>
               <td><strong>${escapeHtml(order.buyer_username || '-')}</strong></td>
-              <td><strong>${escapeHtml(order.product_name)}</strong></td>
-              <td style="color:var(--mc-gold);font-weight:700;white-space:nowrap;">${formatRupiah(order.amount)}</td>
-              <td style="font-size:0.72rem;white-space:nowrap;">${payHtml}</td>
-              <td style="max-width:150px;font-size:0.72rem;color:#94a3b8;">${escapeHtml(order.notes || '-')}</td>
-              <td style="max-width:170px;font-size:0.72rem;color:#cbd5e1;">${escapeHtml(order.owner_note || '-')}</td>
-              <td><span class="${status.badge}">${status.label}</span></td>
-              <td style="text-align:right;white-space:nowrap;">${actions}</td>
+              <td>
+                <strong>${escapeHtml(order.product_name)}</strong><br>
+                <span style="color:var(--mc-gold);font-weight:700;font-size:0.85rem;">${formatRupiah(order.amount)}</span>
+              </td>
+              <td style="font-size:0.72rem;white-space:nowrap;">
+                ${payHtml}
+                ${proofHtml}
+              </td>
+              <td style="max-width:140px;font-size:0.72rem;color:#94a3b8;">${escapeHtml(order.notes || '-')}</td>
+              <td style="max-width:160px;font-size:0.72rem;color:#cbd5e1;">${escapeHtml(order.owner_note || '-')}</td>
+              <td style="white-space:nowrap;font-size:0.72rem;color:#94a3b8;">${formatDateTime(order.created_at)}</td>
             </tr>
           `;
         });
@@ -4380,7 +4414,7 @@
       }
     },
 
-    acceptOrder: async function (orderId) {
+    acceptOrder: async function (orderId, options) {
       let order = (state.ownerOrders || []).find(o => String(o.id) === String(orderId));
       if (!order && window.KeuanganDB?.listAllOrders) {
         try {
@@ -4406,7 +4440,7 @@
 
       // Sesuai aturan owner: Jika buyer bayar pakai CASH atau bayar nanti/tempo, masuk kategori nyicil (piutang)
       const isCash = String(order.payment_method || '').toLowerCase() === 'cash' || String(order.payment_method || '').toLowerCase() === 'tunai';
-      const isDebt = order.pay_timing === 'later' || isCash;
+      let isDebt = order.pay_timing === 'later' || isCash;
 
       // 1. HITUNG MODAL POKOK VS UANG ADMIN (CUAN) TERLEBIH DAHULU
       const hasExplicitAdmin =
@@ -4439,23 +4473,31 @@
         return;
       }
 
-      // 3. KONFIRMASI PEMBAYARAN DANA (JIKA BUYER BAYAR SEKARANG LEWAT DANA)
-      if (order.payment_method === 'dana' && !isDebt) {
-        const confirmedDana = await uiConfirm({
-          title: '📱 KONFIRMASI SALDO DANA',
+      // 3. KONFIRMASI PEMBAYARAN DANA / STATUS NYICIL
+      const isDana = String(order.payment_method || '').toLowerCase() === 'dana';
+      if (options && options.verified === true) {
+        isDebt = false;
+      } else if (options && options.asDebt === true) {
+        isDebt = true;
+      } else if (isDana && order.pay_timing !== 'later') {
+        const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
+        const hasProof = !!proof;
+
+        const payDecision = await uiPrompt({
+          title: '📱 TINJAU PEMBAYARAN DANA',
           message:
-            `Pembeli (${buyerName}) membayar DANA sebesar ${formatRupiah(orderAmt)}.\n\n` +
-            `Apakah uang ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH benar-benar masuk ke akun DANA kamu?\n\n` +
-            `• Pilih ACC jika saldo DANA sudah masuk.\n` +
-            `• Pilih BATAL jika belum masuk (pesanan tidak di-ACC).`,
-          okText: '✅ SUDAH MASUK',
-          cancelText: 'BATAL',
-          danger: false
+            `Pembeli (${buyerName}) memesan ${order.product_name} (${formatRupiah(orderAmt)}) via DANA.\n` +
+            (hasProof ? '📸 Pembeli SUDAH melampirkan screenshot bukti transfer.\n\n' : '⚠️ Pembeli BELUM melampirkan screenshot bukti transfer.\n\n') +
+            'Pilih status penerimaan uang transfer:',
+          options: [
+            { value: 'verified', label: '✅ SUDAH MASUK (Lunas / Beres)' },
+            { value: 'debt', label: '⏳ BELUM MASUK (Hitung Nyicil / Piutang)' }
+          ],
+          okText: 'LANJUTKAN ACC',
+          cancelText: 'BATAL'
         });
-        if (!confirmedDana) {
-          showToast('⚠️ Pesanan BELUM di-ACC. Cek mutasi DANA dulu; jika uang belum masuk, jangan di-ACC atau klik TOLAK!', 'gold');
-          return;
-        }
+        if (!payDecision) return;
+        isDebt = payDecision === 'debt';
       }
 
       // 4. BERI KESEMPATAN OWNER MENENTUKAN / MENYESUAIKAN UANG ADMIN (CUAN)
@@ -4624,6 +4666,156 @@
       });
       if (note === null) return;
       await window.App.setOrderStatus(orderId, 'completed', String(note).trim());
+    },
+
+    acceptOrderFromProof: async function (orderId, isVerified) {
+      this.closeProofViewer();
+      await this.acceptOrder(orderId, isVerified ? { verified: true } : { asDebt: true });
+    },
+
+    viewProof: function (orderId) {
+      AudioEngine.play('click');
+      let order = (state.ownerOrders || []).find(o => String(o.id) === String(orderId));
+      if (!order && state.items) {
+        const it = state.items.find(i => i.orderId === orderId);
+        if (it) {
+          order = {
+            id: orderId,
+            buyer_username: it.debtorName || it.pulsaCustomer,
+            product_name: it.desc,
+            amount: it.amount,
+            status: it.isDebt ? 'confirmed' : 'completed'
+          };
+        }
+      }
+
+      const modal = document.getElementById('mc-proof-viewer-modal');
+      if (!modal) return;
+
+      const buyerEl = document.getElementById('proof-viewer-buyer');
+      const productEl = document.getElementById('proof-viewer-product');
+      const amountEl = document.getElementById('proof-viewer-amount');
+      const imgEl = document.getElementById('proof-viewer-img');
+      const emptyEl = document.getElementById('proof-viewer-empty');
+      const actionsEl = document.getElementById('proof-viewer-actions');
+
+      const rawBuyer = order?.buyer_username || 'Pelanggan';
+      const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
+      const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order || orderId) : order?.payment_proof;
+
+      if (buyerEl) buyerEl.textContent = buyerName;
+      if (productEl) productEl.textContent = order?.product_name || '-';
+      if (amountEl) amountEl.textContent = order ? formatRupiah(order.amount) : '-';
+
+      if (proof) {
+        if (imgEl) {
+          imgEl.src = proof;
+          imgEl.style.display = 'block';
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+      } else {
+        if (imgEl) imgEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
+      }
+
+      if (actionsEl) {
+        if (order?.status === 'pending') {
+          actionsEl.innerHTML = `
+            <button class="mc-btn mc-btn-green mc-btn-acc-lg" onclick="window.App.acceptOrderFromProof('${order.id}', true)">
+              ✅ BUKTI BENAR - ACC UANG MASUK (BERES)
+            </button>
+            <button class="mc-btn mc-btn-gold mc-btn-acc-lg" onclick="window.App.acceptOrderFromProof('${order.id}', false)">
+              ⏳ BUKTI BELUM JELAS - ACC TAPI HITUNG NYICIL
+            </button>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px;">
+              <button class="mc-btn mc-btn-redstone mc-btn-decline-lg" onclick="window.App.closeProofViewer(); window.App.declineOrder('${order.id}')">
+                ✕ TOLAK PESANAN
+              </button>
+              <button class="mc-btn mc-btn-dark" onclick="window.App.closeProofViewer()">
+                TUTUP
+              </button>
+            </div>
+          `;
+        } else if (order?.status === 'confirmed') {
+          const loggedItem = state.items.find(it => it.orderId === order.id);
+          const isDebt = loggedItem ? !!loggedItem.isDebt : true;
+          actionsEl.innerHTML = `
+            ${isDebt ? `
+              <button class="mc-btn mc-btn-green mc-btn-acc-lg" onclick="window.App.closeProofViewer(); window.App.confirmDebtSettlementForOrder('${order.id}')">
+                💰 BUKTI BENAR - ACC UANG MASUK (LUNAS BERES)
+              </button>
+            ` : ''}
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px;">
+              <button class="mc-btn mc-btn-dark" onclick="window.App.closeProofViewer()">
+                TUTUP
+              </button>
+            </div>
+          `;
+        } else {
+          actionsEl.innerHTML = `
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button class="mc-btn mc-btn-dark" onclick="window.App.closeProofViewer()">
+                TUTUP
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      modal.classList.add('active');
+    },
+
+    closeProofViewer: function () {
+      const modal = document.getElementById('mc-proof-viewer-modal');
+      if (modal) modal.classList.remove('active');
+    },
+
+    confirmDebtSettlementForOrder: async function (orderId) {
+      let order = (state.ownerOrders || []).find(o => String(o.id) === String(orderId));
+      if (!order && window.KeuanganDB?.listAllOrders) {
+        try {
+          const fresh = await window.KeuanganDB.listAllOrders();
+          state.ownerOrders = fresh;
+          order = fresh.find(o => String(o.id) === String(orderId));
+        } catch (e) {}
+      }
+
+      const loggedItem = state.items.find(it => it.orderId === orderId);
+      const rawBuyer = order?.buyer_username || loggedItem?.debtorName || loggedItem?.pulsaCustomer || 'Pelanggan';
+      const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
+      const orderAmt = Number(order?.amount || loggedItem?.amount) || 0;
+
+      const ok = await uiConfirm({
+        title: '💰 ACC UANG MASUK (PELUNASAN)',
+        message:
+          `Konfirmasi bahwa uang transfer DANA sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke akun DANA kamu?\n\n` +
+          `• Piutang atas nama ${buyerName} akan otomatis lunas.\n` +
+          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas dompet DANA.\n` +
+          `• Status pesanan menjadi SELESAI (BERES).`,
+        okText: '✅ YA, UANG SUDAH MASUK',
+        cancelText: 'BATAL'
+      });
+      if (!ok) return;
+
+      // Jalankan pelunasan hutang
+      this.executeDebtRepayment(buyerName, orderAmt, 'DANA');
+
+      // Update status pesanan di database
+      try {
+        await this.setOrderStatus(orderId, 'completed', 'Pembayaran transfer DANA telah di-ACC & lunas. Pesanan beres! Terima kasih.');
+      } catch (e) {
+        console.warn('Gagal setOrderStatus completed:', e);
+      }
+
+      // Tandai item ledger lokal jika ada
+      if (loggedItem) {
+        loggedItem.isDebt = false;
+        saveData();
+        render();
+      }
+
+      await this.refreshOwnerOrders();
+      showToast(`🎉 Pembayaran DANA dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk dompet DANA.`, 'success');
     },
 
     setOrderStatus: async function (orderId, status, note, adminFee) {

@@ -13,6 +13,42 @@
   let currentModal = 0;
   let cachedOrders = [];
   let selectedOrderProduct = null;
+  let popupProofDataUrl = null;
+  let formProofDataUrl = null;
+  let activeProofOrderId = null;
+  let modalProofDataUrl = null;
+
+  function compressImage(file, maxDimension = 900, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Gagal memproses gambar screenshot'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+      reader.readAsDataURL(file);
+    });
+  }
 
   const PAYMENT_LABELS = {
     dana: '📱 DANA',
@@ -494,6 +530,34 @@
         </div>
         ${order.notes ? `<div class="buyer-order-notes">📝 ${esc(order.notes)}</div>` : ''}
         ${order.owner_note ? `<div class="buyer-order-owner-note" style="${isConfirmed ? 'color:#47e268;font-weight:700;' : ''}">💬 Pesan owner: ${esc(order.owner_note)}</div>` : ''}
+        ${(() => {
+          const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
+          if (proof) {
+            return `
+              <div style="display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                <button type="button" class="buyer-proof-badge" onclick="window.BuyerApp.viewProof('${order.id}')" title="Klik untuk melihat screenshot bukti transfer">
+                  📸 Bukti TF: [Lihat SS]
+                </button>
+                ${order.status !== 'completed' && order.status !== 'cancelled' ? `
+                  <button type="button" class="mc-btn mc-btn-dark" style="padding:2px 7px; font-size:7px;" onclick="window.BuyerApp.openProofModal('${order.id}')">
+                    Ganti SS
+                  </button>
+                ` : ''}
+              </div>
+            `;
+          }
+          if (order.status !== 'completed' && order.status !== 'cancelled') {
+            return `
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="mc-btn mc-btn-diamond" style="padding:4px 9px; font-size:7.5px; display:inline-flex; align-items:center; gap:4px;" onclick="window.BuyerApp.openProofModal('${order.id}')">
+                  📸 Kirim Bukti Transfer (SS)
+                </button>
+                <span style="font-size:0.68rem; color:#94a3b8;">(Dihitung nyicil sampai di-ACC)</span>
+              </div>
+            `;
+          }
+          return '';
+        })()}
         ${motifHtml}
       </div>
     `;
@@ -704,6 +768,15 @@
 
   function closeOrderModal() {
     selectedOrderProduct = null;
+    popupProofDataUrl = null;
+    const previewWrap = el('buyer-popup-proof-preview-wrap');
+    if (previewWrap) previewWrap.style.display = 'none';
+    const previewImg = el('buyer-popup-proof-preview');
+    if (previewImg) previewImg.src = '';
+    const nameEl = el('buyer-popup-proof-name');
+    if (nameEl) nameEl.textContent = 'Belum ada screenshot dipilih';
+    const fileInput = el('buyer-popup-proof-file');
+    if (fileInput) fileInput.value = '';
     el('buyer-order-modal')?.classList.remove('active');
   }
 
@@ -717,10 +790,49 @@
 
     const paySelect = el('buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
-    paySelect?.addEventListener('change', () => {
-      if (cashNote) {
-        cashNote.style.display = paySelect.value === 'cash' ? 'block' : 'none';
+    const danaNote = el('buyer-popup-dana-note');
+    const proofGroup = el('buyer-popup-proof-group');
+    const proofFile = el('buyer-popup-proof-file');
+    const proofBtn = el('buyer-popup-proof-btn');
+    const proofName = el('buyer-popup-proof-name');
+    const proofPreviewWrap = el('buyer-popup-proof-preview-wrap');
+    const proofPreviewImg = el('buyer-popup-proof-preview');
+    const proofClear = el('buyer-popup-proof-clear');
+
+    function syncPopupPayMethod() {
+      const isDana = paySelect?.value === 'dana';
+      if (cashNote) cashNote.style.display = !isDana ? 'block' : 'none';
+      if (danaNote) danaNote.style.display = isDana ? 'block' : 'none';
+      if (proofGroup) proofGroup.style.display = isDana ? 'block' : 'none';
+    }
+    paySelect?.addEventListener('change', syncPopupPayMethod);
+    syncPopupPayMethod();
+
+    proofBtn?.addEventListener('click', () => proofFile?.click());
+    proofFile?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        toast('⏳ Memproses screenshot bukti transfer...', 'gold');
+        const compressed = await compressImage(file, 900, 0.8);
+        popupProofDataUrl = compressed;
+        if (proofPreviewImg && proofPreviewWrap) {
+          proofPreviewImg.src = compressed;
+          proofPreviewWrap.style.display = 'block';
+        }
+        if (proofName) proofName.textContent = file.name;
+        toast('📸 Bukti transfer berhasil dilampirkan!', 'success');
+      } catch (err) {
+        toast('Gagal memproses gambar: ' + (err?.message || 'Coba lagi.'), 'danger');
       }
+    });
+
+    proofClear?.addEventListener('click', () => {
+      popupProofDataUrl = null;
+      if (proofPreviewWrap) proofPreviewWrap.style.display = 'none';
+      if (proofPreviewImg) proofPreviewImg.src = '';
+      if (proofName) proofName.textContent = 'Belum ada screenshot dipilih';
+      if (proofFile) proofFile.value = '';
     });
 
     const timingSelect = el('buyer-popup-timing');
@@ -800,7 +912,8 @@
           payment_method: paymentMethod,
           pay_timing: payTiming,
           due_date: payTiming === 'later' ? dueDate : null,
-          notes: orderNotes
+          notes: orderNotes,
+          payment_proof: popupProofDataUrl || null
         });
 
         playBuyerChime();
@@ -976,10 +1089,49 @@
 
     const formPaySelect = el('buyer-order-payment');
     const formCashNote = el('buyer-order-cash-note');
-    formPaySelect?.addEventListener('change', () => {
-      if (formCashNote) {
-        formCashNote.style.display = formPaySelect.value === 'cash' ? 'block' : 'none';
+    const formDanaNote = el('buyer-order-dana-note');
+    const formProofGroup = el('buyer-order-proof-group');
+    const formProofFile = el('buyer-order-proof-file');
+    const formProofBtn = el('buyer-order-proof-btn');
+    const formProofName = el('buyer-order-proof-name');
+    const formProofPreviewWrap = el('buyer-order-proof-preview-wrap');
+    const formProofPreviewImg = el('buyer-order-proof-preview');
+    const formProofClear = el('buyer-order-proof-clear');
+
+    function syncFormPayMethod() {
+      const isDana = formPaySelect?.value === 'dana';
+      if (formCashNote) formCashNote.style.display = !isDana ? 'block' : 'none';
+      if (formDanaNote) formDanaNote.style.display = isDana ? 'block' : 'none';
+      if (formProofGroup) formProofGroup.style.display = isDana ? 'block' : 'none';
+    }
+    formPaySelect?.addEventListener('change', syncFormPayMethod);
+    syncFormPayMethod();
+
+    formProofBtn?.addEventListener('click', () => formProofFile?.click());
+    formProofFile?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        toast('⏳ Memproses screenshot bukti transfer...', 'gold');
+        const compressed = await compressImage(file, 900, 0.8);
+        formProofDataUrl = compressed;
+        if (formProofPreviewImg && formProofPreviewWrap) {
+          formProofPreviewImg.src = compressed;
+          formProofPreviewWrap.style.display = 'block';
+        }
+        if (formProofName) formProofName.textContent = file.name;
+        toast('📸 Bukti transfer berhasil dilampirkan!', 'success');
+      } catch (err) {
+        toast('Gagal memproses gambar: ' + (err?.message || 'Coba lagi.'), 'danger');
       }
+    });
+
+    formProofClear?.addEventListener('click', () => {
+      formProofDataUrl = null;
+      if (formProofPreviewWrap) formProofPreviewWrap.style.display = 'none';
+      if (formProofPreviewImg) formProofPreviewImg.src = '';
+      if (formProofName) formProofName.textContent = 'Belum ada screenshot dipilih';
+      if (formProofFile) formProofFile.value = '';
     });
 
     form.addEventListener('submit', async (event) => {
@@ -1028,11 +1180,16 @@
           notes,
           payment_method: paymentMethod,
           pay_timing: payTiming,
-          due_date: dueDate || null
+          due_date: dueDate || null,
+          payment_proof: formProofDataUrl || null
         });
 
         playBuyerChime();
         form.reset();
+        formProofDataUrl = null;
+        if (formProofPreviewWrap) formProofPreviewWrap.style.display = 'none';
+        if (formProofPreviewImg) formProofPreviewImg.src = '';
+        if (formProofName) formProofName.textContent = 'Belum ada screenshot dipilih';
         if (timingSelect) timingSelect.value = 'now';
         updateDueTip();
         toast('✅ Pesanan dikirim. Tunggu konfirmasi owner.');
@@ -1130,6 +1287,184 @@
     if (input) input.click();
   }
 
+  function openProofModal(orderId) {
+    activeProofOrderId = orderId;
+    modalProofDataUrl = null;
+
+    const modal = el('buyer-proof-upload-modal');
+    if (!modal) return;
+
+    const order = (cachedOrders || []).find(o => String(o.id) === String(orderId));
+    const descEl = el('buyer-proof-order-desc');
+    if (descEl && order) {
+      descEl.textContent = `${order.product_name} • ${formatRupiah(order.amount)} (Pesanan #${order.id.slice(0, 6)})`;
+    }
+
+    const previewWrap = el('buyer-proof-modal-preview-wrap');
+    const previewImg = el('buyer-proof-modal-preview-img');
+    const fileNameEl = el('buyer-proof-modal-file-name');
+    const submitBtn = el('buyer-proof-modal-submit');
+
+    const existingProof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order || orderId) : order?.payment_proof;
+    if (existingProof && previewImg && previewWrap) {
+      modalProofDataUrl = existingProof;
+      previewImg.src = existingProof;
+      previewWrap.style.display = 'block';
+      if (fileNameEl) fileNameEl.textContent = '📸 Screenshot sebelumnya terpasang';
+      if (submitBtn) submitBtn.disabled = false;
+    } else {
+      if (previewWrap) previewWrap.style.display = 'none';
+      if (previewImg) previewImg.src = '';
+      if (fileNameEl) fileNameEl.textContent = 'Atau tekan Ctrl+V untuk tempel SS';
+      if (submitBtn) submitBtn.disabled = true;
+    }
+
+    modal.classList.add('active');
+  }
+
+  function closeProofModal() {
+    const modal = el('buyer-proof-upload-modal');
+    if (modal) modal.classList.remove('active');
+    activeProofOrderId = null;
+    modalProofDataUrl = null;
+  }
+
+  function wireProofUploadModal() {
+    const modal = el('buyer-proof-upload-modal');
+    if (!modal || modal.dataset.wired) return;
+    modal.dataset.wired = 'true';
+
+    const fileInput = el('buyer-proof-modal-file-input');
+    const selectBtn = el('buyer-proof-modal-select-btn');
+    const closeBtn = el('buyer-proof-upload-close-x');
+    const cancelBtn = el('buyer-proof-modal-cancel');
+    const submitBtn = el('buyer-proof-modal-submit');
+    const previewWrap = el('buyer-proof-modal-preview-wrap');
+    const previewImg = el('buyer-proof-modal-preview-img');
+    const fileNameEl = el('buyer-proof-modal-file-name');
+
+    closeBtn?.addEventListener('click', closeProofModal);
+    cancelBtn?.addEventListener('click', closeProofModal);
+
+    selectBtn?.addEventListener('click', () => {
+      fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        toast('⏳ Memproses screenshot bukti transfer...', 'gold');
+        const compressed = await compressImage(file, 900, 0.8);
+        modalProofDataUrl = compressed;
+        if (previewImg && previewWrap) {
+          previewImg.src = compressed;
+          previewWrap.style.display = 'block';
+        }
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (submitBtn) submitBtn.disabled = false;
+        toast('📸 Screenshot siap dikirim!', 'success');
+      } catch (err) {
+        toast('Gagal memproses gambar: ' + (err?.message || 'Coba lagi.'), 'danger');
+      } finally {
+        fileInput.value = '';
+      }
+    });
+
+    // Paste listener (Ctrl+V)
+    window.addEventListener('paste', async (e) => {
+      if (!modal.classList.contains('active')) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            try {
+              toast('⏳ Menempelkan screenshot dari clipboard...', 'gold');
+              const compressed = await compressImage(file, 900, 0.8);
+              modalProofDataUrl = compressed;
+              if (previewImg && previewWrap) {
+                previewImg.src = compressed;
+                previewWrap.style.display = 'block';
+              }
+              if (fileNameEl) fileNameEl.textContent = 'Tercopy dari Clipboard (Screenshot)';
+              if (submitBtn) submitBtn.disabled = false;
+              toast('📸 Screenshot berhasil ditempel!', 'success');
+            } catch (err) {
+              toast('Gagal memproses gambar: ' + err.message, 'danger');
+            }
+          }
+          break;
+        }
+      }
+    });
+
+    submitBtn?.addEventListener('click', async () => {
+      if (!activeProofOrderId || !modalProofDataUrl) {
+        toast('Pilih screenshot bukti transfer terlebih dahulu.', 'danger');
+        return;
+      }
+      setBusy(submitBtn, true, 'MENGIRIM...');
+      try {
+        await window.KeuanganDB.uploadOrderProof(activeProofOrderId, modalProofDataUrl);
+        toast('✅ Bukti transfer terkirim! Menunggu tinjauan owner.', 'success');
+        closeProofModal();
+        await refreshOrders();
+      } catch (err) {
+        toast('Gagal mengirim bukti transfer: ' + (err?.message || 'Coba lagi.'), 'danger');
+      } finally {
+        setBusy(submitBtn, false);
+      }
+    });
+  }
+
+  function viewProof(orderId) {
+    const order = (cachedOrders || []).find(o => String(o.id) === String(orderId));
+    const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order || orderId) : order?.payment_proof;
+    const modal = el('mc-proof-viewer-modal');
+    if (!modal) return;
+
+    const buyerEl = el('proof-viewer-buyer');
+    const productEl = el('proof-viewer-product');
+    const amountEl = el('proof-viewer-amount');
+    const imgEl = el('proof-viewer-img');
+    const emptyEl = el('proof-viewer-empty');
+    const actionsEl = el('proof-viewer-actions');
+
+    if (buyerEl) buyerEl.textContent = profile?.username || order?.buyer_username || '-';
+    if (productEl) productEl.textContent = order?.product_name || '-';
+    if (amountEl) amountEl.textContent = order ? formatRupiah(order.amount) : '-';
+
+    if (proof) {
+      if (imgEl) {
+        imgEl.src = proof;
+        imgEl.style.display = 'block';
+      }
+      if (emptyEl) emptyEl.style.display = 'none';
+    } else {
+      if (imgEl) imgEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+    }
+
+    if (actionsEl) {
+      actionsEl.innerHTML = `
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          ${order && order.status !== 'completed' && order.status !== 'cancelled' ? `
+            <button type="button" class="mc-btn mc-btn-diamond" style="padding:7px 12px; font-size:8px;" onclick="document.getElementById('mc-proof-viewer-modal').classList.remove('active'); window.BuyerApp.openProofModal('${order.id}');">
+              🔄 GANTI BUKTI TF (SS)
+            </button>
+          ` : ''}
+          <button type="button" class="mc-btn mc-btn-green" style="padding:7px 14px; font-size:8px;" onclick="document.getElementById('mc-proof-viewer-modal').classList.remove('active')">
+            TUTUP
+          </button>
+        </div>
+      `;
+    }
+
+    modal.classList.add('active');
+  }
+
   function start(userProfile) {
     profile = userProfile;
 
@@ -1146,6 +1481,7 @@
       wireOrderModal();
       wireProfileModal();
       wireCatalogTabs();
+      wireProofUploadModal();
 
       el('buyer-refresh')?.addEventListener('click', async () => {
         toast('Memuat ulang data...', 'gold');
@@ -1170,6 +1506,9 @@
     refreshAll,
     openAvatarUpload,
     openOrderModal,
-    openProfileModal
+    openProfileModal,
+    openProofModal,
+    closeProofModal,
+    viewProof
   };
 })();

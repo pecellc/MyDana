@@ -632,6 +632,9 @@
     if (hasAdmin) {
       payload.admin_fee = admin;
     }
+    if (order.payment_proof) {
+      payload.payment_proof = order.payment_proof;
+    }
 
     let { data, error } = await client
       .from('orders')
@@ -639,8 +642,9 @@
       .select()
       .single();
 
-    if (error && (/admin_fee/i.test(error.message || ''))) {
-      delete payload.admin_fee;
+    if (error && (/admin_fee|payment_proof|column .* does not exist/i.test(error.message || ''))) {
+      if (/admin_fee/i.test(error.message || '')) delete payload.admin_fee;
+      if (/payment_proof/i.test(error.message || '')) delete payload.payment_proof;
       const retry = await client
         .from('orders')
         .insert(payload)
@@ -659,7 +663,46 @@
       }
       throw error;
     }
+
+    if (data?.id && order.payment_proof) {
+      try {
+        localStorage.setItem(`keuanganku_order_proof_${data.id}`, order.payment_proof);
+      } catch (e) {}
+    }
+
     return data;
+  }
+
+  async function uploadOrderProof(orderId, proofDataUrl) {
+    if (!orderId) throw new Error('Order ID tidak valid.');
+    try {
+      localStorage.setItem(`keuanganku_order_proof_${orderId}`, proofDataUrl);
+    } catch (e) {}
+
+    if (client) {
+      const { error } = await client
+        .from('orders')
+        .update({ payment_proof: proofDataUrl })
+        .eq('id', orderId);
+
+      if (error && !(/payment_proof|column .* does not exist/i.test(error.message || ''))) {
+        throw error;
+      }
+    }
+    return true;
+  }
+
+  function getOrderProof(order) {
+    if (!order) return null;
+    const fromOrder = typeof order === 'object' ? order.payment_proof : null;
+    if (fromOrder) return fromOrder;
+    const id = typeof order === 'object' ? order.id : order;
+    if (!id) return null;
+    try {
+      return localStorage.getItem(`keuanganku_order_proof_${id}`) || null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------- Avatar
@@ -890,6 +933,8 @@
     updateBuyerAvatar,
     getBuyerAvatar,
     createOrder,
+    uploadOrderProof,
+    getOrderProof,
     listMyOrders,
     listAllOrders,
     updateOrderAdminFee,
