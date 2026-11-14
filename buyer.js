@@ -317,7 +317,7 @@
           ${admin > 0 ? `
             <div style="display:flex; gap:6px; align-items:center; margin-top:3px; flex-wrap:wrap;">
               <span class="badge-modal-cost" style="font-size:0.68rem; background:rgba(251,146,60,0.15); color:#fb923c; padding:1px 6px; border-radius:3px; font-weight:700;">
-                🔥 Modal: ${formatRupiah(modalNeeded)}
+                🔥 Saldo Yg Di Dapat: ${formatRupiah(modalNeeded)}
               </span>
               <span class="badge-admin-fee" style="font-size:0.68rem; background:rgba(71,226,104,0.15); color:var(--mc-emerald); padding:1px 6px; border-radius:3px; font-weight:700;">
                 💎 Admin: ${formatRupiah(admin)}
