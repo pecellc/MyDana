@@ -2321,6 +2321,8 @@ html.auth-pending #auth-screen {
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
+  /* Kalau harga + tombol turun baris, tetap menempel ke kanan. */
+  margin-left: auto;
 }
 
 .buyer-product-price {
@@ -2328,7 +2330,19 @@ html.auth-pending #auth-screen {
   font-size: 9px;
   color: var(--mc-diamond);
   min-width: 0;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+/* Harga ratusan ribu (Rp 100.000 ke atas) lebih panjang, jadi
+   font-nya dikecilkan supaya tidak berdesakan dengan tombol PESAN. */
+.buyer-product-price.is-long {
+  font-size: 7.5px;
+  letter-spacing: -0.02em;
+}
+
+#buyer-popup-prod-price.is-long {
+  font-size: 9.5px !important;
+  letter-spacing: -0.02em;
 }
 
 .buyer-form {
@@ -5933,7 +5947,7 @@ textarea,
           ` : ''}
         </div>
         <div class="buyer-product-action">
-          <span class="buyer-product-price">${formatRupiah(product.price)}</span>
+          <span class="buyer-product-price${Number(product.price) >= 100000 ? ' is-long' : ''}">${formatRupiah(product.price)}</span>
           <button class="mc-btn mc-btn-green buyer-btn-order" data-order-product="${esc(product.id)}" title="Beli ${esc(product.name)}">
             🛒 PESAN
           </button>
@@ -6309,7 +6323,10 @@ textarea,
     const descEl = el('buyer-popup-prod-desc');
     if (descEl) descEl.textContent = product.description || '';
     const priceEl = el('buyer-popup-prod-price');
-    if (priceEl) priceEl.textContent = formatRupiah(product.price);
+    if (priceEl) {
+      priceEl.textContent = formatRupiah(product.price);
+      priceEl.classList.toggle('is-long', Number(product.price) >= 100000);
+    }
     const modalEl = el('buyer-popup-prod-modal');
     if (modalEl) modalEl.textContent = formatRupiah(modalNeeded);
     const adminEl = el('buyer-popup-prod-admin');

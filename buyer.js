@@ -281,7 +281,7 @@
           ` : ''}
         </div>
         <div class="buyer-product-action">
-          <span class="buyer-product-price">${formatRupiah(product.price)}</span>
+          <span class="buyer-product-price${Number(product.price) >= 100000 ? ' is-long' : ''}">${formatRupiah(product.price)}</span>
           <button class="mc-btn mc-btn-green buyer-btn-order" data-order-product="${esc(product.id)}" title="Beli ${esc(product.name)}">
             🛒 PESAN
           </button>
@@ -657,7 +657,10 @@
     const descEl = el('buyer-popup-prod-desc');
     if (descEl) descEl.textContent = product.description || '';
     const priceEl = el('buyer-popup-prod-price');
-    if (priceEl) priceEl.textContent = formatRupiah(product.price);
+    if (priceEl) {
+      priceEl.textContent = formatRupiah(product.price);
+      priceEl.classList.toggle('is-long', Number(product.price) >= 100000);
+    }
     const modalEl = el('buyer-popup-prod-modal');
     if (modalEl) modalEl.textContent = formatRupiah(modalNeeded);
     const adminEl = el('buyer-popup-prod-admin');
