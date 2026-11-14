@@ -1022,7 +1022,7 @@
     items.forEach((it) => {
       const isRepaymentIn = it.type === 'in' && 
         (it.location === 'DANA' || it.location === 'Dompet' || it.location === 'GoPay') &&
-        (String(it.desc || '').includes('Cicilan hutang') || it.isColdMoney);
+        (String(it.desc || '').includes('Cicilan hutang') || String(it.desc || '').includes('Pelunasan') || it.isPulsaRepayment);
 
       if (isRepaymentIn) {
         const person = it.debtorName || it.pulsaCustomer;
@@ -1060,14 +1060,14 @@
       }
     });
 
-    // 3. Sinkronkan status isSettled untuk pesanan pulsa
+    // 3. Sinkronkan status isSettled untuk pesanan pulsa berdasarkan orderId masing-masing
+    const settledOrderIds = new Set(
+      items.filter(it => it.orderId && !toDelete.has(it.id) && (it.isPulsaRepayment || String(it.desc || '').includes('Pelunasan') || String(it.desc || '').includes('Cicilan'))).map(it => it.orderId)
+    );
     items.forEach(it => {
       if (it.isPulsa && it.orderId && it.location === 'Uang Akan Datang (Hutang)') {
         it.isDebt = true;
-        const person = it.debtorName || it.pulsaCustomer;
-        const repaid = repaidByPerson[person] || 0;
-        const maxDebt = totalDebtByPerson[person] || 0;
-        if (repaid >= maxDebt && maxDebt > 0) {
+        if (it.isSettled || settledOrderIds.has(it.orderId)) {
           it.isSettled = true;
         }
       }
@@ -1443,6 +1443,19 @@
     };
   }
 
+  // Modal pool yang dipublikasikan ke public_status Supabase:
+  // Database Supabase (modal_status & accept_order) secara otomatis mengurangi v_reserved
+  // dari seluruh order online aktif (status pending & confirmed).
+  // Oleh karena itu, modal yang dikirim ke Supabase adalah TOTAL MODAL KIOS
+  // dikurangi HANYA modal pesanan offline (yang tidak tercatat di tabel orders Supabase).
+  function getModalPoolForSupabase() {
+    const { targetModal, totalSetorModal } = calculateBalances();
+    const offlineUnpaidModal = (state.items || [])
+      .filter(it => it.isPulsa && it.isDebt && !it.orderId && !it.isSettled)
+      .reduce((sum, it) => sum + (Number(it.pulsaModal) || 0), 0);
+    return Math.max(0, targetModal - offlineUnpaidModal - totalSetorModal);
+  }
+
   // ===================================================================
   // HELPER ALOKASI MODAL DARI SALDO RIIL
   // Modal hanya boleh dibentuk dari saldo riil yang benar-benar ada.
@@ -1527,8 +1540,20 @@
 
       if (match) {
         const amt = Number(item.amount) || 0;
-        if (item.type === 'in') income += amt;
-        else expense += amt;
+        if (item.type === 'in') {
+          // Jika transaksi pulsa / pelunasan pulsa:
+          // Pemasukan uang asli pemilik HANYA jatah admin / laba bersih (cuan),
+          // BUKAN omset kotor! (Modal pokok yang kembali adalah uang modal kios).
+          if (item.isPulsaRepayment) {
+            income += (Number(item.pulsaProfit) || 0);
+          } else if (item.isPulsa && !item.isDebt) {
+            income += (Number(item.pulsaProfit) || 0);
+          } else {
+            income += amt;
+          }
+        } else {
+          expense += amt;
+        }
       }
     });
 
@@ -2743,8 +2768,8 @@
     const pulsaCountEl = document.getElementById('pulsa-count');
     if (pulsaCountEl) pulsaCountEl.textContent = `${totalPulsaCount} Trx`;
 
-    const pulsaOmsetEl = document.getElementById('pulsa-omset');
-    if (pulsaOmsetEl) pulsaOmsetEl.textContent = formatRupiah(totalPulsaOmset);
+    const pulsaProfitEl = document.getElementById('pulsa-total-profit') || document.getElementById('pulsa-omset');
+    if (pulsaProfitEl) pulsaProfitEl.textContent = formatRupiah(totalPulsaProfit);
 
     const pulsaModalAmtEl = document.getElementById('pulsa-modal-amt');
     if (pulsaModalAmtEl) pulsaModalAmtEl.textContent = formatRupiah(uangPanas);
@@ -2975,6 +3000,8 @@
             typeLabel = isDebt 
               ? (item.isSettled ? '<span class="badge-in">✔ PULSA LUNAS</span>' : '<span class="badge-debt">⏳ PULSA BON</span>') 
               : '<span class="badge-pulsa">⚡ PULSA</span>';
+          } else if (item.isPulsaRepayment) {
+            typeLabel = '<span class="badge-in">💰 LUNAS PULSA</span>';
           } else if (item.isTambahModal) {
             typeLabel = '<span class="badge-modal-in">➕ TAMBAH MODAL</span>';
           } else if (item.isKurangiModal) {
@@ -3000,6 +3027,8 @@
             if (item.isSettled) {
               descHtml += ` <span style="font-size: 0.7rem; color: var(--mc-emerald); font-weight: 700;">(✔ Lunas via ${escapeHtml(item.settledWallet || 'Kas')})</span>`;
             }
+          } else if (item.isPulsaRepayment) {
+            descHtml += `<br><span style="font-size: 0.72rem; color: #fb923c; font-weight: 700;">🔥 Modal Kios Kembali: ${formatRupiah(item.pulsaModal)} | 🧊 Cuan: <strong style="color: #38bdf8;">${formatRupiah(item.pulsaProfit)}</strong></span>`;
           }
 
           html += `
@@ -3930,7 +3959,7 @@
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
-          await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+          await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
         } catch (e) {
           console.warn('Gagal publish modal instan:', e);
         }
@@ -3968,7 +3997,7 @@
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
-          await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+          await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
         } catch (e) {}
       }
     },
@@ -4007,7 +4036,7 @@
 
       if (window.KeuanganDB?.publishModalNow) {
         try {
-          await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+          await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
         } catch (e) {
           console.warn('Gagal publish modal instan:', e);
         }
@@ -4063,7 +4092,7 @@
       window.App.closeModal();
     },
 
-    executeDebtRepayment: function (debtorName, amount, destWallet) {
+    executeDebtRepayment: function (debtorName, amount, destWallet, orderId, pulsaModal, pulsaProfit) {
       const now = new Date().toISOString();
 
       state.items.push({
@@ -4074,7 +4103,8 @@
         desc: `${debtorName} bayar cicilan / hutang`,
         debtorName: debtorName,
         pulsaCustomer: debtorName,
-        location: 'Uang Akan Datang (Hutang)'
+        location: 'Uang Akan Datang (Hutang)',
+        orderId: orderId || null
       });
 
       state.items.push({
@@ -4082,11 +4112,15 @@
         date: now,
         type: 'in',
         amount: amount,
-        desc: `Cicilan hutang dari ${debtorName} (${destWallet})`,
+        desc: `Pelunasan pulsa dari ${debtorName} (${destWallet})`,
         debtorName: debtorName,
         pulsaCustomer: debtorName,
         location: destWallet,
-        isColdMoney: true
+        isColdMoney: true,
+        orderId: orderId || null,
+        isPulsaRepayment: true,
+        pulsaModal: Number(pulsaModal) || 0,
+        pulsaProfit: Number(pulsaProfit) || 0
       });
 
       saveData();
@@ -4722,7 +4756,7 @@
         // mencerminkan transaksi ini (khususnya order tempo/nyicil).
         if (window.KeuanganDB?.publishModalNow) {
           try {
-            await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+            await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
           } catch (e) {}
         }
       }
@@ -4944,7 +4978,9 @@
       window.__settlingOrderIds[orderId] = true;
       try {
         // Jalankan pelunasan hutang (mengurangi piutang dan memasukkan uang ke kas tujuan)
-        this.executeDebtRepayment(buyerName, orderAmt, targetWallet);
+        const modalPart = Number(loggedItem?.pulsaModal) || Math.max(0, orderAmt - (Number(order?.admin_fee) || 0));
+        const profitPart = Number(loggedItem?.pulsaProfit) || (orderAmt - modalPart);
+        this.executeDebtRepayment(buyerName, orderAmt, targetWallet, orderId, modalPart, profitPart);
 
         // Update status pesanan di database
         try {
@@ -4987,7 +5023,7 @@
 
         if (window.KeuanganDB?.publishModalNow) {
           try {
-            await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
+            await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
           } catch (e) {}
         }
         return true;
