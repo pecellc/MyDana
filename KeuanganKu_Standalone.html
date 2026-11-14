@@ -2272,6 +2272,7 @@ html.auth-pending #auth-screen {
   gap: 9px;
   max-height: 360px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .buyer-product-card {
@@ -2518,6 +2519,48 @@ select.modal-input option {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Cegah bar notifikasi melebarkan halaman di HP (penyebab katalog
+   terpotong saat halaman digeser ke samping). */
+.buyer-notif-bar > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.buyer-notif-bar > div:first-child {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.buyer-notif-bar > div:first-child span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.buyer-notif-bar > div:last-child {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .buyer-notif-bar {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  .buyer-notif-bar > div:first-child { flex: 0 1 auto; }
+  .buyer-notif-bar > div:last-child { justify-content: flex-end; }
+  .buyer-notif-bar .mc-btn { flex: 0 1 auto; }
+}
+
+@media (max-width: 360px) {
+  .buyer-notif-bar .mc-btn {
+    font-size: 0.62rem !important;
+    padding: 5px 8px !important;
+  }
 }
 
 /* ===================================================================
@@ -2527,6 +2570,7 @@ select.modal-input option {
 html {
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 button,
