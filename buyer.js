@@ -297,10 +297,21 @@
       const catLabel = cat === 'dana'
         ? '💳 SALDO DANA'
         : (cat === 'gopay' ? '💚 SALDO GOPAY' : '📶 PULSA');
+
+      const price = Number(product.price) || 0;
+      const origPrice = product.original_price || (price > 0 ? (price + (price <= 20000 ? 3000 : 4000)) : 0);
+      const discountPercent = product.discount_percent || (origPrice > price ? Math.round(((origPrice - price) / origPrice) * 100) : 0);
+      const hasDiscount = origPrice > price && discountPercent > 0;
+
       return `
       <div class="buyer-product-card" data-product-cat="${cat}">
         <div class="buyer-product-info">
-          <strong>${esc(product.name)}</strong>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+            <strong>${esc(product.name)}</strong>
+            ${hasDiscount ? `
+              <span class="mc-promo-tag">🔥 DISKON</span>
+            ` : ''}
+          </div>
           <span class="buyer-product-cat buyer-product-cat-${cat}">${catLabel}</span>
           ${product.description ? `<span>${esc(product.description)}</span>` : ''}
           ${admin > 0 ? `
@@ -315,7 +326,15 @@
           ` : ''}
         </div>
         <div class="buyer-product-action">
-          <span class="buyer-product-price${Number(product.price) >= 100000 ? ' is-long' : ''}">${formatRupiah(product.price)}</span>
+          <div class="buyer-price-stack">
+            ${hasDiscount ? `
+              <div class="buyer-discount-row">
+                <span class="buyer-strike-price">${formatRupiah(origPrice)}</span>
+                <span class="mc-discount-badge">-${discountPercent}%</span>
+              </div>
+            ` : ''}
+            <span class="buyer-product-price${Number(product.price) >= 100000 ? ' is-long' : ''}">${formatRupiah(product.price)}</span>
+          </div>
           <button class="mc-btn mc-btn-green buyer-btn-order" data-order-product="${esc(product.id)}" title="Beli ${esc(product.name)}">
             🛒 PESAN
           </button>
@@ -740,10 +759,29 @@
     if (nameEl) nameEl.textContent = product.name;
     const descEl = el('buyer-popup-prod-desc');
     if (descEl) descEl.textContent = product.description || '';
+
+    const price = Number(product.price) || 0;
+    const origPrice = product.original_price || (price > 0 ? (price + (price <= 20000 ? 3000 : 4000)) : 0);
+    const savings = Math.max(0, origPrice - price);
+    const discountPercent = product.discount_percent || (origPrice > price ? Math.round((savings / origPrice) * 100) : 0);
+
     const priceEl = el('buyer-popup-prod-price');
     if (priceEl) {
       priceEl.textContent = formatRupiah(product.price);
       priceEl.classList.toggle('is-long', Number(product.price) >= 100000);
+    }
+
+    const strikeWrap = el('buyer-popup-prod-discount-wrap');
+    const strikeEl = el('buyer-popup-prod-strike');
+    const badgeEl = el('buyer-popup-prod-badge');
+    if (strikeWrap && strikeEl && badgeEl) {
+      if (origPrice > price && discountPercent > 0) {
+        strikeEl.textContent = formatRupiah(origPrice);
+        badgeEl.textContent = `-${discountPercent}%`;
+        strikeWrap.style.display = 'flex';
+      } else {
+        strikeWrap.style.display = 'none';
+      }
     }
     const modalEl = el('buyer-popup-prod-modal');
     if (modalEl) modalEl.textContent = formatRupiah(modalNeeded);

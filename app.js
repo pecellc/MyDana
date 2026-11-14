@@ -155,8 +155,14 @@
               <td style="text-align:right; font-weight:700; color:var(--mc-emerald);">
                 ${formatRupiah(admin)}
               </td>
-              <td style="text-align:right; font-family:var(--mc-pixel-font); font-size:9.5px; color:var(--mc-gold);">
-                ${formatRupiah(p.price)}
+              <td style="text-align:right;">
+                <div style="font-family:var(--mc-pixel-font); font-size:9.5px; color:var(--mc-gold);">${formatRupiah(p.price)}</div>
+                ${(p.original_price && p.original_price > p.price) ? `
+                  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">
+                    <span style="text-decoration:line-through;">${formatRupiah(p.original_price)}</span>
+                    <span class="mc-discount-badge" style="font-size:6px; padding:1px 4px;">-${p.discount_percent}%</span>
+                  </div>
+                ` : ''}
               </td>
               <td style="text-align:center;">
                 <span class="${p.active !== false ? 'status-pill-visible' : 'status-pill-hidden'}" onclick="window.App.toggleProductActive('${p.id}', ${p.active !== false})" title="Klik untuk ubah status visibilitas">
@@ -4867,6 +4873,7 @@
       const activeEl = document.getElementById('prod-active');
       const sortEl = document.getElementById('prod-sort');
       const categoryEl = document.getElementById('prod-category');
+      const origEl = document.getElementById('prod-orig-price');
 
       if (id && state.ownerCatalog) {
         const prod = state.ownerCatalog.find(p => String(p.id) === String(id));
@@ -4876,12 +4883,14 @@
           if (nameEl) nameEl.value = prod.name;
           if (modalEl) modalEl.value = prod.modal_needed != null ? prod.modal_needed : Math.max(0, prod.price - (prod.admin_fee || 0));
           if (adminEl) adminEl.value = prod.admin_fee || 0;
+          if (origEl) origEl.value = (prod.original_price && prod.original_price > prod.price) ? prod.original_price : '';
           if (descEl) descEl.value = prod.description || '';
           if (activeEl) activeEl.value = String(prod.active !== false);
           if (sortEl) sortEl.value = prod.sort_order || 1;
           if (categoryEl) categoryEl.value = normalizeProductCategory(prod.category);
           setupRupiahInput(modalEl);
           setupRupiahInput(adminEl);
+          setupRupiahInput(origEl);
           this.calcProductModalPreview();
           modal.classList.add('active');
           return;
@@ -4894,12 +4903,14 @@
       if (nameEl) nameEl.value = '';
       if (modalEl) modalEl.value = '';
       if (adminEl) adminEl.value = '';
+      if (origEl) origEl.value = '';
       if (descEl) descEl.value = '';
       if (activeEl) activeEl.value = 'true';
       if (sortEl) sortEl.value = (state.ownerCatalog ? state.ownerCatalog.length + 1 : 1);
       if (categoryEl) categoryEl.value = 'gopay';
       setupRupiahInput(modalEl);
       setupRupiahInput(adminEl);
+      setupRupiahInput(origEl);
       this.calcProductModalPreview();
       modal.classList.add('active');
     },
@@ -4916,6 +4927,23 @@
       if (previewEl) {
         previewEl.textContent = formatRupiah(total);
       }
+
+      const origVal = parseRupiahInput(document.getElementById('prod-orig-price')?.value || '0') || 0;
+      const discPreviewEl = document.getElementById('prod-discount-preview');
+      if (discPreviewEl) {
+        if (total > 0) {
+          const finalOrig = origVal > total ? origVal : (total + (total <= 20000 ? 3000 : 4000));
+          const savings = finalOrig - total;
+          const pct = Math.round((savings / finalOrig) * 100);
+          discPreviewEl.innerHTML = `
+            🏷️ Efek di Buyer: <span style="text-decoration:line-through; color:#94a3b8;">${formatRupiah(finalOrig)}</span>
+            <span class="mc-discount-badge" style="margin-left:4px;">-${pct}%</span>
+            <span style="color:#4ade80; margin-left:4px; font-weight:700;">(Hemat ${formatRupiah(savings)})</span>
+          `;
+        } else {
+          discPreviewEl.innerHTML = '';
+        }
+      }
     },
 
     saveProductModal: async function () {
@@ -4928,6 +4956,7 @@
       const name = String(document.getElementById('prod-name')?.value || '').trim();
       const modalVal = parseRupiahInput(document.getElementById('prod-modal')?.value || '0') || 0;
       const adminVal = parseRupiahInput(document.getElementById('prod-admin')?.value || '0') || 0;
+      const origPriceVal = parseRupiahInput(document.getElementById('prod-orig-price')?.value || '0') || null;
       const price = modalVal + adminVal;
       const desc = String(document.getElementById('prod-desc')?.value || '').trim();
       const active = document.getElementById('prod-active')?.value !== 'false';
@@ -4949,6 +4978,7 @@
             name,
             price,
             admin_fee: adminVal,
+            original_price: origPriceVal,
             description: desc,
             active,
             sort_order: sortOrder,
@@ -4960,6 +4990,7 @@
             name,
             price,
             admin_fee: adminVal,
+            original_price: origPriceVal,
             description: desc,
             active,
             sort_order: sortOrder,

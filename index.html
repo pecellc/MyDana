@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -280,9 +280,15 @@
               <strong id="buyer-popup-prod-name" style="font-size: 1rem; color: #fff;">-</strong>
               <div id="buyer-popup-prod-desc" style="font-size: 0.74rem; color: #94a3b8; margin-top: 2px;"></div>
             </div>
-            <div id="buyer-popup-prod-price"
-              style="font-family: var(--mc-pixel-font); font-size: 11px; color: var(--mc-diamond); text-align: right; flex-shrink: 0;">
-              Rp 0</div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;">
+              <div id="buyer-popup-prod-discount-wrap" style="display: none; align-items: center; gap: 5px;">
+                <span id="buyer-popup-prod-strike" class="buyer-strike-price">Rp 0</span>
+                <span id="buyer-popup-prod-badge" class="mc-discount-badge">-0%</span>
+              </div>
+              <div id="buyer-popup-prod-price"
+                style="font-family: var(--mc-pixel-font); font-size: 11px; color: var(--mc-diamond); text-align: right;">
+                Rp 0</div>
+            </div>
           </div>
           <div class="buyer-popup-pills" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
             <span class="badge-modal-cost"
@@ -1200,12 +1206,29 @@
         </div>
       </div>
 
-      <!-- Preview Total Price -->
+      <!-- Preview Total Price & Diskon -->
       <div
-        style="background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;">TOTAL HARGA JUAL BUYER:</span>
-        <span id="prod-total-preview"
-          style="font-family: var(--mc-pixel-font); font-size: 1.15rem; color: var(--mc-gold);">Rp 0</span>
+        style="background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;">TOTAL HARGA JUAL BUYER:</span>
+          <span id="prod-total-preview"
+            style="font-family: var(--mc-pixel-font); font-size: 1.15rem; color: var(--mc-gold);">Rp 0</span>
+        </div>
+        <div id="prod-discount-preview" style="font-size: 0.75rem; color: #cbd5e1; text-align: right;">
+          <!-- Diskon preview -->
+        </div>
+      </div>
+
+      <!-- Harga Coret / Diskon Marketing -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 700; color: #f87171;">
+          🏷️ HARGA ASLI / CORET SEBELUM DISKON (RP):
+        </label>
+        <span style="font-size: 0.72rem; opacity: 0.75; color: #cbd5e1;">
+          Trik psikologi diskon: pembeli melihat harga ini dicoret seolah promo besar. Kosongkan untuk otomatis dihitung (~15%-25%).
+        </span>
+        <input type="number" id="prod-orig-price" class="modal-input" placeholder="Otomatis terisi jika kosong (contoh: 17000)"
+          oninput="window.App.calcProductModalPreview()">
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px;">

@@ -286,6 +286,7 @@ create table if not exists public.products (
   name text not null,
   description text default '',
   price numeric not null default 0 check (price >= 0),
+  original_price numeric default null,
   admin_fee numeric not null default 0 check (admin_fee >= 0),
   sort_order integer not null default 0,
   category text default 'pulsa',
@@ -294,6 +295,7 @@ create table if not exists public.products (
 );
 
 -- Migrasi jika tabel products sudah ada
+alter table public.products add column if not exists original_price numeric default null;
 alter table public.products add column if not exists admin_fee numeric not null default 0;
 alter table public.products add column if not exists sort_order integer not null default 0;
 

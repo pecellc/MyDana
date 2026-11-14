@@ -343,25 +343,33 @@
     return m ? parseInt(m[1], 10) : null;
   }
 
+  function readOriginalPriceMarker(description) {
+    const m = String(description || '').match(/\[(?:orig|strike|coret):\s*(\d+)\]/i);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
   function stripProductMeta(description) {
     return String(description || '')
       .replace(/\[admin:\s*\d+(?:[.,]\d+)?\]/gi, ' ')
       .replace(/\[sort:\s*\d+\]/gi, ' ')
+      .replace(/\[(?:orig|strike|coret):\s*\d+\]/gi, ' ')
       .replace(/\(\s*(?:admin|fee|untung|laba)\s*[:=]?\s*(?:rp\.?\s*)?(?:\d{1,3}(?:[.,]\d{3})+|\d+(?:[.,]\d+)?)\s*(?:k|rb|ribu|jt|juta)?\s*\)/gi, ' ')
       .replace(/(?:^|\s)(?:admin|fee|untung|laba)\s*[:=]?\s*(?:rp\.?\s*)?(?:\d{1,3}(?:[.,]\d{3})+|\d+(?:[.,]\d+)?)\s*(?:k|rb|ribu|jt|juta)?\b/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
-  // Tulis ulang marker admin/urutan. Marker lama SELALU diganti supaya admin
+  // Tulis ulang marker admin/urutan/diskon. Marker lama SELALU diganti supaya admin
   // tidak tertinggal di nilai lama (penyebab "admin naik, modal ikut naik").
   function buildProductDescription(description, options) {
     const opts = options || {};
     const original = String(description || '');
     const adminProvided = opts.admin !== undefined && opts.admin !== null;
     const sortProvided = opts.sort !== undefined && opts.sort !== null;
+    const origProvided = opts.original_price !== undefined && opts.original_price !== null;
     const existingAdmin = readAdminMarker(original);
     const existingSort = readSortMarker(original);
+    const existingOrig = readOriginalPriceMarker(original);
 
     const admin = adminProvided
       ? Math.max(0, Math.round(Number(opts.admin) || 0))
@@ -369,10 +377,14 @@
     const sort = sortProvided
       ? Math.max(0, parseInt(opts.sort, 10) || 0)
       : existingSort;
+    const orig = origProvided
+      ? Math.max(0, parseInt(opts.original_price, 10) || 0)
+      : existingOrig;
 
     let clean = stripProductMeta(original);
     if (admin !== null) clean = `${clean}${clean ? ' ' : ''}[admin:${admin}]`;
     if (sort !== null) clean = `${clean}${clean ? ' ' : ''}[sort:${sort}]`;
+    if (orig) clean = `${clean}${clean ? ' ' : ''}[orig:${orig}]`;
     return clean.trim();
   }
 
@@ -423,16 +435,53 @@
     return marker !== null ? marker : 999;
   }
 
+  function extractOriginalPrice(item) {
+    if (!item) return 0;
+    const price = Number(item.price || item.amount) || 0;
+    if (price <= 0) return 0;
+
+    // 1. Cek kolom original_price di tabel database
+    if (item.original_price !== undefined && item.original_price !== null && item.original_price !== '') {
+      const explicit = Number(item.original_price);
+      if (Number.isFinite(explicit) && explicit > price) return explicit;
+    }
+
+    // 2. Cek marker [orig:xxx] di deskripsi
+    const marker = readOriginalPriceMarker(item.description);
+    if (marker && marker > price) return marker;
+
+    // 3. Trik Diskon Psikologis Otomatis:
+    // Naikkan harga coret ~15% - 25% (dibulatkan) agar pembeli merasa mendapat diskon besar
+    // padahal harga jual asli tetap utuh.
+    let markup = 3000;
+    if (price < 10000) markup = 2000;
+    else if (price <= 20000) markup = 3000;
+    else if (price <= 35000) markup = 4000;
+    else if (price <= 55000) markup = 7000;
+    else if (price <= 80000) markup = 10000;
+    else if (price <= 120000) markup = 15000;
+    else markup = Math.round((price * 0.15) / 1000) * 1000;
+
+    return price + markup;
+  }
+
   function enrichProduct(p) {
     const admin = extractAdminFee(p);
     const sort = extractSortOrder(p);
     const price = Number(p.price) || 0;
+    const origPrice = extractOriginalPrice(p);
+    const discountSavings = Math.max(0, origPrice - price);
+    const discountPercent = origPrice > price ? Math.round((discountSavings / origPrice) * 100) : 0;
+
     return {
       ...p,
       description: stripProductMeta(p.description),
       description_raw: p.description || '',
       admin_fee: admin,
       sort_order: sort,
+      original_price: origPrice,
+      discount_savings: discountSavings,
+      discount_percent: discountPercent,
       modal_needed: Math.max(0, price - admin)
     };
   }
@@ -499,11 +548,13 @@
     const price = Number(product.price) || 0;
     const hasAdmin = product.admin_fee !== undefined && product.admin_fee !== null;
     const hasSort = product.sort_order !== undefined && product.sort_order !== null;
+    const hasOrig = product.original_price !== undefined && product.original_price !== null && Number(product.original_price) > price;
     const admin = Math.max(0, Number(product.admin_fee) || 0);
     const sort = Math.max(0, parseInt(product.sort_order, 10) || 0);
+    const orig = hasOrig ? Number(product.original_price) : null;
 
-    // Deskripsi disimpan bersih. Marker admin/urutan hanya dipakai sebagai
-    // fallback kalau project lama belum punya kolom admin_fee/sort_order.
+    // Deskripsi disimpan bersih. Marker admin/urutan/diskon hanya dipakai sebagai
+    // fallback kalau project lama belum punya kolom di Supabase.
     const cleanDesc = stripProductMeta(product.description);
 
     const payload = {
@@ -517,15 +568,18 @@
 
     if (hasAdmin) payload.admin_fee = admin;
     if (hasSort) payload.sort_order = sort;
+    if (orig) payload.original_price = orig;
 
     let res = await client.from('products').insert(payload).select().single();
-    if (res.error && (/admin_fee|sort_order|column/i.test(res.error.message || ''))) {
+    if (res.error && (/admin_fee|sort_order|original_price|column/i.test(res.error.message || ''))) {
       payload.description = buildProductDescription(product.description, {
         admin: hasAdmin ? admin : undefined,
-        sort: hasSort ? sort : 0
+        sort: hasSort ? sort : 0,
+        original_price: orig
       });
       delete payload.admin_fee;
       delete payload.sort_order;
+      delete payload.original_price;
       res = await client.from('products').insert(payload).select().single();
     }
 
@@ -544,11 +598,13 @@
 
     const hasAdmin = updates.admin_fee !== undefined && updates.admin_fee !== null;
     const hasSort = updates.sort_order !== undefined && updates.sort_order !== null;
+    const hasOrig = updates.original_price !== undefined && updates.original_price !== null;
+    const orig = hasOrig ? (Number(updates.original_price) || null) : undefined;
 
     // Kalau hanya admin/urutan yang diubah, ambil deskripsi lama dulu supaya
     // marker admin yang sudah ada tidak hilang saat fallback project lama.
     let rawBaseDesc = updates.description;
-    if (rawBaseDesc === undefined && (hasAdmin || hasSort)) {
+    if (rawBaseDesc === undefined && (hasAdmin || hasSort || hasOrig)) {
       const { data: current } = await client
         .from('products')
         .select('description')
@@ -564,17 +620,20 @@
 
     if (hasAdmin) payload.admin_fee = Math.max(0, Number(updates.admin_fee) || 0);
     if (hasSort) payload.sort_order = Math.max(0, parseInt(updates.sort_order, 10) || 0);
+    if (orig !== undefined) payload.original_price = orig;
 
     let res = await client.from('products').update(payload).eq('id', id).select().single();
-    if (res.error && (/admin_fee|sort_order|column/i.test(res.error.message || ''))) {
+    if (res.error && (/admin_fee|sort_order|original_price|column/i.test(res.error.message || ''))) {
       if (rawBaseDesc !== undefined) {
         payload.description = buildProductDescription(rawBaseDesc, {
           admin: hasAdmin ? Math.max(0, Number(updates.admin_fee) || 0) : undefined,
-          sort: hasSort ? Math.max(0, parseInt(updates.sort_order, 10) || 0) : undefined
+          sort: hasSort ? Math.max(0, parseInt(updates.sort_order, 10) || 0) : undefined,
+          original_price: orig
         });
       }
       delete payload.admin_fee;
       delete payload.sort_order;
+      delete payload.original_price;
       res = await client.from('products').update(payload).eq('id', id).select().single();
     }
 
