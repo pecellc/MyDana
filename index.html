@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=12">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -219,26 +219,6 @@
           <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
             💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
           </div>
-          <div id="buyer-order-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
-            📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
-          </div>
-          <div id="buyer-order-proof-group" style="margin-top: 6px;">
-            <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
-              <span>📸 BUKTI TRANSFER (SS DANA)</span>
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
-            </label>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <input type="file" id="buyer-order-proof-file" accept="image/*" style="display:none;">
-              <button type="button" class="mc-btn mc-btn-diamond" id="buyer-order-proof-btn" style="padding:6px 12px; font-size:7.5px;">
-                📁 PILIH FOTO / SS
-              </button>
-              <span id="buyer-order-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
-            </div>
-            <div id="buyer-order-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
-              <img id="buyer-order-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
-              <button type="button" id="buyer-order-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
-            </div>
-          </div>
           <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
           <select id="buyer-order-timing" class="modal-input">
             <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
@@ -323,12 +303,11 @@
         <!-- Form Pemesanan -->
         <form id="buyer-popup-form" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
           <div>
-            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP / ID AKUN TUJUAN <span
+            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP TUJUAN <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890 / ID Game"
+            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890"
               required autocomplete="tel">
-            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor tujuan pengisian
-              pulsa / kuota / saldo transfer.</span>
+            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor HP tujuan pengisian pulsa / kuota.</span>
           </div>
 
           <div>
@@ -340,26 +319,6 @@
             </select>
             <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
               💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
-            </div>
-            <div id="buyer-popup-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
-              📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
-            </div>
-            <div id="buyer-popup-proof-group" style="margin-top: 6px;">
-              <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
-                <span>📸 BUKTI TRANSFER (SS DANA)</span>
-                <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
-              </label>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input type="file" id="buyer-popup-proof-file" accept="image/*" style="display:none;">
-                <button type="button" class="mc-btn mc-btn-diamond" id="buyer-popup-proof-btn" style="padding:6px 12px; font-size:7.5px;">
-                  📁 PILIH FOTO / SS
-                </button>
-                <span id="buyer-popup-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
-              </div>
-              <div id="buyer-popup-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
-                <img id="buyer-popup-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
-                <button type="button" id="buyer-popup-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
-              </div>
             </div>
           </div>
 

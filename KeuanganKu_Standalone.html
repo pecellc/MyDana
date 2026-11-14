@@ -3298,26 +3298,6 @@ textarea,
           <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
             💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
           </div>
-          <div id="buyer-order-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
-            📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
-          </div>
-          <div id="buyer-order-proof-group" style="margin-top: 6px;">
-            <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
-              <span>📸 BUKTI TRANSFER (SS DANA)</span>
-              <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
-            </label>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <input type="file" id="buyer-order-proof-file" accept="image/*" style="display:none;">
-              <button type="button" class="mc-btn mc-btn-diamond" id="buyer-order-proof-btn" style="padding:6px 12px; font-size:7.5px;">
-                📁 PILIH FOTO / SS
-              </button>
-              <span id="buyer-order-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
-            </div>
-            <div id="buyer-order-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
-              <img id="buyer-order-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
-              <button type="button" id="buyer-order-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
-            </div>
-          </div>
           <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
           <select id="buyer-order-timing" class="modal-input">
             <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
@@ -3402,12 +3382,11 @@ textarea,
         <!-- Form Pemesanan -->
         <form id="buyer-popup-form" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
           <div>
-            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP / ID AKUN TUJUAN <span
+            <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP TUJUAN <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890 / ID Game"
+            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890"
               required autocomplete="tel">
-            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor tujuan pengisian
-              pulsa / kuota / saldo transfer.</span>
+            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor HP tujuan pengisian pulsa / kuota.</span>
           </div>
 
           <div>
@@ -3419,26 +3398,6 @@ textarea,
             </select>
             <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
               💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
-            </div>
-            <div id="buyer-popup-dana-note" style="font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px dashed #0284c7; border-radius:4px; padding:6px 8px; margin-top:6px;">
-              📱 <strong>Transfer DANA:</strong> Jika sudah transfer, lampirkan screenshot bukti transfer di bawah agar bisa langsung di-ACC owner. Jika belum transfer, pesanan akan dicatat nyicil sampai kamu kirim bukti transfer.
-            </div>
-            <div id="buyer-popup-proof-group" style="margin-top: 6px;">
-              <label class="buyer-form-label" style="display:flex; justify-content:space-between; align-items:center;">
-                <span>📸 BUKTI TRANSFER (SS DANA)</span>
-                <span style="font-size:0.68rem; color:#94a3b8; font-weight:normal;">(Opsional / Bisa nanti)</span>
-              </label>
-              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <input type="file" id="buyer-popup-proof-file" accept="image/*" style="display:none;">
-                <button type="button" class="mc-btn mc-btn-diamond" id="buyer-popup-proof-btn" style="padding:6px 12px; font-size:7.5px;">
-                  📁 PILIH FOTO / SS
-                </button>
-                <span id="buyer-popup-proof-name" style="font-size:0.72rem; color:#cbd5e1; font-style:italic;">Belum ada screenshot dipilih</span>
-              </div>
-              <div id="buyer-popup-proof-preview-wrap" style="display:none; margin-top:6px; position:relative; width:max-content;">
-                <img id="buyer-popup-proof-preview" src="" alt="Bukti Transfer" style="max-height:90px; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 2px 8px rgba(0,0,0,0.4); display:block;">
-                <button type="button" id="buyer-popup-proof-clear" class="mc-btn mc-btn-redstone" style="position:absolute; top:-6px; right:-6px; padding:2px 6px; font-size:7px; border-radius:50%;" title="Hapus foto">✕</button>
-              </div>
             </div>
           </div>
 
@@ -5907,8 +5866,6 @@ textarea,
   let currentModal = 0;
   let cachedOrders = [];
   let selectedOrderProduct = null;
-  let popupProofDataUrl = null;
-  let formProofDataUrl = null;
   let activeProofOrderId = null;
   let modalProofDataUrl = null;
 
@@ -6428,25 +6385,47 @@ textarea,
           const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
           if (proof) {
             return `
-              <div style="display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap;">
-                <button type="button" class="buyer-proof-badge" onclick="window.BuyerApp.viewProof('${order.id}')" title="Klik untuk melihat screenshot bukti transfer">
-                  📸 Bukti TF: [Lihat SS]
-                </button>
-                ${order.status !== 'completed' && order.status !== 'cancelled' ? `
-                  <button type="button" class="mc-btn mc-btn-dark" style="padding:2px 7px; font-size:7px;" onclick="window.BuyerApp.openProofModal('${order.id}')">
-                    Ganti SS
+              <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #059669; border-radius: 4px; padding: 8px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                <div>
+                  <div style="font-size: 0.74rem; color: #4ade80; font-weight: 800;">
+                    ✅ Bukti TF Terkirim
+                  </div>
+                  <div style="font-size: 0.7rem; color: #94a3b8;">
+                    ${order.status === 'completed' ? 'Pembayaran lunas beres!' : 'Menunggu Owner meninjau SS &amp; meng-ACC lunas'}
+                  </div>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="buyer-proof-badge" onclick="window.BuyerApp.viewProof('${order.id}')">
+                    📸 [Lihat SS]
                   </button>
-                ` : ''}
+                  ${order.status !== 'completed' && order.status !== 'cancelled' ? `
+                    <button type="button" class="mc-btn mc-btn-dark" style="padding: 2px 7px; font-size: 7px;" onclick="window.BuyerApp.openProofModal('${order.id}')">
+                      Ganti SS
+                    </button>
+                  ` : ''}
+                </div>
               </div>
             `;
           }
-          if (order.status !== 'completed' && order.status !== 'cancelled') {
+          if (order.status === 'confirmed') {
             return `
-              <div style="margin-top:6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <button type="button" class="mc-btn mc-btn-diamond" style="padding:4px 9px; font-size:7.5px; display:inline-flex; align-items:center; gap:4px;" onclick="window.BuyerApp.openProofModal('${order.id}')">
-                  📸 Kirim Bukti Transfer (SS)
+              <div style="background: rgba(56, 189, 248, 0.12); border: 2px dashed #0284c7; border-radius: 4px; padding: 10px 12px; margin-top: 8px;">
+                <div style="font-size: 0.78rem; color: #38bdf8; font-weight: 800; margin-bottom: 4px;">
+                  💸 Pulsa / Saldo Sudah Dikirim Owner!
+                </div>
+                <div style="font-size: 0.72rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 8px;">
+                  Silakan lakukan transfer pembayaran ke DANA Owner, lalu upload screenshot bukti transfer di bawah agar pesananmu di-ACC lunas.
+                </div>
+                <button type="button" class="mc-btn mc-btn-green" style="padding: 7px 12px; font-size: 8px; font-weight: 800;" onclick="window.BuyerApp.openProofModal('${order.id}')">
+                  📸 KIRIM BUKTI TRANSFER (SS DANA)
                 </button>
-                <span style="font-size:0.68rem; color:#94a3b8;">(Dihitung nyicil sampai di-ACC)</span>
+              </div>
+            `;
+          }
+          if (order.status === 'pending') {
+            return `
+              <div style="font-size: 0.72rem; color: #fbbf24; margin-top: 6px;">
+                ⏳ Menunggu Owner meng-ACC &amp; mengirimkan pulsa/saldo.
               </div>
             `;
           }
@@ -6662,15 +6641,6 @@ textarea,
 
   function closeOrderModal() {
     selectedOrderProduct = null;
-    popupProofDataUrl = null;
-    const previewWrap = el('buyer-popup-proof-preview-wrap');
-    if (previewWrap) previewWrap.style.display = 'none';
-    const previewImg = el('buyer-popup-proof-preview');
-    if (previewImg) previewImg.src = '';
-    const nameEl = el('buyer-popup-proof-name');
-    if (nameEl) nameEl.textContent = 'Belum ada screenshot dipilih';
-    const fileInput = el('buyer-popup-proof-file');
-    if (fileInput) fileInput.value = '';
     el('buyer-order-modal')?.classList.remove('active');
   }
 
@@ -6684,49 +6654,10 @@ textarea,
 
     const paySelect = el('buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
-    const danaNote = el('buyer-popup-dana-note');
-    const proofGroup = el('buyer-popup-proof-group');
-    const proofFile = el('buyer-popup-proof-file');
-    const proofBtn = el('buyer-popup-proof-btn');
-    const proofName = el('buyer-popup-proof-name');
-    const proofPreviewWrap = el('buyer-popup-proof-preview-wrap');
-    const proofPreviewImg = el('buyer-popup-proof-preview');
-    const proofClear = el('buyer-popup-proof-clear');
-
-    function syncPopupPayMethod() {
-      const isDana = paySelect?.value === 'dana';
-      if (cashNote) cashNote.style.display = !isDana ? 'block' : 'none';
-      if (danaNote) danaNote.style.display = isDana ? 'block' : 'none';
-      if (proofGroup) proofGroup.style.display = isDana ? 'block' : 'none';
-    }
-    paySelect?.addEventListener('change', syncPopupPayMethod);
-    syncPopupPayMethod();
-
-    proofBtn?.addEventListener('click', () => proofFile?.click());
-    proofFile?.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        toast('⏳ Memproses screenshot bukti transfer...', 'gold');
-        const compressed = await compressImage(file, 900, 0.8);
-        popupProofDataUrl = compressed;
-        if (proofPreviewImg && proofPreviewWrap) {
-          proofPreviewImg.src = compressed;
-          proofPreviewWrap.style.display = 'block';
-        }
-        if (proofName) proofName.textContent = file.name;
-        toast('📸 Bukti transfer berhasil dilampirkan!', 'success');
-      } catch (err) {
-        toast('Gagal memproses gambar: ' + (err?.message || 'Coba lagi.'), 'danger');
+    paySelect?.addEventListener('change', () => {
+      if (cashNote) {
+        cashNote.style.display = paySelect.value === 'cash' ? 'block' : 'none';
       }
-    });
-
-    proofClear?.addEventListener('click', () => {
-      popupProofDataUrl = null;
-      if (proofPreviewWrap) proofPreviewWrap.style.display = 'none';
-      if (proofPreviewImg) proofPreviewImg.src = '';
-      if (proofName) proofName.textContent = 'Belum ada screenshot dipilih';
-      if (proofFile) proofFile.value = '';
     });
 
     const timingSelect = el('buyer-popup-timing');
@@ -6766,7 +6697,7 @@ textarea,
       const submitBtn = el('buyer-popup-submit');
 
       if (!phone) {
-        toast('Nomor HP / Akun tujuan wajib diisi.', 'danger');
+        toast('Nomor HP tujuan wajib diisi.', 'danger');
         return;
       }
 
@@ -6807,7 +6738,7 @@ textarea,
           pay_timing: payTiming,
           due_date: payTiming === 'later' ? dueDate : null,
           notes: orderNotes,
-          payment_proof: popupProofDataUrl || null
+          payment_proof: null
         });
 
         playBuyerChime();
@@ -6983,50 +6914,13 @@ textarea,
 
     const formPaySelect = el('buyer-order-payment');
     const formCashNote = el('buyer-order-cash-note');
-    const formDanaNote = el('buyer-order-dana-note');
-    const formProofGroup = el('buyer-order-proof-group');
-    const formProofFile = el('buyer-order-proof-file');
-    const formProofBtn = el('buyer-order-proof-btn');
-    const formProofName = el('buyer-order-proof-name');
-    const formProofPreviewWrap = el('buyer-order-proof-preview-wrap');
-    const formProofPreviewImg = el('buyer-order-proof-preview');
-    const formProofClear = el('buyer-order-proof-clear');
 
     function syncFormPayMethod() {
-      const isDana = formPaySelect?.value === 'dana';
-      if (formCashNote) formCashNote.style.display = !isDana ? 'block' : 'none';
-      if (formDanaNote) formDanaNote.style.display = isDana ? 'block' : 'none';
-      if (formProofGroup) formProofGroup.style.display = isDana ? 'block' : 'none';
+      const isCash = formPaySelect?.value === 'cash';
+      if (formCashNote) formCashNote.style.display = isCash ? 'block' : 'none';
     }
     formPaySelect?.addEventListener('change', syncFormPayMethod);
     syncFormPayMethod();
-
-    formProofBtn?.addEventListener('click', () => formProofFile?.click());
-    formProofFile?.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        toast('⏳ Memproses screenshot bukti transfer...', 'gold');
-        const compressed = await compressImage(file, 900, 0.8);
-        formProofDataUrl = compressed;
-        if (formProofPreviewImg && formProofPreviewWrap) {
-          formProofPreviewImg.src = compressed;
-          formProofPreviewWrap.style.display = 'block';
-        }
-        if (formProofName) formProofName.textContent = file.name;
-        toast('📸 Bukti transfer berhasil dilampirkan!', 'success');
-      } catch (err) {
-        toast('Gagal memproses gambar: ' + (err?.message || 'Coba lagi.'), 'danger');
-      }
-    });
-
-    formProofClear?.addEventListener('click', () => {
-      formProofDataUrl = null;
-      if (formProofPreviewWrap) formProofPreviewWrap.style.display = 'none';
-      if (formProofPreviewImg) formProofPreviewImg.src = '';
-      if (formProofName) formProofName.textContent = 'Belum ada screenshot dipilih';
-      if (formProofFile) formProofFile.value = '';
-    });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -7075,15 +6969,11 @@ textarea,
           payment_method: paymentMethod,
           pay_timing: payTiming,
           due_date: dueDate || null,
-          payment_proof: formProofDataUrl || null
+          payment_proof: null
         });
 
         playBuyerChime();
         form.reset();
-        formProofDataUrl = null;
-        if (formProofPreviewWrap) formProofPreviewWrap.style.display = 'none';
-        if (formProofPreviewImg) formProofPreviewImg.src = '';
-        if (formProofName) formProofName.textContent = 'Belum ada screenshot dipilih';
         if (timingSelect) timingSelect.value = 'now';
         updateDueTip();
         toast('✅ Pesanan dikirim. Tunggu konfirmasi owner.');
@@ -11731,10 +11621,16 @@ textarea,
                 </button>
               </div>
             `;
-          } else if (order.payment_method === 'dana' || order.pay_timing === 'later') {
+          } else if (order.status === 'confirmed') {
+            proofHtml = `
+              <div style="margin-top:4px; font-size:0.68rem; color:#38bdf8;">
+                ⏳ Pulsa terkirim • Menunggu buyer kirim SS bukti TF
+              </div>
+            `;
+          } else if (order.status === 'pending') {
             proofHtml = `
               <div style="margin-top:4px; font-size:0.68rem; color:#fbbf24;">
-                ⚠️ Belum ada bukti TF (Nyicil)
+                ⏳ Menunggu ACC (Kirim Pulsa)
               </div>
             `;
           }
@@ -11747,7 +11643,7 @@ textarea,
 
           let actions = '';
           const loggedItem = state.items.find(it => it.orderId === order.id);
-          const isDebtOrder = loggedItem ? !!loggedItem.isDebt : (order.pay_timing === 'later' || order.payment_method === 'cash');
+          const isDebtOrder = loggedItem ? !!loggedItem.isDebt : true;
 
           if (order.status === 'pending') {
             const hasExplicitAdmin =
@@ -11781,13 +11677,19 @@ textarea,
           } else if (order.status === 'confirmed') {
             actions = `
               <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                ${hasProof ? `
+                  <button class="mc-btn mc-btn-diamond" style="padding:6px 9px; font-size:7.5px; font-weight:700;"
+                    onclick="window.App.viewProof('${order.id}')" title="Tinjau screenshot bukti transfer pembeli">
+                    📸 TINJAU BUKTI TF
+                  </button>
+                ` : ''}
                 ${isDebtOrder ? `
-                  <button class="mc-btn mc-btn-green" style="padding:6px 10px; font-size:7.5px; font-weight:700; background:#059669;"
+                  <button class="mc-btn mc-btn-green" style="padding:6px 9px; font-size:7.5px; font-weight:700; background:#059669;"
                     onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA sudah masuk, selesaikan piutang">
                     💰 ACC UANG MASUK
                   </button>
                 ` : ''}
-                <button class="mc-btn mc-btn-gold" style="padding:6px 10px; font-size:7.5px;"
+                <button class="mc-btn mc-btn-gold" style="padding:6px 9px; font-size:7.5px;"
                   onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
                 <button class="mc-btn mc-btn-decline-lg" style="padding:6px 8px; font-size:7.5px;"
                   onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
@@ -11851,7 +11753,6 @@ textarea,
 
       // Sesuai aturan owner: Jika buyer bayar pakai CASH atau bayar nanti/tempo, masuk kategori nyicil (piutang)
       const isCash = String(order.payment_method || '').toLowerCase() === 'cash' || String(order.payment_method || '').toLowerCase() === 'tunai';
-      let isDebt = order.pay_timing === 'later' || isCash;
 
       // 1. HITUNG MODAL POKOK VS UANG ADMIN (CUAN) TERLEBIH DAHULU
       const hasExplicitAdmin =
@@ -11884,31 +11785,17 @@ textarea,
         return;
       }
 
-      // 3. KONFIRMASI PEMBAYARAN DANA / STATUS NYICIL
-      const isDana = String(order.payment_method || '').toLowerCase() === 'dana';
+      // 3. STATUS PEMBAYARAN: ALUR KIRIM PULSA DULU LALU TRANSFER
+      // Sesuai alur kios pulsa: Saat owner klik ACC pesanan pending, pulsa/saldo
+      // dikirim ke HP buyer -> modal pokok kios dipotong -> dicatat sebagai
+      // piutang/nyicil (isDebt = true).
+      // Setelah pulsa masuk, buyer transfer DANA & upload screenshot bukti TF.
+      // Owner kemudian meninjau bukti TF & klik [ACC UANG MASUK] untuk pelunasan lunas beres.
+      let isDebt = true;
       if (options && options.verified === true) {
         isDebt = false;
       } else if (options && options.asDebt === true) {
         isDebt = true;
-      } else if (isDana && order.pay_timing !== 'later') {
-        const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
-        const hasProof = !!proof;
-
-        const payDecision = await uiPrompt({
-          title: '📱 TINJAU PEMBAYARAN DANA',
-          message:
-            `Pembeli (${buyerName}) memesan ${order.product_name} (${formatRupiah(orderAmt)}) via DANA.\n` +
-            (hasProof ? '📸 Pembeli SUDAH melampirkan screenshot bukti transfer.\n\n' : '⚠️ Pembeli BELUM melampirkan screenshot bukti transfer.\n\n') +
-            'Pilih status penerimaan uang transfer:',
-          options: [
-            { value: 'verified', label: '✅ SUDAH MASUK (Lunas / Beres)' },
-            { value: 'debt', label: '⏳ BELUM MASUK (Hitung Nyicil / Piutang)' }
-          ],
-          okText: 'LANJUTKAN ACC',
-          cancelText: 'BATAL'
-        });
-        if (!payDecision) return;
-        isDebt = payDecision === 'debt';
       }
 
       // 4. BERI KESEMPATAN OWNER MENENTUKAN / MENYESUAIKAN UANG ADMIN (CUAN)
@@ -11939,13 +11826,17 @@ textarea,
         return;
       }
 
+      const defaultNote = isDebt
+        ? 'Pulsa sudah dikirim! Silakan transfer ke DANA & upload bukti transfer di menu Pesanan.'
+        : 'Pulsa sudah dikirim & pembayaran lunas. Terima kasih!';
+
       const note = await uiPrompt({
         title: '✅ KETERANGAN UNTUK BUYER',
         message: 'Tulis keterangan yang akan dilihat buyer.',
-        hint: 'Contoh: "Pesanan diterima, pulsa dikirim 5 menit lagi."',
+        hint: 'Contoh: "Pulsa sudah dikirim! Silakan transfer ke DANA & upload bukti transfer."',
         inputLabel: 'KETERANGAN (WAJIB)',
-        placeholder: 'Pesanan diterima, pulsa dikirim 5 menit lagi.',
-        value: 'Pesanan diterima, pulsa segera dikirim.',
+        placeholder: defaultNote,
+        value: defaultNote,
         okText: 'ACC PESANAN',
         required: true,
         requiredMessage: 'Keterangan wajib diisi kalau mau ACC.'
@@ -12196,12 +12087,16 @@ textarea,
       const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
       const orderAmt = Number(order?.amount || loggedItem?.amount) || 0;
 
+      const isCash = String(order?.payment_method || '').toLowerCase() === 'cash' || String(order?.payment_method || '').toLowerCase() === 'tunai';
+      const walletName = isCash ? 'Tunai (Dompet)' : 'DANA';
+      const targetWallet = isCash ? 'Dompet' : 'DANA';
+
       const ok = await uiConfirm({
         title: '💰 ACC UANG MASUK (PELUNASAN)',
         message:
-          `Konfirmasi bahwa uang transfer DANA sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke akun DANA kamu?\n\n` +
+          `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke ${walletName} kamu?\n\n` +
           `• Piutang atas nama ${buyerName} akan otomatis lunas.\n` +
-          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas dompet DANA.\n` +
+          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas ${walletName}.\n` +
           `• Status pesanan menjadi SELESAI (BERES).`,
         okText: '✅ YA, UANG SUDAH MASUK',
         cancelText: 'BATAL'
@@ -12209,11 +12104,11 @@ textarea,
       if (!ok) return;
 
       // Jalankan pelunasan hutang
-      this.executeDebtRepayment(buyerName, orderAmt, 'DANA');
+      this.executeDebtRepayment(buyerName, orderAmt, targetWallet);
 
       // Update status pesanan di database
       try {
-        await this.setOrderStatus(orderId, 'completed', 'Pembayaran transfer DANA telah di-ACC & lunas. Pesanan beres! Terima kasih.');
+        await this.setOrderStatus(orderId, 'completed', `Pembayaran ${walletName} telah di-ACC & lunas. Pesanan beres! Terima kasih.`);
       } catch (e) {
         console.warn('Gagal setOrderStatus completed:', e);
       }
@@ -12226,7 +12121,7 @@ textarea,
       }
 
       await this.refreshOwnerOrders();
-      showToast(`🎉 Pembayaran DANA dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk dompet DANA.`, 'success');
+      showToast(`🎉 Pembayaran ${walletName} dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk kas.`, 'success');
     },
 
     setOrderStatus: async function (orderId, status, note, adminFee) {

@@ -4320,10 +4320,16 @@
                 </button>
               </div>
             `;
-          } else if (order.payment_method === 'dana' || order.pay_timing === 'later') {
+          } else if (order.status === 'confirmed') {
+            proofHtml = `
+              <div style="margin-top:4px; font-size:0.68rem; color:#38bdf8;">
+                ⏳ Pulsa terkirim • Menunggu buyer kirim SS bukti TF
+              </div>
+            `;
+          } else if (order.status === 'pending') {
             proofHtml = `
               <div style="margin-top:4px; font-size:0.68rem; color:#fbbf24;">
-                ⚠️ Belum ada bukti TF (Nyicil)
+                ⏳ Menunggu ACC (Kirim Pulsa)
               </div>
             `;
           }
@@ -4336,7 +4342,7 @@
 
           let actions = '';
           const loggedItem = state.items.find(it => it.orderId === order.id);
-          const isDebtOrder = loggedItem ? !!loggedItem.isDebt : (order.pay_timing === 'later' || order.payment_method === 'cash');
+          const isDebtOrder = loggedItem ? !!loggedItem.isDebt : true;
 
           if (order.status === 'pending') {
             const hasExplicitAdmin =
@@ -4370,13 +4376,19 @@
           } else if (order.status === 'confirmed') {
             actions = `
               <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                ${hasProof ? `
+                  <button class="mc-btn mc-btn-diamond" style="padding:6px 9px; font-size:7.5px; font-weight:700;"
+                    onclick="window.App.viewProof('${order.id}')" title="Tinjau screenshot bukti transfer pembeli">
+                    📸 TINJAU BUKTI TF
+                  </button>
+                ` : ''}
                 ${isDebtOrder ? `
-                  <button class="mc-btn mc-btn-green" style="padding:6px 10px; font-size:7.5px; font-weight:700; background:#059669;"
+                  <button class="mc-btn mc-btn-green" style="padding:6px 9px; font-size:7.5px; font-weight:700; background:#059669;"
                     onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA sudah masuk, selesaikan piutang">
                     💰 ACC UANG MASUK
                   </button>
                 ` : ''}
-                <button class="mc-btn mc-btn-gold" style="padding:6px 10px; font-size:7.5px;"
+                <button class="mc-btn mc-btn-gold" style="padding:6px 9px; font-size:7.5px;"
                   onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
                 <button class="mc-btn mc-btn-decline-lg" style="padding:6px 8px; font-size:7.5px;"
                   onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
@@ -4440,7 +4452,6 @@
 
       // Sesuai aturan owner: Jika buyer bayar pakai CASH atau bayar nanti/tempo, masuk kategori nyicil (piutang)
       const isCash = String(order.payment_method || '').toLowerCase() === 'cash' || String(order.payment_method || '').toLowerCase() === 'tunai';
-      let isDebt = order.pay_timing === 'later' || isCash;
 
       // 1. HITUNG MODAL POKOK VS UANG ADMIN (CUAN) TERLEBIH DAHULU
       const hasExplicitAdmin =
@@ -4473,31 +4484,17 @@
         return;
       }
 
-      // 3. KONFIRMASI PEMBAYARAN DANA / STATUS NYICIL
-      const isDana = String(order.payment_method || '').toLowerCase() === 'dana';
+      // 3. STATUS PEMBAYARAN: ALUR KIRIM PULSA DULU LALU TRANSFER
+      // Sesuai alur kios pulsa: Saat owner klik ACC pesanan pending, pulsa/saldo
+      // dikirim ke HP buyer -> modal pokok kios dipotong -> dicatat sebagai
+      // piutang/nyicil (isDebt = true).
+      // Setelah pulsa masuk, buyer transfer DANA & upload screenshot bukti TF.
+      // Owner kemudian meninjau bukti TF & klik [ACC UANG MASUK] untuk pelunasan lunas beres.
+      let isDebt = true;
       if (options && options.verified === true) {
         isDebt = false;
       } else if (options && options.asDebt === true) {
         isDebt = true;
-      } else if (isDana && order.pay_timing !== 'later') {
-        const proof = window.KeuanganDB?.getOrderProof ? window.KeuanganDB.getOrderProof(order) : order.payment_proof;
-        const hasProof = !!proof;
-
-        const payDecision = await uiPrompt({
-          title: '📱 TINJAU PEMBAYARAN DANA',
-          message:
-            `Pembeli (${buyerName}) memesan ${order.product_name} (${formatRupiah(orderAmt)}) via DANA.\n` +
-            (hasProof ? '📸 Pembeli SUDAH melampirkan screenshot bukti transfer.\n\n' : '⚠️ Pembeli BELUM melampirkan screenshot bukti transfer.\n\n') +
-            'Pilih status penerimaan uang transfer:',
-          options: [
-            { value: 'verified', label: '✅ SUDAH MASUK (Lunas / Beres)' },
-            { value: 'debt', label: '⏳ BELUM MASUK (Hitung Nyicil / Piutang)' }
-          ],
-          okText: 'LANJUTKAN ACC',
-          cancelText: 'BATAL'
-        });
-        if (!payDecision) return;
-        isDebt = payDecision === 'debt';
       }
 
       // 4. BERI KESEMPATAN OWNER MENENTUKAN / MENYESUAIKAN UANG ADMIN (CUAN)
@@ -4528,13 +4525,17 @@
         return;
       }
 
+      const defaultNote = isDebt
+        ? 'Pulsa sudah dikirim! Silakan transfer ke DANA & upload bukti transfer di menu Pesanan.'
+        : 'Pulsa sudah dikirim & pembayaran lunas. Terima kasih!';
+
       const note = await uiPrompt({
         title: '✅ KETERANGAN UNTUK BUYER',
         message: 'Tulis keterangan yang akan dilihat buyer.',
-        hint: 'Contoh: "Pesanan diterima, pulsa dikirim 5 menit lagi."',
+        hint: 'Contoh: "Pulsa sudah dikirim! Silakan transfer ke DANA & upload bukti transfer."',
         inputLabel: 'KETERANGAN (WAJIB)',
-        placeholder: 'Pesanan diterima, pulsa dikirim 5 menit lagi.',
-        value: 'Pesanan diterima, pulsa segera dikirim.',
+        placeholder: defaultNote,
+        value: defaultNote,
         okText: 'ACC PESANAN',
         required: true,
         requiredMessage: 'Keterangan wajib diisi kalau mau ACC.'
@@ -4785,12 +4786,16 @@
       const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
       const orderAmt = Number(order?.amount || loggedItem?.amount) || 0;
 
+      const isCash = String(order?.payment_method || '').toLowerCase() === 'cash' || String(order?.payment_method || '').toLowerCase() === 'tunai';
+      const walletName = isCash ? 'Tunai (Dompet)' : 'DANA';
+      const targetWallet = isCash ? 'Dompet' : 'DANA';
+
       const ok = await uiConfirm({
         title: '💰 ACC UANG MASUK (PELUNASAN)',
         message:
-          `Konfirmasi bahwa uang transfer DANA sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke akun DANA kamu?\n\n` +
+          `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke ${walletName} kamu?\n\n` +
           `• Piutang atas nama ${buyerName} akan otomatis lunas.\n` +
-          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas dompet DANA.\n` +
+          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas ${walletName}.\n` +
           `• Status pesanan menjadi SELESAI (BERES).`,
         okText: '✅ YA, UANG SUDAH MASUK',
         cancelText: 'BATAL'
@@ -4798,11 +4803,11 @@
       if (!ok) return;
 
       // Jalankan pelunasan hutang
-      this.executeDebtRepayment(buyerName, orderAmt, 'DANA');
+      this.executeDebtRepayment(buyerName, orderAmt, targetWallet);
 
       // Update status pesanan di database
       try {
-        await this.setOrderStatus(orderId, 'completed', 'Pembayaran transfer DANA telah di-ACC & lunas. Pesanan beres! Terima kasih.');
+        await this.setOrderStatus(orderId, 'completed', `Pembayaran ${walletName} telah di-ACC & lunas. Pesanan beres! Terima kasih.`);
       } catch (e) {
         console.warn('Gagal setOrderStatus completed:', e);
       }
@@ -4815,7 +4820,7 @@
       }
 
       await this.refreshOwnerOrders();
-      showToast(`🎉 Pembayaran DANA dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk dompet DANA.`, 'success');
+      showToast(`🎉 Pembayaran ${walletName} dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk kas.`, 'success');
     },
 
     setOrderStatus: async function (orderId, status, note, adminFee) {
