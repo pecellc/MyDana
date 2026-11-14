@@ -12781,14 +12781,14 @@ textarea,
                 ` : ''}
                 ${isDebtOrder ? `
                   <button class="mc-btn mc-btn-green" style="padding:6px 9px; font-size:7.5px; font-weight:700; background:#059669;"
-                    onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA sudah masuk, selesaikan piutang">
+                    onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA/Cash sudah masuk, selesaikan piutang">
                     💰 ACC UANG MASUK
                   </button>
                 ` : `
                   <span style="color:var(--mc-emerald);font-weight:700;font-size:0.75rem;">✔ LUNAS BERES</span>
+                  <button class="mc-btn mc-btn-gold" style="padding:6px 9px; font-size:7.5px;"
+                    onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
                 `}
-                <button class="mc-btn mc-btn-gold" style="padding:6px 9px; font-size:7.5px;"
-                  onclick="window.App.completeOrder('${order.id}')">SELESAI</button>
                 <button class="mc-btn mc-btn-decline-lg" style="padding:6px 8px; font-size:7.5px;"
                   onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
               </div>
@@ -13055,6 +13055,10 @@ textarea,
     },
 
     completeOrder: async function (orderId) {
+      const loggedItem = (state.items || []).find(it => it.orderId === orderId);
+      if (loggedItem && loggedItem.isDebt && !loggedItem.isSettled) {
+        return this.confirmDebtSettlementForOrder(orderId);
+      }
       const note = await uiPrompt({
         title: '🏁 SELESAIKAN PESANAN',
         message: 'Keterangan selesai untuk buyer (opsional).',
