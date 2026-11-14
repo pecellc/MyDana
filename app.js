@@ -66,6 +66,15 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Kategori produk sekarang: `dana` dan `gopay` (tab PULSA sudah diganti
+  // GOPAY). Nilai lama tetap dipetakan supaya produk lama tidak rusak.
+  function normalizeProductCategory(value) {
+    const raw = String(value || '').toLowerCase().trim();
+    if (raw === 'dana' || raw === 'saldo' || raw === 'saldo-dana') return 'dana';
+    if (raw === 'pulsa' || raw === 'kuota' || raw === 'token' || raw === 'data') return 'pulsa';
+    return 'gopay';
+  }
+
   function renderOwnerProducts(products) {
     const prods = Array.isArray(products) ? products : [];
 
@@ -254,6 +263,61 @@
     if (/jt|juta|mio/.test(text)) return Math.round(numberPart * 1000000);
     if (/rb|ribu|k\b|\dk/.test(text)) return Math.round(numberPart * 1000);
     return Math.round(parseInt(text.replace(/[^\d]/g, ''), 10) || 0);
+  }
+
+  // ===================================================================
+  // FORMATTER RIBUAN OTOMATIS (5000 -> 5.000) UNTUK INPUT NOMINAL
+  // ===================================================================
+  function attachRupiahInputFormatter(inputEl) {
+    if (!inputEl || inputEl._rupiahFormatterBound) return;
+    inputEl._rupiahFormatterBound = true;
+
+    inputEl.addEventListener('input', function () {
+      if (inputEl.dataset.rupiah !== '1') return;
+
+      const raw = inputEl.value || '';
+      const digits = raw.replace(/\D/g, '');
+      const caret = typeof inputEl.selectionStart === 'number' ? inputEl.selectionStart : raw.length;
+      const digitsBeforeCaret = raw.slice(0, caret).replace(/\D/g, '').length;
+
+      if (!digits) {
+        if (raw !== '') inputEl.value = '';
+        return;
+      }
+
+      const trimmed = digits.replace(/^0+(?=\d)/, '');
+      const formatted = trimmed.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      if (formatted === raw) return;
+
+      inputEl.value = formatted;
+
+      // Kembalikan posisi kursor setelah jumlah digit yang sama.
+      let pos = 0;
+      let seen = 0;
+      while (pos < formatted.length && seen < digitsBeforeCaret) {
+        if (/\d/.test(formatted[pos])) seen++;
+        pos++;
+      }
+      try {
+        inputEl.setSelectionRange(pos, pos);
+      } catch (err) {}
+    });
+  }
+
+  function applyRupiahInitialFormat(inputEl) {
+    if (!inputEl || inputEl.dataset.rupiah !== '1') return;
+    const raw = String(inputEl.value || '').trim();
+    if (!/^\d+$/.test(raw)) return;
+    inputEl.value = raw.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function setupRupiahInput(inputEl) {
+    if (!inputEl) return;
+    inputEl.type = 'text';
+    inputEl.inputMode = 'numeric';
+    inputEl.dataset.rupiah = '1';
+    attachRupiahInputFormatter(inputEl);
+    applyRupiahInitialFormat(inputEl);
   }
 
   // Waktu & Tanggal Lengkap (WIB)
@@ -1264,6 +1328,64 @@
     };
   }
 
+  // ===================================================================
+  // HELPER ALOKASI MODAL DARI SALDO RIIL
+  // Modal hanya boleh dibentuk dari saldo riil yang benar-benar ada.
+  // - balance   : isi dompet/DANA saat ini
+  // - available : saldo dompet yang belum dialokasikan jadi modal
+  //               (dibatasi uang dingin global supaya tidak dobel hitung)
+  // ===================================================================
+  const MODAL_WALLETS = ['DANA', 'GoPay', 'Dompet'];
+
+  function normalizeModalWallet(rawWallet) {
+    if (!rawWallet) return null;
+    const text = String(rawWallet).trim();
+    if (!text) return null;
+    const detected = detectCategoryWithTypo(text);
+    if (detected && detected !== 'Uang Akan Datang (Hutang)') return detected;
+    return null;
+  }
+
+  function describeModalWallet(wallet) {
+    if (!wallet) return 'DANA';
+    return wallet === 'Dompet' ? 'Dompet / Cash' : wallet;
+  }
+
+  function getModalFunding(preferredWallet) {
+    const bal = calculateBalances();
+    const uangDingin = Math.max(0, Number(bal.uangDingin) || 0);
+
+    const wallets = MODAL_WALLETS.map((wallet) => {
+      const balance = Math.max(0, Number(bal.balances[wallet]) || 0);
+      return {
+        wallet,
+        balance,
+        available: Math.max(0, Math.min(balance, uangDingin))
+      };
+    });
+
+    const preferred = normalizeModalWallet(preferredWallet);
+    const selected = preferred ? (wallets.find(w => w.wallet === preferred) || null) : null;
+
+    let autoWallet = null;
+    wallets.forEach((w) => {
+      if (w.available <= 0) return;
+      if (!autoWallet || w.available > autoWallet.available) autoWallet = w;
+    });
+
+    return {
+      balances: bal.balances,
+      totalRiil: bal.totalRiil,
+      uangPanas: bal.uangPanas,
+      uangDingin,
+      wallets,
+      selected,
+      preferred,
+      autoWallet,
+      funded: wallets.filter(w => w.available > 0)
+    };
+  }
+
   function extractDebtorName(desc) {
     if (!desc) return 'Seseorang';
     const clean = desc.replace(/\b(dipinjam|uang|dihutang|ngutang|pinjam|menghutang|ke|orang|teman)\b/gi, '').trim();
@@ -1414,12 +1536,16 @@
     }
 
     if (inputEl) {
+      const numericInput = o.inputMode === 'numeric' || o.inputType === 'number';
       inputEl.style.display = useSelect ? 'none' : 'block';
-      inputEl.type = o.inputType === 'number' ? 'number' : 'text';
+      inputEl.type = numericInput ? 'text' : (o.inputType === 'number' ? 'number' : 'text');
       inputEl.inputMode = o.inputMode || (o.inputType === 'number' ? 'numeric' : 'text');
       inputEl.placeholder = o.placeholder || '';
       inputEl.value = o.value == null ? '' : String(o.value);
       inputEl.disabled = useSelect;
+      inputEl.dataset.rupiah = numericInput ? '1' : '0';
+      attachRupiahInputFormatter(inputEl);
+      applyRupiahInitialFormat(inputEl);
     }
 
     if (selectEl) {
@@ -3159,78 +3285,15 @@
         return;
       }
 
-      // 3. Kasus Tambah Modal Pulsa dari Uang Riil
+      // 3. Kasus Tambah Modal Pulsa dari Saldo Riil
+      // Semua validasi & pencatatan didelegasikan ke submitTambahModalDirect
+      // supaya tombol dan chat memakai aturan yang sama persis.
       if (res.isTambahModal) {
-        const nominal = res.amount;
-        const currentBal = calculateBalances();
-
-        // Tentukan dompet: jika user menyebutkan dompet spesifik (misal "di dana"), pakai itu.
-        // Jika tidak disebut, cari dompet yang memiliki saldo uang riil cukup.
-        let targetWallet = res.wallet;
-        if (!res.walletSpecified) {
-          const priority = ['DANA', 'GoPay', 'Dompet'];
-          const found = priority.find(w => (currentBal.balances[w] || 0) >= nominal);
-          if (found) {
-            targetWallet = found;
-          } else {
-            targetWallet = priority.reduce((maxW, w) => 
-              (currentBal.balances[w] || 0) > (currentBal.balances[maxW] || 0) ? w : maxW, 'DANA');
-          }
-        }
-
-        const saldoWallet = currentBal.balances[targetWallet] || 0;
-        const sisaUangRiilBebas = Math.max(0, currentBal.uangDingin);
-
-        // LOGIKA: IF UANG RIIL NOT ENOUGH = DECLINE!
-        if (saldoWallet < nominal || sisaUangRiilBebas < nominal) {
-          AudioEngine.play('hurt');
-          Fx.burst(null, null, 'redstone');
-
-          let failReason = '';
-          if (currentBal.totalRiil <= 0) {
-            failReason = `Kamu belum punya uang riil sama sekali (Kas di Tangan: Rp 0). Silakan tambah uang riil terlebih dahulu (contoh: "tambah uang ril ${formatRupiah(nominal)} di ${targetWallet}").`;
-          } else if (saldoWallet < nominal) {
-            failReason = `Saldo uang riil di ${targetWallet} cuma ${formatRupiah(saldoWallet)}, tidak cukup untuk dijadikan modal ${formatRupiah(nominal)}!`;
-          } else {
-            failReason = `Sisa uang riil bebas kamu cuma ${formatRupiah(sisaUangRiilBebas)}. Uang riil kamu yang lain sudah dialokasikan ke modal (${formatRupiah(currentBal.uangPanas)} dari total kas ${formatRupiah(currentBal.totalRiil)}).`;
-          }
-
-          showToast(`❌ Tambah Modal Ditolak: ${failReason}`, 'danger');
-          return;
-        }
-
-        // LOGIKA: IF UANG RIIL ENOUGH = MODAL NAMBAH!
-        state.items.push({
-          id: 'item-' + Date.now(),
-          date: new Date().toISOString(),
-          type: 'in',
-          amount: nominal,
-          desc: `Tambah Modal dari Uang Riil (${targetWallet})`,
-          location: targetWallet,
-          isTambahModal: true,
-          isTambahModalRiil: true
-        });
-
-        saveData();
-        render();
-        inputEl.value = '';
-        inputEl.focus();
-        AudioEngine.play('trade');
-        Fx.burst(null, null, 'trade');
-
-        const { uangPanas, uangDingin, totalRiil } = calculateBalances();
-        showToast(
-          `➕ Berhasil tambah modal ${formatRupiah(nominal)} dari Uang Riil di ${targetWallet}! ` +
-          `Modal Kios: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)} • Total Kas Riil: ${formatRupiah(totalRiil)}.`,
-          'gold'
-        );
-
-        if (window.KeuanganDB?.publishModalNow) {
-          try {
-            await window.KeuanganDB.publishModalNow(calculateBalances().uangPanas);
-          } catch (e) {
-            console.warn('Gagal publish modal instan:', e);
-          }
+        const walletArg = res.walletSpecified ? res.wallet : null;
+        const ok = await window.App.submitTambahModalDirect(res.amount, walletArg);
+        if (ok) {
+          inputEl.value = '';
+          inputEl.focus();
         }
         return;
       }
@@ -3567,7 +3630,10 @@
       if (elCuan) elCuan.textContent = formatRupiah(totalPulsaProfit);
 
       const inputBase = document.getElementById('input-base-modal');
-      if (inputBase) inputBase.value = baseModal || '';
+      if (inputBase) {
+        inputBase.value = baseModal || '';
+        setupRupiahInput(inputBase);
+      }
 
       const modal = document.getElementById('mc-pulsa-modal');
       if (modal) modal.classList.add('active');
@@ -3580,12 +3646,60 @@
 
     tambahModalPrompt: async function () {
       AudioEngine.play('click');
+
+      const funding = getModalFunding();
+      if (!funding.funded.length) {
+        AudioEngine.play('hurt');
+        Fx.burst(null, null, 'redstone');
+        let reason = '';
+        if (funding.totalRiil <= 0) {
+          reason = 'Belum ada saldo riil sama sekali. Catat pemasukan dulu, misalnya "tambah 100k di dana".';
+        } else if (funding.uangDingin <= 0) {
+          reason = `Semua saldo riil (${formatRupiah(funding.totalRiil)}) sudah dialokasikan ke modal (${formatRupiah(funding.uangPanas)}).`;
+        } else {
+          reason = 'Tidak ada dompet dengan saldo riil yang bisa dialokasikan.';
+        }
+        showToast(`❌ Tidak bisa tambah modal: ${reason}`, 'danger');
+        return;
+      }
+
+      // Pilih sumber saldo riil. Kalau cuma satu dompet yang ada uangnya,
+      // langsung pakai dompet itu tanpa nanya.
+      let wallet = funding.funded[0].wallet;
+      if (funding.funded.length > 1) {
+        const picked = await uiPrompt({
+          title: '➕ TAMBAH MODAL DARI SALDO RIIL',
+          message:
+            `Pilih dompet sumber modal. Uang dingin bebas saat ini: ${formatRupiah(funding.uangDingin)}.`,
+          hint: funding.funded
+            .map((w) => `${describeModalWallet(w.wallet)}: ${formatRupiah(w.available)} siap dialokasikan`)
+            .join(' • '),
+          inputLabel: 'SUMBER SALDO RIIL',
+          options: funding.funded.map((w) => ({
+            value: w.wallet,
+            label: `${describeModalWallet(w.wallet)} — ${formatRupiah(w.available)}`
+          })),
+          value: funding.autoWallet ? funding.autoWallet.wallet : wallet,
+          required: true,
+          okText: 'LANJUT'
+        });
+        if (picked === null) return;
+        wallet = normalizeModalWallet(picked) || wallet;
+      }
+
+      const source = funding.wallets.find((w) => w.wallet === wallet) || funding.funded[0];
+      wallet = source.wallet;
+
       const inputStr = await uiPrompt({
-        title: '➕ TAMBAH MODAL DARI UANG RIIL',
-        message: 'Berapa nominal modal yang mau dialokasikan dari Uang Riil di DANA?',
-        hint: 'Modal diambil dari kas riil yang tersedia. Contoh: 50000, 50k, atau 100k.',
-        inputLabel: 'NOMINAL MODAL (RP)',
-        placeholder: '50000',
+        title: '➕ TAMBAH MODAL DARI SALDO RIIL',
+        message:
+          `Berapa modal yang mau dialokasikan dari ${describeModalWallet(wallet)}? ` +
+          `Saldo yang bisa dipakai: ${formatRupiah(source.available)}.`,
+        hint:
+          `Uang dingin bebas: ${formatRupiah(funding.uangDingin)} • Modal sekarang: ${formatRupiah(funding.uangPanas)}. ` +
+          `Contoh: 50000, 50k, atau 100k.`,
+        inputLabel: `NOMINAL MODAL DARI ${describeModalWallet(wallet).toUpperCase()} (RP)`,
+        placeholder: String(Math.min(source.available, 50000) || 50000),
         inputMode: 'numeric',
         required: true,
         requiredMessage: 'Nominal wajib diisi.',
@@ -3599,7 +3713,7 @@
         return;
       }
 
-      await window.App.submitTambahModalDirect(amt, 'DANA');
+      await window.App.submitTambahModalDirect(amt, wallet);
     },
 
     kurangiModalPrompt: async function () {
@@ -3627,43 +3741,60 @@
       window.App.submitKurangiModalDirect(amt, 'DANA');
     },
 
-    submitTambahModalDirect: async function (amt, wallet = 'DANA') {
+    submitTambahModalDirect: async function (amt, wallet) {
       const nominal = Math.max(0, Math.round(Number(amt) || 0));
       if (nominal <= 0) {
         showToast('Nominal tambah modal tidak valid!', 'danger');
-        return;
+        return false;
       }
 
-      const currentBal = calculateBalances();
-      const saldoWallet = currentBal.balances[wallet] || 0;
-      const sisaUangRiilBebas = Math.max(0, currentBal.uangDingin);
+      const funding = getModalFunding(wallet);
 
-      // LOGIKA: IF UANG RIIL NOT ENOUGH = DECLINE!
-      if (saldoWallet < nominal || sisaUangRiilBebas < nominal) {
+      // Kalau dompet tidak disebut, otomatis pilih dompet dengan saldo
+      // bebas terbesar. Kalau dompet disebut, WAJIB pakai dompet itu.
+      const target = funding.selected || funding.autoWallet || null;
+      const walletName = target ? target.wallet : (funding.preferred || 'DANA');
+      const walletLabel = describeModalWallet(walletName);
+      const saldoWallet = target
+        ? target.balance
+        : Math.max(0, Number(funding.balances[walletName]) || 0);
+      const available = target ? target.available : 0;
+
+      // Modal tidak boleh dibentuk dari udara: harus ada saldo riil di
+      // dompet sumber DAN uang dingin yang belum dialokasikan.
+      if (available < nominal) {
         AudioEngine.play('hurt');
         Fx.burst(null, null, 'redstone');
 
         let failReason = '';
-        if (currentBal.totalRiil <= 0) {
-          failReason = `Kamu belum punya uang riil sama sekali (Kas di Tangan: Rp 0). Silakan tambah uang riil terlebih dahulu (contoh: "tambah uang ril ${formatRupiah(nominal)} di ${wallet}").`;
+        if (funding.totalRiil <= 0) {
+          failReason =
+            `belum ada saldo riil sama sekali (kas di tangan Rp 0). ` +
+            `Catat pemasukan dulu, misalnya "tambah 100k di dana".`;
         } else if (saldoWallet < nominal) {
-          failReason = `Saldo uang riil di ${wallet} cuma ${formatRupiah(saldoWallet)}, tidak cukup untuk modal ${formatRupiah(nominal)}!`;
+          failReason =
+            `saldo riil di ${walletLabel} cuma ${formatRupiah(saldoWallet)}, ` +
+            `tidak cukup untuk modal ${formatRupiah(nominal)}.`;
+        } else if (funding.uangDingin < nominal) {
+          failReason =
+            `uang dingin bebas cuma ${formatRupiah(funding.uangDingin)}. ` +
+            `${formatRupiah(funding.uangPanas)} dari kas sudah dialokasikan ke modal.`;
         } else {
-          failReason = `Sisa uang riil bebas (uang dingin) kamu cuma ${formatRupiah(sisaUangRiilBebas)}. Uang riil kamu yang lain sudah dialokasikan ke modal (${formatRupiah(currentBal.uangPanas)} dari total kas ${formatRupiah(currentBal.totalRiil)}).`;
+          failReason =
+            `saldo riil ${walletLabel} yang bisa dialokasikan cuma ${formatRupiah(available)}.`;
         }
 
-        showToast(`❌ Tambah Modal Ditolak (Saldo Kurang): ${failReason}`, 'danger');
-        return;
+        showToast(`❌ Tambah modal ditolak: ${failReason}`, 'danger');
+        return false;
       }
 
-      // LOGIKA: IF UANG RIIL ENOUGH = MODAL NAMBAH!
       state.items.push({
         id: 'item-' + Date.now(),
         date: new Date().toISOString(),
         type: 'in',
         amount: nominal,
-        desc: `Tambah Modal dari Uang Riil (${wallet})`,
-        location: wallet,
+        desc: `Tambah Modal dari Saldo Riil (${walletLabel})`,
+        location: walletName,
         isTambahModal: true,
         isTambahModalRiil: true
       });
@@ -3674,7 +3805,7 @@
 
       const { uangPanas, totalRiil, uangDingin } = calculateBalances();
       showToast(
-        `➕ Berhasil tambah modal ${formatRupiah(nominal)} dari Uang Riil ke ${wallet}! ` +
+        `➕ Berhasil tambah modal ${formatRupiah(nominal)} dari Saldo Riil ${walletLabel}! ` +
         `Modal Kios: ${formatRupiah(uangPanas)} • Sisa Uang Dingin: ${formatRupiah(uangDingin)} • Total Kas Riil: ${formatRupiah(totalRiil)}.`,
         'gold'
       );
@@ -3686,6 +3817,8 @@
           console.warn('Gagal publish modal instan:', e);
         }
       }
+
+      return true;
     },
 
     submitKurangiModalDirect: async function (amt, wallet) {
@@ -3725,7 +3858,28 @@
     saveBaseModal: async function () {
       const input = document.getElementById('input-base-modal');
       const val = parseRupiahInput(input?.value || '0');
-      state.pulsaConfig.baseModal = Math.max(0, isNaN(val) ? 0 : val);
+      const nextBase = Math.max(0, isNaN(val) ? 0 : val);
+      const currentBase = Number(state.pulsaConfig?.baseModal) || 0;
+      const delta = nextBase - currentBase;
+
+      // Menambah modal pokok juga harus didanai saldo riil yang bebas.
+      // Kalau cuma menurunkan modal, tidak perlu validasi karena uangnya
+      // justru kembali jadi uang dingin.
+      if (delta > 0) {
+        const funding = getModalFunding();
+        if (delta > funding.uangDingin) {
+          AudioEngine.play('hurt');
+          Fx.burst(null, null, 'redstone');
+          showToast(
+            `❌ Gagal set modal pokok: kenaikan ${formatRupiah(delta)} melebihi saldo riil bebas ${formatRupiah(funding.uangDingin)}. ` +
+            `Pakai tombol "Tambah Modal" supaya sumber saldo riil tercatat.`,
+            'danger'
+          );
+          return;
+        }
+      }
+
+      state.pulsaConfig.baseModal = nextBase;
       saveData();
       render();
       window.App.closePulsaModal();
@@ -3751,6 +3905,7 @@
       document.getElementById('modal-debtor-name').textContent = name;
       document.getElementById('modal-remaining-amt').textContent = formatRupiah(remainingAmt);
       document.getElementById('modal-pay-amount').value = remainingAmt;
+      setupRupiahInput(document.getElementById('modal-pay-amount'));
       document.getElementById('modal-dest-wallet').value = 'DANA';
 
       const modal = document.getElementById('mc-debt-modal');
@@ -3767,7 +3922,7 @@
       if (!state.activeDebtorModal) return;
 
       const debtorName = state.activeDebtorModal.name;
-      const amount = parseInt(document.getElementById('modal-pay-amount').value, 10);
+      const amount = parseRupiahInput(document.getElementById('modal-pay-amount').value);
       const rawWallet = document.getElementById('modal-dest-wallet').value;
       const destWallet = detectCategoryWithTypo(rawWallet) || 'DANA';
 
@@ -4527,7 +4682,9 @@
           if (descEl) descEl.value = prod.description || '';
           if (activeEl) activeEl.value = String(prod.active !== false);
           if (sortEl) sortEl.value = prod.sort_order || 1;
-          if (categoryEl) categoryEl.value = prod.category === 'dana' ? 'dana' : 'pulsa';
+          if (categoryEl) categoryEl.value = normalizeProductCategory(prod.category);
+          setupRupiahInput(modalEl);
+          setupRupiahInput(adminEl);
           this.calcProductModalPreview();
           modal.classList.add('active');
           return;
@@ -4543,7 +4700,9 @@
       if (descEl) descEl.value = '';
       if (activeEl) activeEl.value = 'true';
       if (sortEl) sortEl.value = (state.ownerCatalog ? state.ownerCatalog.length + 1 : 1);
-      if (categoryEl) categoryEl.value = 'pulsa';
+      if (categoryEl) categoryEl.value = 'gopay';
+      setupRupiahInput(modalEl);
+      setupRupiahInput(adminEl);
       this.calcProductModalPreview();
       modal.classList.add('active');
     },
@@ -4576,7 +4735,7 @@
       const desc = String(document.getElementById('prod-desc')?.value || '').trim();
       const active = document.getElementById('prod-active')?.value !== 'false';
       const sortOrder = parseInt(document.getElementById('prod-sort')?.value || '1', 10);
-      const category = document.getElementById('prod-category')?.value === 'dana' ? 'dana' : 'pulsa';
+      const category = normalizeProductCategory(document.getElementById('prod-category')?.value);
 
       if (!name) {
         showToast('Nama produk wajib diisi!', 'danger');
@@ -4617,7 +4776,15 @@
         this.closeProductModal();
         await this.refreshProductsTab();
       } catch (err) {
-        showToast('Gagal menyimpan produk: ' + (err?.message || 'Coba lagi.'), 'danger');
+        const rawMsg = String(err?.message || '');
+        if (/row-level security|permission denied|jwt|not authenticated|invalid claim/i.test(rawMsg)) {
+          showToast(
+            '🔒 Sesi owner tidak valid atau sudah kedaluwarsa. Tutup tab MyDana lain, lalu logout dan login ulang.',
+            'danger'
+          );
+        } else {
+          showToast('Gagal menyimpan produk: ' + (rawMsg || 'Coba lagi.'), 'danger');
+        }
       }
     },
 
@@ -4863,6 +5030,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Input nominal owner: tampilkan pemisah ribuan otomatis (5000 -> 5.000).
+    ['input-base-modal', 'modal-pay-amount', 'prod-modal', 'prod-admin'].forEach((id) => {
+      setupRupiahInput(document.getElementById(id));
+    });
+
     // Siapkan trigger gesture BGM seawal mungkin
     autoStartBgm();
 

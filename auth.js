@@ -20,6 +20,7 @@
   let client = null;
   let routedUserId = null;
   let currentProfile = null;
+  let manualLogout = false;
 
   if (configured && window.supabase?.createClient) {
     client = window.supabase.createClient(cfg.url, cfg.anonKey, {
@@ -150,6 +151,20 @@
     } catch (e) { /* ignore */ }
   }
 
+  // Kalau sesi Supabase benar-benar berakhir (refresh token gagal / logout
+  // dari tab lain), jangan biarkan UI owner palsu tetap terbuka. Kembalikan
+  // ke layar login supaya request berikutnya tidak kena RLS.
+  function handleSessionLost(message) {
+    currentProfile = null;
+    routedUserId = null;
+    window.__AUTH_ROLE__ = null;
+    window.__AUTH_READY__ = false;
+    if (window.KeuanganAuth) window.KeuanganAuth.profile = null;
+    clearCachedProfile();
+    setScreen('auth');
+    setError(message || 'Sesi login sudah berakhir. Silakan login ulang.');
+  }
+
   // ---------------------------------------------------------------- routing
   function routeProfile(profile) {
     if (!profile) {
@@ -227,6 +242,13 @@
         if (data) profile = data;
       } catch (error) {
         console.warn('Gagal memuat profil dari Supabase:', error);
+        const msg = String(error?.message || error || '');
+        if (/jwt|not authenticated|invalid claim|permission denied|row-level security|refresh token/i.test(msg)) {
+          // Token sudah tidak valid: jangan pakai cache owner, karena UI akan
+          // terlihat login padahal semua tulisannya ditolak RLS.
+          handleSessionLost('Sesi login sudah berakhir. Silakan login ulang.');
+          return null;
+        }
         const cached = readCachedProfile();
         if (cached?.id === user.id) {
           profile = cached;
@@ -316,6 +338,7 @@
     },
 
     async logout() {
+      manualLogout = true;
       try {
         if (client) await client.auth.signOut();
       } catch (error) {
@@ -328,6 +351,17 @@
 
   window.KeuanganAuth = Auth;
   window.Auth = Auth;
+
+  // Pantau perubahan sesi Supabase. Kalau token mati / logout dari tab lain,
+  // paksa kembali ke layar login supaya tidak ada owner UI palsu.
+  if (client?.auth?.onAuthStateChange) {
+    client.auth.onAuthStateChange((event, session) => {
+      if (manualLogout) return;
+      if (event === 'SIGNED_OUT' || ((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && !session)) {
+        handleSessionLost('Sesi login sudah berakhir. Silakan login ulang.');
+      }
+    });
+  }
 
   // ---------------------------------------------------------------- UI wiring
   document.addEventListener('DOMContentLoaded', async () => {
@@ -437,6 +471,20 @@
 
     // Logout buyer
     el('buyer-logout')?.addEventListener('click', () => Auth.logout());
+
+    // Saat tab dibuka lagi, cek apakah sesi masih hidup. Tab lama yang
+    // refresh token-nya sudah tidak valid akan dikembalikan ke layar login.
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState !== 'visible' || !client) return;
+      try {
+        const { data, error } = await client.auth.getSession();
+        if (error || !data?.session) {
+          handleSessionLost('Sesi login sudah berakhir. Silakan login ulang.');
+        }
+      } catch (e) {
+        console.warn('Cek sesi saat tab aktif gagal:', e);
+      }
+    });
 
     // Jalankan pemeriksaan sesi
     try {

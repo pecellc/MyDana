@@ -2246,6 +2246,12 @@ html.auth-pending #auth-screen {
   border-color: rgba(251, 191, 36, 0.35);
 }
 
+.buyer-product-cat-gopay {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
 .buyer-products,
 .buyer-orders {
   display: flex;

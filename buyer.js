@@ -213,21 +213,26 @@
   let catalogProducts = [];
   let catalogTab = 'all';
 
-  // Tentukan produk masuk tab PULSA atau SALDO DANA. Kolom `category` adalah
-  // sumber utama; kalau data lama belum punya kategori, tebak dari nama.
+  // Tab katalog buyer: SEMUA, SALDO DANA, dan SALDO GOPAY. Kolom `category`
+  // adalah sumber utama; data lama tanpa kategori ditebak dari nama produk.
+  // Kategori `pulsa` lama tetap dikenali supaya produk lama tidak hilang dari
+  // tab SEMUA, tapi tab PULSA sudah tidak ditampilkan lagi.
   function productCategory(product) {
     const raw = String(product?.category || '').toLowerCase().trim();
-    if (['dana', 'saldo', 'ewallet', 'e-wallet', 'saldo-dana'].includes(raw)) return 'dana';
+    if (['dana', 'saldo', 'saldo-dana'].includes(raw)) return 'dana';
+    if (['gopay', 'go-pay', 'go pay', 'saldo-gopay', 'ewallet', 'e-wallet'].includes(raw)) return 'gopay';
     if (['pulsa', 'kuota', 'token', 'data'].includes(raw)) return 'pulsa';
 
     const name = String(product?.name || '').toLowerCase();
-    const looksDana = /(dana|saldo|ovo|gopay|shopeewallet|shopeepay|ewallet|e-wallet)/.test(name);
+    const looksGopay = /(gopay|go-?pay)/.test(name);
+    const looksDana = /(dana|saldo)/.test(name);
     const looksPulsa = /(pulsa|kuota|token|paket data|\bdata\b|pln|listrik|voucher|diamond|game)/.test(name);
+    if (looksGopay) return 'gopay';
     if (looksDana && !looksPulsa) return 'dana';
-    return 'pulsa';
+    return looksPulsa ? 'pulsa' : 'gopay';
   }
 
-  const CATALOG_TAB_LABEL = { all: 'SEMUA', pulsa: 'PULSA', dana: 'SALDO DANA' };
+  const CATALOG_TAB_LABEL = { all: 'SEMUA', dana: 'SALDO DANA', gopay: 'SALDO GOPAY' };
 
   function renderCatalog() {
     const container = el('buyer-products');
@@ -255,7 +260,9 @@
         : (window.KeuanganDB?.extractAdminFee ? window.KeuanganDB.extractAdminFee(product) : 0);
       const modalNeeded = Math.max(0, product.price - admin);
       const cat = productCategory(product);
-      const catLabel = cat === 'dana' ? '💳 SALDO DANA' : '📶 PULSA';
+      const catLabel = cat === 'dana'
+        ? '💳 SALDO DANA'
+        : (cat === 'gopay' ? '💚 SALDO GOPAY' : '📶 PULSA');
       return `
       <div class="buyer-product-card" data-product-cat="${cat}">
         <div class="buyer-product-info">
