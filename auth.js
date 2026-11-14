@@ -337,6 +337,35 @@
       return this.signIn(cleanUsername, password);
     },
 
+    async updatePassword(newPassword, oldPassword = null) {
+      if (!client) throw new Error('Supabase belum siap.');
+      const cleanNew = String(newPassword || '').trim();
+      if (!cleanNew || cleanNew.length < 6) {
+        throw new Error('Password baru minimal 6 karakter.');
+      }
+
+      // Jika diberikan oldPassword, verifikasi dulu kecocokannya
+      if (oldPassword && currentProfile?.username) {
+        const { error: verifyErr } = await client.auth.signInWithPassword({
+          email: usernameToEmail(currentProfile.username),
+          password: oldPassword
+        });
+        if (verifyErr) {
+          throw new Error('Password lama salah. Periksa kembali.');
+        }
+      }
+
+      const { data, error } = await client.auth.updateUser({
+        password: cleanNew
+      });
+
+      if (error) {
+        throw new Error(friendlyError(error));
+      }
+
+      return data;
+    },
+
     async logout() {
       manualLogout = true;
       try {

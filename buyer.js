@@ -1020,6 +1020,53 @@
       toast('✅ Pengaturan profil & nomor HP berhasil disimpan!', 'success');
       closeProfileModal();
     });
+
+    // Seksi Ubah Password Buyer
+    const pwToggleBtn = el('buyer-pw-toggle-btn');
+    const pwFields = el('buyer-pw-fields');
+    const submitPwBtn = el('buyer-submit-pw-btn');
+
+    pwToggleBtn?.addEventListener('click', () => {
+      if (!pwFields) return;
+      const isClosed = pwFields.style.display === 'none' || !pwFields.style.display;
+      pwFields.style.display = isClosed ? 'flex' : 'none';
+      pwToggleBtn.textContent = isClosed ? '✕ TUTUP FORM' : '🔑 BUKA FORM PW';
+    });
+
+    submitPwBtn?.addEventListener('click', async () => {
+      const oldPw = String(el('buyer-old-pw')?.value || '').trim();
+      const newPw = String(el('buyer-new-pw')?.value || '').trim();
+      const confirmPw = String(el('buyer-confirm-pw')?.value || '').trim();
+
+      if (!newPw) {
+        toast('Password baru wajib diisi.', 'danger');
+        return;
+      }
+      if (newPw.length < 6) {
+        toast('Password baru minimal 6 karakter.', 'danger');
+        return;
+      }
+      if (newPw !== confirmPw) {
+        toast('Konfirmasi password tidak sama.', 'danger');
+        return;
+      }
+
+      setBusy(submitPwBtn, true, 'MENYIMPAN...');
+      try {
+        await window.KeuanganAuth.updatePassword(newPw, oldPw || null);
+        toast('✅ Password akun kamu berhasil diubah!', 'success');
+        playBuyerChime();
+        if (el('buyer-old-pw')) el('buyer-old-pw').value = '';
+        if (el('buyer-new-pw')) el('buyer-new-pw').value = '';
+        if (el('buyer-confirm-pw')) el('buyer-confirm-pw').value = '';
+        if (pwFields) pwFields.style.display = 'none';
+        if (pwToggleBtn) pwToggleBtn.textContent = '🔑 BUKA FORM PW';
+      } catch (err) {
+        toast('Gagal mengubah password: ' + (err?.message || 'Coba lagi.'), 'danger');
+      } finally {
+        setBusy(submitPwBtn, false);
+      }
+    });
   }
 
   function parseAmount(value) {

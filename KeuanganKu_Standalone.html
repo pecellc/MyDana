@@ -3089,6 +3089,108 @@ textarea,
   color: #ffffff;
 }
 
+/* ===================================================================
+   FLOATING PHOTOS (FOTO KENANGAN MELAYANG OWNER)
+   =================================================================== */
+.mc-floating-photos-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+}
+
+.mc-floating-photo-item {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  background: #ffffff;
+  padding: 5px 5px 14px 5px;
+  border-radius: 4px;
+  border: 3px solid #1c2636;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  will-change: transform;
+  width: 110px;
+  max-width: 25vw;
+}
+
+.mc-floating-photo-item.is-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  animation: none !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
+  transform: scale(1.08) !important;
+}
+
+.mc-floating-photo-item:hover {
+  z-index: 998;
+  transform: scale(1.12) rotate(0deg) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.65);
+}
+
+.mc-floating-photo-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #0f172a;
+}
+
+.mc-floating-photo-pin {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: #ff5252;
+  border: 2px solid #7f1d1d;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  border-radius: 50%;
+}
+
+.mc-floating-photo-caption {
+  font-family: var(--mc-pixel-font);
+  font-size: 6.5px;
+  color: #1e293b;
+  text-align: center;
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes mcPhotoFloat0 {
+  0%, 100% { transform: translateY(0px) rotate(-4deg); }
+  50% { transform: translateY(-15px) rotate(-1deg); }
+}
+@keyframes mcPhotoFloat1 {
+  0%, 100% { transform: translateY(0px) rotate(5deg); }
+  50% { transform: translateY(-20px) rotate(8deg); }
+}
+@keyframes mcPhotoFloat2 {
+  0%, 100% { transform: translateY(0px) rotate(-6deg); }
+  50% { transform: translateY(-18px) rotate(-3deg); }
+}
+@keyframes mcPhotoFloat3 {
+  0%, 100% { transform: translateY(0px) rotate(4deg); }
+  50% { transform: translateY(-14px) rotate(1deg); }
+}
+
+@media (max-width: 640px) {
+  .mc-floating-photo-item {
+    width: 80px;
+    padding: 4px 4px 10px 4px;
+  }
+}
+
 </style>
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -3469,6 +3571,33 @@ textarea,
             </span>
           </div>
 
+          <!-- Seksi Ganti Password Akun Buyer -->
+          <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid var(--panel-border-light); padding: 12px; border-radius: 4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family: var(--mc-pixel-font); font-size: 8px; color: var(--mc-gold);">🔐 GANTI PASSWORD AKUN</span>
+              <button type="button" id="buyer-pw-toggle-btn" class="mc-btn mc-btn-dark" style="padding: 3px 8px; font-size: 7.5px;">
+                🔑 BUKA FORM PW
+              </button>
+            </div>
+            <div id="buyer-pw-fields" style="display:none; flex-direction:column; gap:8px; margin-top:10px;">
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD LAMA (OPSIONAL)</label>
+                <input type="password" id="buyer-old-pw" class="modal-input" placeholder="Masukkan password saat ini (jika ada)">
+              </div>
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD BARU (MIN. 6 KARAKTER)</label>
+                <input type="password" id="buyer-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password">
+              </div>
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">KONFIRMASI PASSWORD BARU</label>
+                <input type="password" id="buyer-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password">
+              </div>
+              <button type="button" id="buyer-submit-pw-btn" class="mc-btn mc-btn-gold" style="padding: 6px 12px; font-size: 7.5px; font-weight:800; align-self:flex-start; margin-top:4px;">
+                💾 SIMPAN PASSWORD BARU
+              </button>
+            </div>
+          </div>
+
           <!-- Statistik Transaksi Pembeli -->
           <div class="buyer-stats-grid">
             <div class="buyer-stat-card">
@@ -3597,6 +3726,12 @@ textarea,
         </button>
         <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
           🌞 SIANG
+        </button>
+        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()" title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
+          🖼️ FOTO: OFF
+        </button>
+        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()" title="Ubah Password Akun Owner">
+          🔐 GANTI PW
         </button>
         <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
           📥 EXCEL
@@ -4331,6 +4466,56 @@ textarea,
     </div>
   </div>
 
+  <!-- Modal Ganti Password Owner -->
+  <div class="mc-modal-overlay" id="mc-owner-pw-modal">
+    <div class="mc-modal-content mc-box" style="max-width: 440px;">
+      <div class="mc-modal-header">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span>🔐</span> <span>GANTI PASSWORD OWNER</span>
+        </span>
+        <button type="button" class="mc-modal-close-btn" onclick="window.App.closeChangePasswordModal()">✕</button>
+      </div>
+      <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">
+        Ubah password akun Owner agar lebih kuat dan terlindungi aman dari kebocoran data.
+      </div>
+      <form id="owner-change-pw-form" style="display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <label class="modal-label" for="owner-old-pw">PASSWORD LAMA (OPSIONAL)</label>
+          <input type="password" id="owner-old-pw" class="modal-input" placeholder="Password lama kamu">
+        </div>
+        <div>
+          <label class="modal-label" for="owner-new-pw">PASSWORD BARU (MIN. 6 KARAKTER)</label>
+          <input type="password" id="owner-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password" required>
+        </div>
+        <div>
+          <label class="modal-label" for="owner-confirm-pw">KONFIRMASI PASSWORD BARU</label>
+          <input type="password" id="owner-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password" required>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="mc-btn mc-btn-dark" onclick="window.App.closeChangePasswordModal()">BATAL</button>
+          <button type="submit" id="owner-submit-pw-btn" class="mc-btn mc-btn-gold">🔑 SIMPAN PASSWORD</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Preview Foto Kenangan Melayang -->
+  <div class="mc-modal-overlay" id="mc-floating-photo-preview-modal" onclick="if(event.target===this) this.classList.remove('active')">
+    <div class="mc-modal-content mc-box" style="max-width: 520px; text-align: center; padding: 16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-family: var(--mc-pixel-font); font-size: 8.5px; color: var(--mc-gold);">🖼️ FOTO KENANGAN MELAYANG</span>
+        <button type="button" class="mc-modal-close-btn" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">✕</button>
+      </div>
+      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang" style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;">
+      <div style="margin-top:10px; display:flex; justify-content:center;">
+        <button type="button" class="mc-btn mc-btn-dark" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">TUTUP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container Foto Melayang Owner -->
+  <div id="mc-floating-photos-container" class="mc-floating-photos-container" style="display:none;"></div>
+
   <!-- THEME DIALOG: pengganti prompt() / confirm() bawaan browser -->
   <div id="app-dialog-overlay" class="mc-modal-overlay" role="presentation">
     <div class="mc-modal-box app-dialog-box" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
@@ -4739,6 +4924,35 @@ textarea,
       }
 
       return this.signIn(cleanUsername, password);
+    },
+
+    async updatePassword(newPassword, oldPassword = null) {
+      if (!client) throw new Error('Supabase belum siap.');
+      const cleanNew = String(newPassword || '').trim();
+      if (!cleanNew || cleanNew.length < 6) {
+        throw new Error('Password baru minimal 6 karakter.');
+      }
+
+      // Jika diberikan oldPassword, verifikasi dulu kecocokannya
+      if (oldPassword && currentProfile?.username) {
+        const { error: verifyErr } = await client.auth.signInWithPassword({
+          email: usernameToEmail(currentProfile.username),
+          password: oldPassword
+        });
+        if (verifyErr) {
+          throw new Error('Password lama salah. Periksa kembali.');
+        }
+      }
+
+      const { data, error } = await client.auth.updateUser({
+        password: cleanNew
+      });
+
+      if (error) {
+        throw new Error(friendlyError(error));
+      }
+
+      return data;
     },
 
     async logout() {
@@ -6872,6 +7086,53 @@ textarea,
       }
       toast('✅ Pengaturan profil & nomor HP berhasil disimpan!', 'success');
       closeProfileModal();
+    });
+
+    // Seksi Ubah Password Buyer
+    const pwToggleBtn = el('buyer-pw-toggle-btn');
+    const pwFields = el('buyer-pw-fields');
+    const submitPwBtn = el('buyer-submit-pw-btn');
+
+    pwToggleBtn?.addEventListener('click', () => {
+      if (!pwFields) return;
+      const isClosed = pwFields.style.display === 'none' || !pwFields.style.display;
+      pwFields.style.display = isClosed ? 'flex' : 'none';
+      pwToggleBtn.textContent = isClosed ? '✕ TUTUP FORM' : '🔑 BUKA FORM PW';
+    });
+
+    submitPwBtn?.addEventListener('click', async () => {
+      const oldPw = String(el('buyer-old-pw')?.value || '').trim();
+      const newPw = String(el('buyer-new-pw')?.value || '').trim();
+      const confirmPw = String(el('buyer-confirm-pw')?.value || '').trim();
+
+      if (!newPw) {
+        toast('Password baru wajib diisi.', 'danger');
+        return;
+      }
+      if (newPw.length < 6) {
+        toast('Password baru minimal 6 karakter.', 'danger');
+        return;
+      }
+      if (newPw !== confirmPw) {
+        toast('Konfirmasi password tidak sama.', 'danger');
+        return;
+      }
+
+      setBusy(submitPwBtn, true, 'MENYIMPAN...');
+      try {
+        await window.KeuanganAuth.updatePassword(newPw, oldPw || null);
+        toast('✅ Password akun kamu berhasil diubah!', 'success');
+        playBuyerChime();
+        if (el('buyer-old-pw')) el('buyer-old-pw').value = '';
+        if (el('buyer-new-pw')) el('buyer-new-pw').value = '';
+        if (el('buyer-confirm-pw')) el('buyer-confirm-pw').value = '';
+        if (pwFields) pwFields.style.display = 'none';
+        if (pwToggleBtn) pwToggleBtn.textContent = '🔑 BUKA FORM PW';
+      } catch (err) {
+        toast('Gagal mengubah password: ' + (err?.message || 'Coba lagi.'), 'danger');
+      } finally {
+        setBusy(submitPwBtn, false);
+      }
     });
   }
 
@@ -12421,6 +12682,175 @@ textarea,
       this.kurangiModalPrompt();
     },
 
+    openChangePasswordModal: function () {
+      AudioEngine.play('click');
+      const modal = document.getElementById('mc-owner-pw-modal');
+      if (!modal) return;
+      if (document.getElementById('owner-old-pw')) document.getElementById('owner-old-pw').value = '';
+      if (document.getElementById('owner-new-pw')) document.getElementById('owner-new-pw').value = '';
+      if (document.getElementById('owner-confirm-pw')) document.getElementById('owner-confirm-pw').value = '';
+      modal.classList.add('active');
+      setTimeout(() => document.getElementById('owner-new-pw')?.focus(), 100);
+    },
+
+    closeChangePasswordModal: function () {
+      const modal = document.getElementById('mc-owner-pw-modal');
+      if (modal) modal.classList.remove('active');
+    },
+
+    toggleFloatingPhotos: function () {
+      state.settings.floatingPhotos = !state.settings.floatingPhotos;
+      saveData();
+      this.updateFloatingPhotos();
+      AudioEngine.play('click');
+      showToast(
+        state.settings.floatingPhotos
+          ? '🖼️ Foto Melayang Diaktifkan! Klik foto untuk perbesar.'
+          : '🖼️ Foto Melayang Dinonaktifkan.',
+        'gold'
+      );
+    },
+
+    updateFloatingPhotos: function () {
+      const btn = document.getElementById('floating-photos-btn');
+      if (btn) {
+        btn.textContent = state.settings.floatingPhotos ? '🖼️ FOTO: ON' : '🖼️ FOTO: OFF';
+        btn.classList.toggle('active', !!state.settings.floatingPhotos);
+      }
+
+      const container = document.getElementById('mc-floating-photos-container');
+      if (!container) return;
+
+      if (!state.settings.floatingPhotos) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      if (container.children.length > 0) return; // Sudah terpasang
+
+      const photoList = [
+        { src: 'assets/photos/0.jpg', title: 'Kenangan 0' },
+        { src: 'assets/photos/1.jpg', title: 'Kenangan 1' },
+        { src: 'assets/photos/2.jpg', title: 'Kenangan 2' },
+        { src: 'assets/photos/3.jpg', title: 'Kenangan 3' },
+        { src: 'assets/photos/4.jpg', title: 'Kenangan 4' },
+        { src: 'assets/photos/5.jpg', title: 'Kenangan 5' },
+        { src: 'assets/photos/6.jpg', title: 'Kenangan 6' },
+        { src: 'assets/photos/7.png', title: 'Kenangan 7' },
+        { src: 'assets/photos/8.jpg', title: 'Kenangan 8' },
+        { src: 'assets/photos/9.png', title: 'Kenangan 9' },
+        { src: 'assets/photos/10.jpg', title: 'Kenangan 10' }
+      ];
+
+      photoList.forEach((p, idx) => {
+        const item = document.createElement('div');
+        item.className = 'mc-floating-photo-item';
+
+        const cols = 4;
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const leftPercent = 5 + col * 24 + ((idx * 7) % 6);
+        const topPercent = 10 + row * 26 + ((idx * 11) % 8);
+
+        item.style.left = `${Math.max(4, Math.min(84, leftPercent))}%`;
+        item.style.top = `${Math.max(8, Math.min(76, topPercent))}%`;
+
+        const animIdx = idx % 4;
+        const duration = 4.5 + (idx % 3) * 1.2;
+        const delay = -(idx * 0.9);
+        item.style.animation = `mcPhotoFloat${animIdx} ${duration}s ease-in-out infinite alternate`;
+        item.style.animationDelay = `${delay}s`;
+
+        item.innerHTML = `
+          <div class="mc-floating-photo-pin"></div>
+          <img class="mc-floating-photo-img" src="${p.src}" alt="${p.title}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="mc-floating-photo-caption">#${idx + 1}</div>
+        `;
+
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let origX = 0, origY = 0;
+        let hasMoved = false;
+
+        function onMouseDown(e) {
+          if (e.button !== 0) return;
+          isDragging = true;
+          hasMoved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          origX = item.offsetLeft;
+          origY = item.offsetTop;
+          item.classList.add('is-dragging');
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function onMouseMove(e) {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+          item.style.left = `${origX + dx}px`;
+          item.style.top = `${origY + dy}px`;
+        }
+
+        function onMouseUp() {
+          if (!isDragging) return;
+          isDragging = false;
+          item.classList.remove('is-dragging');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (!hasMoved) {
+            window.App.previewFloatingPhoto(p.src);
+          }
+        }
+
+        item.addEventListener('mousedown', onMouseDown);
+
+        item.addEventListener('touchstart', (e) => {
+          const t = e.touches[0];
+          isDragging = true;
+          hasMoved = false;
+          startX = t.clientX;
+          startY = t.clientY;
+          origX = item.offsetLeft;
+          origY = item.offsetTop;
+          item.classList.add('is-dragging');
+        }, { passive: true });
+
+        item.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          const t = e.touches[0];
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
+          item.style.left = `${origX + dx}px`;
+          item.style.top = `${origY + dy}px`;
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+          if (!isDragging) return;
+          isDragging = false;
+          item.classList.remove('is-dragging');
+          if (!hasMoved) {
+            window.App.previewFloatingPhoto(p.src);
+          }
+        });
+
+        container.appendChild(item);
+      });
+    },
+
+    previewFloatingPhoto: function (src) {
+      const modal = document.getElementById('mc-floating-photo-preview-modal');
+      const img = document.getElementById('mc-floating-photo-preview-img');
+      if (!modal || !img) return;
+      img.src = src;
+      modal.classList.add('active');
+      AudioEngine.play('click');
+    },
+
     uiConfirm: uiConfirm,
     uiPrompt: uiPrompt,
 
@@ -12497,6 +12927,57 @@ textarea,
       } catch (e) {
         console.warn('Realtime orders tidak aktif:', e);
       }
+    }
+
+    // Floating photos UI update
+    window.App?.updateFloatingPhotos?.();
+
+    // Wire Form Ganti Password Owner
+    const ownerPwForm = document.getElementById('owner-change-pw-form');
+    if (ownerPwForm && !ownerPwForm.dataset.wired) {
+      ownerPwForm.dataset.wired = 'true';
+      ownerPwForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const oldPw = String(document.getElementById('owner-old-pw')?.value || '').trim();
+        const newPw = String(document.getElementById('owner-new-pw')?.value || '').trim();
+        const confirmPw = String(document.getElementById('owner-confirm-pw')?.value || '').trim();
+        const submitBtn = document.getElementById('owner-submit-pw-btn');
+
+        if (!newPw) {
+          showToast('Password baru wajib diisi.', 'danger');
+          return;
+        }
+        if (newPw.length < 6) {
+          showToast('Password baru minimal 6 karakter.', 'danger');
+          return;
+        }
+        if (newPw !== confirmPw) {
+          showToast('Konfirmasi password baru tidak cocok.', 'danger');
+          return;
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'MENYIMPAN...';
+        }
+
+        try {
+          await window.KeuanganAuth.updatePassword(newPw, oldPw || null);
+          AudioEngine.play('coin');
+          showToast('✅ Password Owner berhasil diubah! Gunakan password baru saat login.', 'success');
+          window.App.closeChangePasswordModal();
+          if (document.getElementById('owner-old-pw')) document.getElementById('owner-old-pw').value = '';
+          if (document.getElementById('owner-new-pw')) document.getElementById('owner-new-pw').value = '';
+          if (document.getElementById('owner-confirm-pw')) document.getElementById('owner-confirm-pw').value = '';
+        } catch (err) {
+          showToast('Gagal mengubah password: ' + (err?.message || 'Coba lagi.'), 'danger');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🔑 SIMPAN PASSWORD';
+          }
+        }
+      });
     }
 
     window.addEventListener('keuanganku:sync-error', () => {

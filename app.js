@@ -5120,6 +5120,175 @@
       this.kurangiModalPrompt();
     },
 
+    openChangePasswordModal: function () {
+      AudioEngine.play('click');
+      const modal = document.getElementById('mc-owner-pw-modal');
+      if (!modal) return;
+      if (document.getElementById('owner-old-pw')) document.getElementById('owner-old-pw').value = '';
+      if (document.getElementById('owner-new-pw')) document.getElementById('owner-new-pw').value = '';
+      if (document.getElementById('owner-confirm-pw')) document.getElementById('owner-confirm-pw').value = '';
+      modal.classList.add('active');
+      setTimeout(() => document.getElementById('owner-new-pw')?.focus(), 100);
+    },
+
+    closeChangePasswordModal: function () {
+      const modal = document.getElementById('mc-owner-pw-modal');
+      if (modal) modal.classList.remove('active');
+    },
+
+    toggleFloatingPhotos: function () {
+      state.settings.floatingPhotos = !state.settings.floatingPhotos;
+      saveData();
+      this.updateFloatingPhotos();
+      AudioEngine.play('click');
+      showToast(
+        state.settings.floatingPhotos
+          ? '🖼️ Foto Melayang Diaktifkan! Klik foto untuk perbesar.'
+          : '🖼️ Foto Melayang Dinonaktifkan.',
+        'gold'
+      );
+    },
+
+    updateFloatingPhotos: function () {
+      const btn = document.getElementById('floating-photos-btn');
+      if (btn) {
+        btn.textContent = state.settings.floatingPhotos ? '🖼️ FOTO: ON' : '🖼️ FOTO: OFF';
+        btn.classList.toggle('active', !!state.settings.floatingPhotos);
+      }
+
+      const container = document.getElementById('mc-floating-photos-container');
+      if (!container) return;
+
+      if (!state.settings.floatingPhotos) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      if (container.children.length > 0) return; // Sudah terpasang
+
+      const photoList = [
+        { src: 'assets/photos/0.jpg', title: 'Kenangan 0' },
+        { src: 'assets/photos/1.jpg', title: 'Kenangan 1' },
+        { src: 'assets/photos/2.jpg', title: 'Kenangan 2' },
+        { src: 'assets/photos/3.jpg', title: 'Kenangan 3' },
+        { src: 'assets/photos/4.jpg', title: 'Kenangan 4' },
+        { src: 'assets/photos/5.jpg', title: 'Kenangan 5' },
+        { src: 'assets/photos/6.jpg', title: 'Kenangan 6' },
+        { src: 'assets/photos/7.png', title: 'Kenangan 7' },
+        { src: 'assets/photos/8.jpg', title: 'Kenangan 8' },
+        { src: 'assets/photos/9.png', title: 'Kenangan 9' },
+        { src: 'assets/photos/10.jpg', title: 'Kenangan 10' }
+      ];
+
+      photoList.forEach((p, idx) => {
+        const item = document.createElement('div');
+        item.className = 'mc-floating-photo-item';
+
+        const cols = 4;
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const leftPercent = 5 + col * 24 + ((idx * 7) % 6);
+        const topPercent = 10 + row * 26 + ((idx * 11) % 8);
+
+        item.style.left = `${Math.max(4, Math.min(84, leftPercent))}%`;
+        item.style.top = `${Math.max(8, Math.min(76, topPercent))}%`;
+
+        const animIdx = idx % 4;
+        const duration = 4.5 + (idx % 3) * 1.2;
+        const delay = -(idx * 0.9);
+        item.style.animation = `mcPhotoFloat${animIdx} ${duration}s ease-in-out infinite alternate`;
+        item.style.animationDelay = `${delay}s`;
+
+        item.innerHTML = `
+          <div class="mc-floating-photo-pin"></div>
+          <img class="mc-floating-photo-img" src="${p.src}" alt="${p.title}" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="mc-floating-photo-caption">#${idx + 1}</div>
+        `;
+
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let origX = 0, origY = 0;
+        let hasMoved = false;
+
+        function onMouseDown(e) {
+          if (e.button !== 0) return;
+          isDragging = true;
+          hasMoved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          origX = item.offsetLeft;
+          origY = item.offsetTop;
+          item.classList.add('is-dragging');
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function onMouseMove(e) {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+          item.style.left = `${origX + dx}px`;
+          item.style.top = `${origY + dy}px`;
+        }
+
+        function onMouseUp() {
+          if (!isDragging) return;
+          isDragging = false;
+          item.classList.remove('is-dragging');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (!hasMoved) {
+            window.App.previewFloatingPhoto(p.src);
+          }
+        }
+
+        item.addEventListener('mousedown', onMouseDown);
+
+        item.addEventListener('touchstart', (e) => {
+          const t = e.touches[0];
+          isDragging = true;
+          hasMoved = false;
+          startX = t.clientX;
+          startY = t.clientY;
+          origX = item.offsetLeft;
+          origY = item.offsetTop;
+          item.classList.add('is-dragging');
+        }, { passive: true });
+
+        item.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          const t = e.touches[0];
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
+          item.style.left = `${origX + dx}px`;
+          item.style.top = `${origY + dy}px`;
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+          if (!isDragging) return;
+          isDragging = false;
+          item.classList.remove('is-dragging');
+          if (!hasMoved) {
+            window.App.previewFloatingPhoto(p.src);
+          }
+        });
+
+        container.appendChild(item);
+      });
+    },
+
+    previewFloatingPhoto: function (src) {
+      const modal = document.getElementById('mc-floating-photo-preview-modal');
+      const img = document.getElementById('mc-floating-photo-preview-img');
+      if (!modal || !img) return;
+      img.src = src;
+      modal.classList.add('active');
+      AudioEngine.play('click');
+    },
+
     uiConfirm: uiConfirm,
     uiPrompt: uiPrompt,
 
@@ -5196,6 +5365,57 @@
       } catch (e) {
         console.warn('Realtime orders tidak aktif:', e);
       }
+    }
+
+    // Floating photos UI update
+    window.App?.updateFloatingPhotos?.();
+
+    // Wire Form Ganti Password Owner
+    const ownerPwForm = document.getElementById('owner-change-pw-form');
+    if (ownerPwForm && !ownerPwForm.dataset.wired) {
+      ownerPwForm.dataset.wired = 'true';
+      ownerPwForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const oldPw = String(document.getElementById('owner-old-pw')?.value || '').trim();
+        const newPw = String(document.getElementById('owner-new-pw')?.value || '').trim();
+        const confirmPw = String(document.getElementById('owner-confirm-pw')?.value || '').trim();
+        const submitBtn = document.getElementById('owner-submit-pw-btn');
+
+        if (!newPw) {
+          showToast('Password baru wajib diisi.', 'danger');
+          return;
+        }
+        if (newPw.length < 6) {
+          showToast('Password baru minimal 6 karakter.', 'danger');
+          return;
+        }
+        if (newPw !== confirmPw) {
+          showToast('Konfirmasi password baru tidak cocok.', 'danger');
+          return;
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'MENYIMPAN...';
+        }
+
+        try {
+          await window.KeuanganAuth.updatePassword(newPw, oldPw || null);
+          AudioEngine.play('coin');
+          showToast('✅ Password Owner berhasil diubah! Gunakan password baru saat login.', 'success');
+          window.App.closeChangePasswordModal();
+          if (document.getElementById('owner-old-pw')) document.getElementById('owner-old-pw').value = '';
+          if (document.getElementById('owner-new-pw')) document.getElementById('owner-new-pw').value = '';
+          if (document.getElementById('owner-confirm-pw')) document.getElementById('owner-confirm-pw').value = '';
+        } catch (err) {
+          showToast('Gagal mengubah password: ' + (err?.message || 'Coba lagi.'), 'danger');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🔑 SIMPAN PASSWORD';
+          }
+        }
+      });
     }
 
     window.addEventListener('keuanganku:sync-error', () => {

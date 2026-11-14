@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -390,6 +390,33 @@
             </span>
           </div>
 
+          <!-- Seksi Ganti Password Akun Buyer -->
+          <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid var(--panel-border-light); padding: 12px; border-radius: 4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family: var(--mc-pixel-font); font-size: 8px; color: var(--mc-gold);">🔐 GANTI PASSWORD AKUN</span>
+              <button type="button" id="buyer-pw-toggle-btn" class="mc-btn mc-btn-dark" style="padding: 3px 8px; font-size: 7.5px;">
+                🔑 BUKA FORM PW
+              </button>
+            </div>
+            <div id="buyer-pw-fields" style="display:none; flex-direction:column; gap:8px; margin-top:10px;">
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD LAMA (OPSIONAL)</label>
+                <input type="password" id="buyer-old-pw" class="modal-input" placeholder="Masukkan password saat ini (jika ada)">
+              </div>
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD BARU (MIN. 6 KARAKTER)</label>
+                <input type="password" id="buyer-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password">
+              </div>
+              <div>
+                <label class="buyer-form-label" style="font-size:0.7rem;">KONFIRMASI PASSWORD BARU</label>
+                <input type="password" id="buyer-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password">
+              </div>
+              <button type="button" id="buyer-submit-pw-btn" class="mc-btn mc-btn-gold" style="padding: 6px 12px; font-size: 7.5px; font-weight:800; align-self:flex-start; margin-top:4px;">
+                💾 SIMPAN PASSWORD BARU
+              </button>
+            </div>
+          </div>
+
           <!-- Statistik Transaksi Pembeli -->
           <div class="buyer-stats-grid">
             <div class="buyer-stat-card">
@@ -518,6 +545,12 @@
         </button>
         <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
           🌞 SIANG
+        </button>
+        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()" title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
+          🖼️ FOTO: OFF
+        </button>
+        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()" title="Ubah Password Akun Owner">
+          🔐 GANTI PW
         </button>
         <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
           📥 EXCEL
@@ -1251,6 +1284,56 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal Ganti Password Owner -->
+  <div class="mc-modal-overlay" id="mc-owner-pw-modal">
+    <div class="mc-modal-content mc-box" style="max-width: 440px;">
+      <div class="mc-modal-header">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span>🔐</span> <span>GANTI PASSWORD OWNER</span>
+        </span>
+        <button type="button" class="mc-modal-close-btn" onclick="window.App.closeChangePasswordModal()">✕</button>
+      </div>
+      <div style="font-size: 0.78rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">
+        Ubah password akun Owner agar lebih kuat dan terlindungi aman dari kebocoran data.
+      </div>
+      <form id="owner-change-pw-form" style="display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <label class="modal-label" for="owner-old-pw">PASSWORD LAMA (OPSIONAL)</label>
+          <input type="password" id="owner-old-pw" class="modal-input" placeholder="Password lama kamu">
+        </div>
+        <div>
+          <label class="modal-label" for="owner-new-pw">PASSWORD BARU (MIN. 6 KARAKTER)</label>
+          <input type="password" id="owner-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password" required>
+        </div>
+        <div>
+          <label class="modal-label" for="owner-confirm-pw">KONFIRMASI PASSWORD BARU</label>
+          <input type="password" id="owner-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password" required>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="button" class="mc-btn mc-btn-dark" onclick="window.App.closeChangePasswordModal()">BATAL</button>
+          <button type="submit" id="owner-submit-pw-btn" class="mc-btn mc-btn-gold">🔑 SIMPAN PASSWORD</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Preview Foto Kenangan Melayang -->
+  <div class="mc-modal-overlay" id="mc-floating-photo-preview-modal" onclick="if(event.target===this) this.classList.remove('active')">
+    <div class="mc-modal-content mc-box" style="max-width: 520px; text-align: center; padding: 16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-family: var(--mc-pixel-font); font-size: 8.5px; color: var(--mc-gold);">🖼️ FOTO KENANGAN MELAYANG</span>
+        <button type="button" class="mc-modal-close-btn" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">✕</button>
+      </div>
+      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang" style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;">
+      <div style="margin-top:10px; display:flex; justify-content:center;">
+        <button type="button" class="mc-btn mc-btn-dark" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">TUTUP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container Foto Melayang Owner -->
+  <div id="mc-floating-photos-container" class="mc-floating-photos-container" style="display:none;"></div>
 
   <!-- THEME DIALOG: pengganti prompt() / confirm() bawaan browser -->
   <div id="app-dialog-overlay" class="mc-modal-overlay" role="presentation">

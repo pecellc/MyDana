@@ -3075,3 +3075,105 @@ textarea,
   font-size: 9px;
   color: #ffffff;
 }
+
+/* ===================================================================
+   FLOATING PHOTOS (FOTO KENANGAN MELAYANG OWNER)
+   =================================================================== */
+.mc-floating-photos-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+}
+
+.mc-floating-photo-item {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  background: #ffffff;
+  padding: 5px 5px 14px 5px;
+  border-radius: 4px;
+  border: 3px solid #1c2636;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  will-change: transform;
+  width: 110px;
+  max-width: 25vw;
+}
+
+.mc-floating-photo-item.is-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  animation: none !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
+  transform: scale(1.08) !important;
+}
+
+.mc-floating-photo-item:hover {
+  z-index: 998;
+  transform: scale(1.12) rotate(0deg) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.65);
+}
+
+.mc-floating-photo-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #0f172a;
+}
+
+.mc-floating-photo-pin {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: #ff5252;
+  border: 2px solid #7f1d1d;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  border-radius: 50%;
+}
+
+.mc-floating-photo-caption {
+  font-family: var(--mc-pixel-font);
+  font-size: 6.5px;
+  color: #1e293b;
+  text-align: center;
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes mcPhotoFloat0 {
+  0%, 100% { transform: translateY(0px) rotate(-4deg); }
+  50% { transform: translateY(-15px) rotate(-1deg); }
+}
+@keyframes mcPhotoFloat1 {
+  0%, 100% { transform: translateY(0px) rotate(5deg); }
+  50% { transform: translateY(-20px) rotate(8deg); }
+}
+@keyframes mcPhotoFloat2 {
+  0%, 100% { transform: translateY(0px) rotate(-6deg); }
+  50% { transform: translateY(-18px) rotate(-3deg); }
+}
+@keyframes mcPhotoFloat3 {
+  0%, 100% { transform: translateY(0px) rotate(4deg); }
+  50% { transform: translateY(-14px) rotate(1deg); }
+}
+
+@media (max-width: 640px) {
+  .mc-floating-photo-item {
+    width: 80px;
+    padding: 4px 4px 10px 4px;
+  }
+}
