@@ -5240,7 +5240,7 @@
         item.innerHTML = `
           <div class="mc-floating-photo-card">
             <div class="mc-floating-photo-pin"></div>
-            <img class="mc-floating-photo-img" src="${photoPool[slot.photoIdx]}" alt="Foto Kenangan" loading="lazy" onerror="this.src='icon-192.png'">
+            <img class="mc-floating-photo-img" src="${photoPool[slot.photoIdx]}" alt="Foto Kenangan" loading="lazy" decoding="async" onerror="this.src='icon-192.png'">
             <div class="mc-floating-photo-caption">#${slot.photoIdx + 1}</div>
           </div>
         `;

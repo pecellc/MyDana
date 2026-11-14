@@ -10,7 +10,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://ziibivkhualutrdiojto.supabase.co">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css?v=16">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -130,7 +135,7 @@
       <div class="buyer-header-right">
         <div class="buyer-profile-badge" id="buyer-profile-badge-btn" title="Klik untuk atur profil & akun">
           <div class="buyer-avatar-wrapper">
-            <img id="buyer-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;">
+            <img id="buyer-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;" decoding="async">
             <span id="buyer-avatar-placeholder" class="buyer-avatar-placeholder">👤</span>
             <span class="buyer-avatar-edit-icon" title="Atur Profil">⚙️</span>
           </div>
@@ -367,7 +372,7 @@
         <!-- Avatar & User Banner -->
         <div class="buyer-profile-banner">
           <div class="buyer-profile-avatar-big-wrap">
-            <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;">
+            <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;" decoding="async">
             <span id="buyer-profile-modal-avatar-placeholder" class="buyer-avatar-placeholder"
               style="font-size:2rem;">👤</span>
           </div>
@@ -483,7 +488,7 @@
         </div>
 
         <div id="buyer-proof-modal-preview-wrap" style="display: none; margin-bottom: 12px; text-align: center; background: #000; border: 2px solid var(--mc-gold); border-radius: 4px; padding: 6px; max-height: 240px; overflow: hidden;">
-          <img id="buyer-proof-modal-preview-img" src="" alt="Preview Bukti Transfer" style="max-height: 220px; max-width: 100%; object-fit: contain;">
+          <img id="buyer-proof-modal-preview-img" src="" alt="Preview Bukti Transfer" style="max-height: 220px; max-width: 100%; object-fit: contain;" decoding="async">
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
@@ -1297,7 +1302,7 @@
 
       <!-- Frame Gambar Screenshot Bukti TF -->
       <div style="background: #000; border: 3px solid var(--mc-gold); border-radius: 4px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 220px; max-height: 60vh; margin-bottom: 14px; position: relative;">
-        <img id="proof-viewer-img" src="" alt="Bukti Transfer" style="max-width: 100%; max-height: 60vh; object-fit: contain; display: block;">
+        <img id="proof-viewer-img" src="" alt="Bukti Transfer" style="max-width: 100%; max-height: 60vh; object-fit: contain; display: block;" decoding="async">
         <div id="proof-viewer-empty" style="display:none; color:#fbbf24; font-size:0.8rem; padding: 20px; text-align: center;">Belum ada gambar bukti transfer</div>
       </div>
 
@@ -1348,7 +1353,7 @@
         <span style="font-family: var(--mc-pixel-font); font-size: 8.5px; color: var(--mc-gold);">🖼️ FOTO KENANGAN MELAYANG</span>
         <button type="button" class="mc-modal-close-btn" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">✕</button>
       </div>
-      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang" style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;">
+      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang" style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;" decoding="async">
       <div style="margin-top:10px; display:flex; justify-content:center;">
         <button type="button" class="mc-btn mc-btn-dark" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">TUTUP</button>
       </div>

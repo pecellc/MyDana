@@ -1816,6 +1816,8 @@ tbody tr:last-child td {
   height: 24px;
   width: 100px;
   image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
   animation: mcDriftCloud linear infinite;
 }
 
@@ -1839,8 +1841,8 @@ tbody tr:last-child td {
 .cloud-4 { top: 62%; width: 160px; animation-duration: 110s; animation-delay: -15s; opacity: 0.45; }
 
 @keyframes mcDriftCloud {
-  from { transform: translateX(-320px); }
-  to { transform: translateX(calc(100vw + 320px)); }
+  from { transform: translate3d(-320px, 0, 0); }
+  to { transform: translate3d(calc(100vw + 320px), 0, 0); }
 }
 
 /* Pixel Moon & Sun */
@@ -2657,11 +2659,16 @@ select.modal-input option {
 /* ===================================================================
    DEEP PERFORMANCE OPTIMIZATION FOR MOBILE & LOW-END DEVICES (HP KENTANG)
    =================================================================== */
-/* 1. Eliminate 300ms mobile tap delay and prevent rubberband zoom stutter */
+/* 1. Eliminate 300ms mobile tap delay, disable tap highlight, and prevent rubberband zoom stutter */
 html {
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -2674,30 +2681,48 @@ textarea,
 .buyer-card,
 .buyer-product-card,
 .buyer-order-item,
+.buyer-proof-badge,
 .mc-tab-btn,
-.recap-tab-btn {
+.recap-tab-btn,
+.mc-modal-close-btn {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 1b. Content-visibility (DOM virtualization): skip layout/paint for off-screen cards */
+.buyer-product-card,
+.buyer-order-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 115px;
+  contain: layout style;
+}
+
+/* 1c. Smooth momentum scrolling with GPU acceleration */
+.app-container,
+.buyer-app,
+.buyer-catalog-grid,
+.buyer-orders-list,
+.table-container,
+.mc-modal-box {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* 2. Low-spec & Mobile screens: Kill GPU-heavy backdrop blur & background clouds */
 @media (max-width: 768px) {
   /* Disable expensive backdrop-filter across all elements on mobile */
-  .app-container,
-  .mc-box,
-  .mc-modal-box,
-  .auth-card,
-  .buyer-card,
-  .stat-card,
-  .grand-total-hero,
-  .buyer-order-item,
-  .buyer-product-card,
-  .pulsa-kios-box,
-  .recap-box,
-  .debt-panel,
-  .quest-box {
+  *, *::before, *::after {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background-color: rgba(15, 23, 42, 0.96) !important;
+  }
+
+  .mc-modal-overlay {
+    background: rgba(5, 10, 20, 0.92) !important;
+  }
+
+  /* Disable continuous pulsing badge on mobile to save CPU and battery */
+  .mc-discount-badge {
+    animation: none !important;
   }
 
   /* Disable animated background clouds on mobile to save CPU/GPU rendering */
@@ -3248,12 +3273,14 @@ textarea,
   box-shadow: 0 1px 4px rgba(239, 68, 68, 0.4);
   letter-spacing: -0.02em;
   white-space: nowrap;
+  transform: translateZ(0);
+  will-change: transform;
   animation: mcPulseDiscount 2.2s ease-in-out infinite alternate;
 }
 
 @keyframes mcPulseDiscount {
-  0% { transform: scale(1); filter: brightness(1); }
-  100% { transform: scale(1.06); filter: brightness(1.2); }
+  0% { transform: scale3d(1, 1, 1); }
+  100% { transform: scale3d(1.05, 1.05, 1); }
 }
 
 .mc-promo-tag {
