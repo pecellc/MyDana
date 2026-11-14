@@ -14,7 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://ziibivkhualutrdiojto.supabase.co">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
   <style>
 /* ===================================================================
    KeuanganKu - MINECRAFT SKY EDITION (Fresh, Open & Airy)
@@ -3120,6 +3121,219 @@ textarea,
 }
 
 /* ===================================================================
+   MINECRAFT TACTILE FORM CONTROLS (ANTI ANDROID NATIVE POPUP)
+   =================================================================== */
+
+/* 1. Segmented Payment Selector */
+.mc-pay-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.mc-pay-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid var(--panel-border-dark);
+  border-radius: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.15s ease;
+  position: relative;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mc-pay-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--panel-border-light);
+}
+
+.mc-pay-card:active {
+  transform: scale(0.98);
+}
+
+.mc-pay-card-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mc-pay-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.mc-pay-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mc-pay-title {
+  font-family: var(--mc-pixel-font);
+  font-size: 7.5px;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-pay-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-pay-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mc-pay-card.is-active {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: var(--mc-emerald);
+  box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.25), 0 0 10px rgba(71, 226, 104, 0.25);
+}
+
+.mc-pay-card.is-active .mc-pay-title {
+  color: var(--mc-emerald);
+}
+
+.mc-pay-card.is-active .mc-pay-indicator {
+  border-color: var(--mc-emerald);
+  background: var(--mc-emerald);
+  box-shadow: 0 0 8px var(--mc-emerald);
+}
+
+/* 2. Custom Minecraft Dropdown (Anti Native Dialog) */
+.mc-custom-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.mc-custom-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(9, 14, 24, 0.85);
+  color: #ffffff;
+  border: 2px solid var(--panel-border-dark);
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  font-family: var(--mc-body-font);
+  font-size: 0.86rem;
+  font-weight: 600;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mc-custom-select-btn:hover,
+.mc-custom-select-btn:focus,
+.mc-custom-select-btn.is-open {
+  border-color: var(--mc-diamond);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+.mc-custom-select-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
+  color: #f1f5f9;
+}
+
+.mc-custom-select-arrow {
+  font-size: 0.7rem;
+  color: var(--mc-diamond);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mc-custom-select-btn.is-open .mc-custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.mc-custom-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #0f172a;
+  border: 2px solid var(--mc-diamond);
+  border-radius: 4px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85), 0 0 15px rgba(56, 189, 248, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  z-index: 1050;
+  max-height: 250px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mc-custom-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #cbd5e1;
+  font-family: var(--mc-body-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.mc-custom-select-item:hover,
+.mc-custom-select-item:active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #ffffff;
+}
+
+.mc-custom-select-item.is-selected {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: var(--mc-emerald);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.mc-custom-select-item-check {
+  color: var(--mc-emerald);
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-left: 8px;
+}
+
+/* ===================================================================
    FLOATING PHOTOS (3 FOTO MELAYANG BERGANTIAN DARI KIRI & KANAN)
    =================================================================== */
 .mc-floating-photos-container {
@@ -3435,7 +3649,8 @@ textarea,
       <div class="buyer-header-right">
         <div class="buyer-profile-badge" id="buyer-profile-badge-btn" title="Klik untuk atur profil & akun">
           <div class="buyer-avatar-wrapper">
-            <img id="buyer-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;" decoding="async">
+            <img id="buyer-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;"
+              decoding="async">
             <span id="buyer-avatar-placeholder" class="buyer-avatar-placeholder">👤</span>
             <span class="buyer-avatar-edit-icon" title="Atur Profil">⚙️</span>
           </div>
@@ -3515,19 +3730,47 @@ textarea,
           <label class="buyer-form-label" for="buyer-order-amount">NOMINAL (Rp)</label>
           <input id="buyer-order-amount" class="modal-input" type="number" min="1" step="1" placeholder="Nominal (Rp)"
             required>
-          <label class="buyer-form-label" for="buyer-order-payment">💳 METODE PEMBAYARAN <span
+          <label class="buyer-form-label">💳 METODE PEMBAYARAN <span
               style="color:var(--mc-redstone);">*</span></label>
-          <select id="buyer-order-payment" class="modal-input">
+          <div class="mc-pay-selector" id="buyer-order-pay-selector">
+            <button type="button" class="mc-pay-card is-active" data-value="dana">
+              <div class="mc-pay-card-left">
+                <span class="mc-pay-icon">📱</span>
+                <div class="mc-pay-text">
+                  <strong class="mc-pay-title">DANA</strong>
+                  <small class="mc-pay-sub">Transfer Online</small>
+                </div>
+              </div>
+              <span class="mc-pay-indicator"></span>
+            </button>
+            <button type="button" class="mc-pay-card" data-value="cash">
+              <div class="mc-pay-card-left">
+                <span class="mc-pay-icon">💵</span>
+                <div class="mc-pay-text">
+                  <strong class="mc-pay-title">CASH / TUNAI</strong>
+                  <small class="mc-pay-sub">Bayar Fisik ke Owner</small>
+                </div>
+              </div>
+              <span class="mc-pay-indicator"></span>
+            </button>
+          </div>
+          <select id="buyer-order-payment" class="modal-input" style="display:none;">
             <option value="dana">📱 DANA (Transfer Online)</option>
             <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
           </select>
-          <div id="buyer-order-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+          <div id="buyer-order-cash-note"
+            style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
             💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
           </div>
-          <label class="buyer-form-label" for="buyer-order-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
-          <select id="buyer-order-timing" class="modal-input">
-            <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
-          </select>
+          <label class="buyer-form-label">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI)</label>
+          <div class="mc-custom-select-wrap" id="buyer-order-timing-wrap">
+            <button type="button" class="mc-custom-select-btn" id="buyer-order-timing-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="mc-custom-select-label" id="buyer-order-timing-label">⚡ Hari Ini (Bayar Sekarang)</span>
+              <span class="mc-custom-select-arrow">▼</span>
+            </button>
+            <div class="mc-custom-select-menu" id="buyer-order-timing-menu" role="listbox" style="display:none;"></div>
+            <select id="buyer-order-timing" class="modal-input" style="display:none;"></select>
+          </div>
           <div id="buyer-due-motivational-tip"
             style="display:none; font-size:0.75rem; color:#38bdf8; background:rgba(56,189,248,0.1); border-left:3px solid #38bdf8; padding:7px 10px; margin-top:5px; border-radius:3px; line-height:1.45;">
           </div>
@@ -3616,29 +3859,58 @@ textarea,
           <div>
             <label class="buyer-form-label" for="buyer-popup-phone">📱 NOMOR HP TUJUAN <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890"
-              required autocomplete="tel">
-            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor HP tujuan pengisian pulsa / kuota.</span>
+            <input id="buyer-popup-phone" class="modal-input" type="tel" placeholder="Contoh: 081234567890" required
+              autocomplete="tel">
+            <span style="font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px;">Nomor HP tujuan pengisian
+              pulsa / kuota.</span>
           </div>
 
           <div>
-            <label class="buyer-form-label" for="buyer-popup-payment">💳 METODE PEMBAYARAN <span
+            <label class="buyer-form-label">💳 METODE PEMBAYARAN <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <select id="buyer-popup-payment" class="modal-input">
+            <div class="mc-pay-selector" id="buyer-popup-pay-selector">
+              <button type="button" class="mc-pay-card is-active" data-value="dana">
+                <div class="mc-pay-card-left">
+                  <span class="mc-pay-icon">📱</span>
+                  <div class="mc-pay-text">
+                    <strong class="mc-pay-title">DANA</strong>
+                    <small class="mc-pay-sub">Transfer Online</small>
+                  </div>
+                </div>
+                <span class="mc-pay-indicator"></span>
+              </button>
+              <button type="button" class="mc-pay-card" data-value="cash">
+                <div class="mc-pay-card-left">
+                  <span class="mc-pay-icon">💵</span>
+                  <div class="mc-pay-text">
+                    <strong class="mc-pay-title">CASH / TUNAI</strong>
+                    <small class="mc-pay-sub">Bayar Fisik ke Owner</small>
+                  </div>
+                </div>
+                <span class="mc-pay-indicator"></span>
+              </button>
+            </div>
+            <select id="buyer-popup-payment" class="modal-input" style="display:none;">
               <option value="dana">📱 DANA (Transfer Online)</option>
               <option value="cash">💵 Cash / Tunai (Bayar Fisik ke Owner)</option>
             </select>
-            <div id="buyer-popup-cash-note" style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
+            <div id="buyer-popup-cash-note"
+              style="display:none; font-size:0.75rem; color:#facc15; background:rgba(234,179,8,0.1); border:1px dashed #ca8a04; border-radius:4px; padding:6px 8px; margin-top:6px;">
               💵 Pembayaran Cash / Tunai dicatat sebagai tempo/nyicil sampai uang fisik diserahkan ke Owner kios.
             </div>
           </div>
 
           <div>
-            <label class="buyer-form-label" for="buyer-popup-timing">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI) <span
+            <label class="buyer-form-label">⏰ BAYAR KAPAN (MAKSIMAL 4 HARI) <span
                 style="color:var(--mc-redstone);">*</span></label>
-            <select id="buyer-popup-timing" class="modal-input">
-              <!-- Diisi otomatis: Hari Ini s/d 4 Hari ke Depan oleh buyer.js -->
-            </select>
+            <div class="mc-custom-select-wrap" id="buyer-popup-timing-wrap">
+              <button type="button" class="mc-custom-select-btn" id="buyer-popup-timing-btn" aria-haspopup="listbox" aria-expanded="false">
+                <span class="mc-custom-select-label" id="buyer-popup-timing-label">⚡ Hari Ini (Bayar Sekarang)</span>
+                <span class="mc-custom-select-arrow">▼</span>
+              </button>
+              <div class="mc-custom-select-menu" id="buyer-popup-timing-menu" role="listbox" style="display:none;"></div>
+              <select id="buyer-popup-timing" class="modal-input" style="display:none;"></select>
+            </div>
             <div id="buyer-popup-due-tip"
               style="display:none; font-size: 0.74rem; color: #38bdf8; background: rgba(56,189,248,0.12); border-left: 3px solid #38bdf8; padding: 6px 9px; margin-top: 5px; border-radius: 3px; line-height: 1.4;">
             </div>
@@ -3672,7 +3944,8 @@ textarea,
         <!-- Avatar & User Banner -->
         <div class="buyer-profile-banner">
           <div class="buyer-profile-avatar-big-wrap">
-            <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;" decoding="async">
+            <img id="buyer-profile-modal-avatar-img" class="buyer-avatar-img" src="" alt="Avatar" style="display:none;"
+              decoding="async">
             <span id="buyer-profile-modal-avatar-placeholder" class="buyer-avatar-placeholder"
               style="font-size:2rem;">👤</span>
           </div>
@@ -3702,27 +3975,34 @@ textarea,
           </div>
 
           <!-- Seksi Ganti Password Akun Buyer -->
-          <div style="background: rgba(15, 23, 42, 0.65); border: 2px solid var(--panel-border-light); padding: 12px; border-radius: 4px;">
+          <div
+            style="background: rgba(15, 23, 42, 0.65); border: 2px solid var(--panel-border-light); padding: 12px; border-radius: 4px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-family: var(--mc-pixel-font); font-size: 8px; color: var(--mc-gold);">🔐 GANTI PASSWORD AKUN</span>
-              <button type="button" id="buyer-pw-toggle-btn" class="mc-btn mc-btn-dark" style="padding: 3px 8px; font-size: 7.5px;">
+              <span style="font-family: var(--mc-pixel-font); font-size: 8px; color: var(--mc-gold);">🔐 GANTI PASSWORD
+                AKUN</span>
+              <button type="button" id="buyer-pw-toggle-btn" class="mc-btn mc-btn-dark"
+                style="padding: 3px 8px; font-size: 7.5px;">
                 🔑 BUKA FORM PW
               </button>
             </div>
             <div id="buyer-pw-fields" style="display:none; flex-direction:column; gap:8px; margin-top:10px;">
               <div>
                 <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD LAMA (OPSIONAL)</label>
-                <input type="password" id="buyer-old-pw" class="modal-input" placeholder="Masukkan password saat ini (jika ada)">
+                <input type="password" id="buyer-old-pw" class="modal-input"
+                  placeholder="Masukkan password saat ini (jika ada)">
               </div>
               <div>
                 <label class="buyer-form-label" style="font-size:0.7rem;">PASSWORD BARU (MIN. 6 KARAKTER)</label>
-                <input type="password" id="buyer-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password">
+                <input type="password" id="buyer-new-pw" class="modal-input" placeholder="Minimal 6 karakter"
+                  autocomplete="new-password">
               </div>
               <div>
                 <label class="buyer-form-label" style="font-size:0.7rem;">KONFIRMASI PASSWORD BARU</label>
-                <input type="password" id="buyer-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password">
+                <input type="password" id="buyer-confirm-pw" class="modal-input" placeholder="Ulangi password baru"
+                  autocomplete="new-password">
               </div>
-              <button type="button" id="buyer-submit-pw-btn" class="mc-btn mc-btn-gold" style="padding: 6px 12px; font-size: 7.5px; font-weight:800; align-self:flex-start; margin-top:4px;">
+              <button type="button" id="buyer-submit-pw-btn" class="mc-btn mc-btn-gold"
+                style="padding: 6px 12px; font-size: 7.5px; font-weight:800; align-self:flex-start; margin-top:4px;">
                 💾 SIMPAN PASSWORD BARU
               </button>
             </div>
@@ -3770,10 +4050,12 @@ textarea,
         </div>
 
         <p style="font-size: 0.78rem; color: #cbd5e1; margin: 0 0 10px; line-height: 1.45;">
-          Upload screenshot bukti transfer DANA kamu. Owner kios akan meninjau bukti ini dan meng-ACC uang masuk agar pesananmu beres/lunas.
+          Upload screenshot bukti transfer DANA kamu. Owner kios akan meninjau bukti ini dan meng-ACC uang masuk agar
+          pesananmu beres/lunas.
         </p>
 
-        <div style="background: rgba(15, 23, 42, 0.7); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem;">
+        <div
+          style="background: rgba(15, 23, 42, 0.7); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem;">
           <div style="color: #94a3b8; font-size:0.72rem; margin-bottom: 2px;">Pesanan:</div>
           <strong id="buyer-proof-order-desc" style="color: #f8fafc; font-size: 0.88rem;">-</strong>
         </div>
@@ -3781,19 +4063,24 @@ textarea,
         <input type="file" id="buyer-proof-modal-file-input" accept="image/*" style="display:none;">
 
         <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
-          <button type="button" class="mc-btn mc-btn-diamond" id="buyer-proof-modal-select-btn" style="padding: 7px 14px; font-size: 8px;">
+          <button type="button" class="mc-btn mc-btn-diamond" id="buyer-proof-modal-select-btn"
+            style="padding: 7px 14px; font-size: 8px;">
             📁 PILIH FOTO / SS
           </button>
-          <span id="buyer-proof-modal-file-name" style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">Atau tekan Ctrl+V untuk tempel SS</span>
+          <span id="buyer-proof-modal-file-name" style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">Atau
+            tekan Ctrl+V untuk tempel SS</span>
         </div>
 
-        <div id="buyer-proof-modal-preview-wrap" style="display: none; margin-bottom: 12px; text-align: center; background: #000; border: 2px solid var(--mc-gold); border-radius: 4px; padding: 6px; max-height: 240px; overflow: hidden;">
-          <img id="buyer-proof-modal-preview-img" src="" alt="Preview Bukti Transfer" style="max-height: 220px; max-width: 100%; object-fit: contain;" decoding="async">
+        <div id="buyer-proof-modal-preview-wrap"
+          style="display: none; margin-bottom: 12px; text-align: center; background: #000; border: 2px solid var(--mc-gold); border-radius: 4px; padding: 6px; max-height: 240px; overflow: hidden;">
+          <img id="buyer-proof-modal-preview-img" src="" alt="Preview Bukti Transfer"
+            style="max-height: 220px; max-width: 100%; object-fit: contain;" decoding="async">
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
           <button type="button" class="mc-btn mc-btn-dark" id="buyer-proof-modal-cancel">BATAL</button>
-          <button type="button" class="mc-btn mc-btn-green" id="buyer-proof-modal-submit" disabled>📤 KIRIM BUKTI KE OWNER</button>
+          <button type="button" class="mc-btn mc-btn-green" id="buyer-proof-modal-submit" disabled>📤 KIRIM BUKTI KE
+            OWNER</button>
         </div>
       </div>
     </div>
@@ -3857,10 +4144,12 @@ textarea,
         <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
           🌞 SIANG
         </button>
-        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()" title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
+        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()"
+          title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
           🖼️ FOTO: OFF
         </button>
-        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()" title="Ubah Password Akun Owner">
+        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()"
+          title="Ubah Password Akun Owner">
           🔐 GANTI PW
         </button>
         <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
@@ -4530,10 +4819,11 @@ textarea,
           🏷️ HARGA ASLI / CORET SEBELUM DISKON (RP):
         </label>
         <span style="font-size: 0.72rem; opacity: 0.75; color: #cbd5e1;">
-          Trik psikologi diskon: pembeli melihat harga ini dicoret seolah promo besar. Kosongkan untuk otomatis dihitung (~15%-25%).
+          Trik psikologi diskon: pembeli melihat harga ini dicoret seolah promo besar. Kosongkan untuk otomatis dihitung
+          (~15%-25%).
         </span>
-        <input type="number" id="prod-orig-price" class="modal-input" placeholder="Otomatis terisi jika kosong (contoh: 17000)"
-          oninput="window.App.calcProductModalPreview()">
+        <input type="number" id="prod-orig-price" class="modal-input"
+          placeholder="Otomatis terisi jika kosong (contoh: 17000)" oninput="window.App.calcProductModalPreview()">
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -4578,14 +4868,17 @@ textarea,
   <!-- MINECRAFT MODAL: TINJAU BUKTI TRANSFER SCREENSHOT (OWNER & BUYER) -->
   <div id="mc-proof-viewer-modal" class="mc-modal-overlay">
     <div class="mc-modal-box" style="max-width: 520px; width: 95%;">
-      <div class="mc-modal-title" style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
+      <div class="mc-modal-title"
+        style="color: var(--mc-gold); display: flex; align-items: center; justify-content: space-between;">
         <span style="display:flex; align-items:center; gap:8px;">
           <span>📸</span> <span>TINJAU BUKTI TRANSFER</span>
         </span>
-        <button type="button" class="mc-modal-close-btn" onclick="window.App?.closeProofViewer ? window.App.closeProofViewer() : (document.getElementById('mc-proof-viewer-modal').classList.remove('active'))">✕</button>
+        <button type="button" class="mc-modal-close-btn"
+          onclick="window.App?.closeProofViewer ? window.App.closeProofViewer() : (document.getElementById('mc-proof-viewer-modal').classList.remove('active'))">✕</button>
       </div>
 
-      <div style="background: rgba(15, 23, 42, 0.75); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">
+      <div
+        style="background: rgba(15, 23, 42, 0.75); border: 2px solid var(--panel-border-dark); border-radius: 4px; padding: 10px; margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">
         <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
           <span style="color: #94a3b8;">Pembeli:</span>
           <strong id="proof-viewer-buyer" style="color: #f8fafc;">-</strong>
@@ -4601,9 +4894,13 @@ textarea,
       </div>
 
       <!-- Frame Gambar Screenshot Bukti TF -->
-      <div style="background: #000; border: 3px solid var(--mc-gold); border-radius: 4px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 220px; max-height: 60vh; margin-bottom: 14px; position: relative;">
-        <img id="proof-viewer-img" src="" alt="Bukti Transfer" style="max-width: 100%; max-height: 60vh; object-fit: contain; display: block;" decoding="async">
-        <div id="proof-viewer-empty" style="display:none; color:#fbbf24; font-size:0.8rem; padding: 20px; text-align: center;">Belum ada gambar bukti transfer</div>
+      <div
+        style="background: #000; border: 3px solid var(--mc-gold); border-radius: 4px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 220px; max-height: 60vh; margin-bottom: 14px; position: relative;">
+        <img id="proof-viewer-img" src="" alt="Bukti Transfer"
+          style="max-width: 100%; max-height: 60vh; object-fit: contain; display: block;" decoding="async">
+        <div id="proof-viewer-empty"
+          style="display:none; color:#fbbf24; font-size:0.8rem; padding: 20px; text-align: center;">Belum ada gambar
+          bukti transfer</div>
       </div>
 
       <!-- Tombol Aksi di Modal Tinjauan Bukti TF -->
@@ -4632,14 +4929,17 @@ textarea,
         </div>
         <div>
           <label class="modal-label" for="owner-new-pw">PASSWORD BARU (MIN. 6 KARAKTER)</label>
-          <input type="password" id="owner-new-pw" class="modal-input" placeholder="Minimal 6 karakter" autocomplete="new-password" required>
+          <input type="password" id="owner-new-pw" class="modal-input" placeholder="Minimal 6 karakter"
+            autocomplete="new-password" required>
         </div>
         <div>
           <label class="modal-label" for="owner-confirm-pw">KONFIRMASI PASSWORD BARU</label>
-          <input type="password" id="owner-confirm-pw" class="modal-input" placeholder="Ulangi password baru" autocomplete="new-password" required>
+          <input type="password" id="owner-confirm-pw" class="modal-input" placeholder="Ulangi password baru"
+            autocomplete="new-password" required>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-          <button type="button" class="mc-btn mc-btn-dark" onclick="window.App.closeChangePasswordModal()">BATAL</button>
+          <button type="button" class="mc-btn mc-btn-dark"
+            onclick="window.App.closeChangePasswordModal()">BATAL</button>
           <button type="submit" id="owner-submit-pw-btn" class="mc-btn mc-btn-gold">🔑 SIMPAN PASSWORD</button>
         </div>
       </form>
@@ -4647,15 +4947,21 @@ textarea,
   </div>
 
   <!-- Modal Preview Foto Kenangan Melayang -->
-  <div class="mc-modal-overlay" id="mc-floating-photo-preview-modal" onclick="if(event.target===this) this.classList.remove('active')">
+  <div class="mc-modal-overlay" id="mc-floating-photo-preview-modal"
+    onclick="if(event.target===this) this.classList.remove('active')">
     <div class="mc-modal-content mc-box" style="max-width: 520px; text-align: center; padding: 16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="font-family: var(--mc-pixel-font); font-size: 8.5px; color: var(--mc-gold);">🖼️ FOTO KENANGAN MELAYANG</span>
-        <button type="button" class="mc-modal-close-btn" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">✕</button>
+        <span style="font-family: var(--mc-pixel-font); font-size: 8.5px; color: var(--mc-gold);">🖼️ FOTO KENANGAN
+          MELAYANG</span>
+        <button type="button" class="mc-modal-close-btn"
+          onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">✕</button>
       </div>
-      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang" style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;" decoding="async">
+      <img id="mc-floating-photo-preview-img" src="" alt="Foto Melayang"
+        style="max-width:100%; max-height:65vh; border-radius:4px; border:2px solid var(--mc-gold); box-shadow:0 8px 30px rgba(0,0,0,0.6); display:block; margin:0 auto;"
+        decoding="async">
       <div style="margin-top:10px; display:flex; justify-content:center;">
-        <button type="button" class="mc-btn mc-btn-dark" onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">TUTUP</button>
+        <button type="button" class="mc-btn mc-btn-dark"
+          onclick="document.getElementById('mc-floating-photo-preview-modal').classList.remove('active')">TUTUP</button>
       </div>
     </div>
   </div>
@@ -6358,6 +6664,130 @@ textarea,
     selectEl.innerHTML = html;
   }
 
+  function setupPaymentSelector(wrapId, selectId, onChange) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+
+    wrap.querySelectorAll('[data-value]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = btn.dataset.value;
+        select.value = val;
+        wrap.querySelectorAll('[data-value]').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.value === val);
+        });
+        select.dispatchEvent(new Event('change'));
+        if (window.AudioEngine?.play) window.AudioEngine.play('click');
+        if (typeof onChange === 'function') onChange(val);
+      });
+    });
+  }
+
+  function syncPaymentSelector(wrapId, selectId) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+    const val = select.value || 'dana';
+    wrap.querySelectorAll('[data-value]').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.value === val);
+    });
+  }
+
+  function setupCustomTimingDropdown(wrapId, selectId, onSelect) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+
+    const btn = wrap.querySelector('.mc-custom-select-btn');
+    const menu = wrap.querySelector('.mc-custom-select-menu');
+    const label = wrap.querySelector('.mc-custom-select-label');
+    if (!btn || !menu) return;
+
+    function renderMenu() {
+      const options = Array.from(select.options);
+      menu.innerHTML = options.map((opt) => {
+        const isSelected = opt.value === select.value;
+        return `
+          <button type="button" class="mc-custom-select-item ${isSelected ? 'is-selected' : ''}" data-val="${opt.value}" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+            <span class="mc-custom-select-item-text">${opt.textContent}</span>
+            ${isSelected ? '<span class="mc-custom-select-item-check">✔</span>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      menu.querySelectorAll('.mc-custom-select-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const val = item.dataset.val;
+          select.value = val;
+          syncLabel();
+          closeMenu();
+          select.dispatchEvent(new Event('change'));
+          if (window.AudioEngine?.play) window.AudioEngine.play('click');
+          if (typeof onSelect === 'function') onSelect(val);
+        });
+      });
+    }
+
+    function syncLabel() {
+      if (!label) return;
+      const chosen = select.selectedOptions?.[0];
+      if (chosen) label.textContent = chosen.textContent;
+    }
+
+    function openMenu() {
+      renderMenu();
+      menu.style.display = 'flex';
+      btn.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      menu.style.display = 'none';
+      btn.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isOpen = menu.style.display === 'flex';
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    syncLabel();
+
+    wrap._sync = () => {
+      syncLabel();
+      renderMenu();
+    };
+  }
+
+  function syncCustomTiming(wrapId, selectId) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+    if (typeof wrap._sync === 'function') {
+      wrap._sync();
+    } else {
+      const label = wrap.querySelector('.mc-custom-select-label');
+      const chosen = select.selectedOptions?.[0];
+      if (label && chosen) label.textContent = chosen.textContent;
+    }
+  }
+
   function initNotificationPermission() {
     if (!('Notification' in window)) return;
     const bar = el('buyer-notif-permission-bar');
@@ -7080,6 +7510,7 @@ textarea,
     // Reset pilihan pembayaran & tempo (maksimal 4 hari)
     const paySelect = el('buyer-popup-payment');
     if (paySelect) paySelect.value = 'dana';
+    syncPaymentSelector('buyer-popup-pay-selector', 'buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
     if (cashNote) cashNote.style.display = 'none';
 
@@ -7087,6 +7518,7 @@ textarea,
     if (timingSelect) {
       populateTimingSelect(timingSelect);
       timingSelect.value = 'now';
+      syncCustomTiming('buyer-popup-timing-wrap', 'buyer-popup-timing');
     }
     const tipEl = el('buyer-popup-due-tip');
     if (tipEl) tipEl.style.display = 'none';
@@ -7110,6 +7542,7 @@ textarea,
     el('buyer-popup-close-x')?.addEventListener('click', closeOrderModal);
     el('buyer-popup-cancel')?.addEventListener('click', closeOrderModal);
 
+    setupPaymentSelector('buyer-popup-pay-selector', 'buyer-popup-payment');
     const paySelect = el('buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
     paySelect?.addEventListener('change', () => {
@@ -7139,6 +7572,7 @@ textarea,
     }
 
     timingSelect?.addEventListener('change', updatePopupDueTip);
+    setupCustomTimingDropdown('buyer-popup-timing-wrap', 'buyer-popup-timing', () => updatePopupDueTip());
 
     const form = el('buyer-popup-form');
     form?.addEventListener('submit', async (e) => {
@@ -7414,9 +7848,11 @@ textarea,
     }
 
     timingSelect?.addEventListener('change', updateDueTip);
+    setupCustomTimingDropdown('buyer-order-timing-wrap', 'buyer-order-timing', () => updateDueTip());
     el('buyer-order-amount')?.addEventListener('input', updateDueTip);
     updateDueTip();
 
+    setupPaymentSelector('buyer-order-pay-selector', 'buyer-order-payment');
     const formPaySelect = el('buyer-order-payment');
     const formCashNote = el('buyer-order-cash-note');
 
@@ -7479,7 +7915,9 @@ textarea,
 
         playBuyerChime();
         form.reset();
+        syncPaymentSelector('buyer-order-pay-selector', 'buyer-order-payment');
         if (timingSelect) timingSelect.value = 'now';
+        syncCustomTiming('buyer-order-timing-wrap', 'buyer-order-timing');
         updateDueTip();
         toast('✅ Pesanan dikirim. Tunggu konfirmasi owner.');
         await refreshAll();

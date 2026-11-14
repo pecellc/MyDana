@@ -85,6 +85,130 @@
     selectEl.innerHTML = html;
   }
 
+  function setupPaymentSelector(wrapId, selectId, onChange) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+
+    wrap.querySelectorAll('[data-value]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = btn.dataset.value;
+        select.value = val;
+        wrap.querySelectorAll('[data-value]').forEach(b => {
+          b.classList.toggle('is-active', b.dataset.value === val);
+        });
+        select.dispatchEvent(new Event('change'));
+        if (window.AudioEngine?.play) window.AudioEngine.play('click');
+        if (typeof onChange === 'function') onChange(val);
+      });
+    });
+  }
+
+  function syncPaymentSelector(wrapId, selectId) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+    const val = select.value || 'dana';
+    wrap.querySelectorAll('[data-value]').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.value === val);
+    });
+  }
+
+  function setupCustomTimingDropdown(wrapId, selectId, onSelect) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+
+    const btn = wrap.querySelector('.mc-custom-select-btn');
+    const menu = wrap.querySelector('.mc-custom-select-menu');
+    const label = wrap.querySelector('.mc-custom-select-label');
+    if (!btn || !menu) return;
+
+    function renderMenu() {
+      const options = Array.from(select.options);
+      menu.innerHTML = options.map((opt) => {
+        const isSelected = opt.value === select.value;
+        return `
+          <button type="button" class="mc-custom-select-item ${isSelected ? 'is-selected' : ''}" data-val="${opt.value}" role="option" aria-selected="${isSelected ? 'true' : 'false'}">
+            <span class="mc-custom-select-item-text">${opt.textContent}</span>
+            ${isSelected ? '<span class="mc-custom-select-item-check">✔</span>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      menu.querySelectorAll('.mc-custom-select-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const val = item.dataset.val;
+          select.value = val;
+          syncLabel();
+          closeMenu();
+          select.dispatchEvent(new Event('change'));
+          if (window.AudioEngine?.play) window.AudioEngine.play('click');
+          if (typeof onSelect === 'function') onSelect(val);
+        });
+      });
+    }
+
+    function syncLabel() {
+      if (!label) return;
+      const chosen = select.selectedOptions?.[0];
+      if (chosen) label.textContent = chosen.textContent;
+    }
+
+    function openMenu() {
+      renderMenu();
+      menu.style.display = 'flex';
+      btn.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      menu.style.display = 'none';
+      btn.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isOpen = menu.style.display === 'flex';
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) {
+        closeMenu();
+      }
+    });
+
+    syncLabel();
+
+    wrap._sync = () => {
+      syncLabel();
+      renderMenu();
+    };
+  }
+
+  function syncCustomTiming(wrapId, selectId) {
+    const wrap = el(wrapId);
+    const select = el(selectId);
+    if (!wrap || !select) return;
+    if (typeof wrap._sync === 'function') {
+      wrap._sync();
+    } else {
+      const label = wrap.querySelector('.mc-custom-select-label');
+      const chosen = select.selectedOptions?.[0];
+      if (label && chosen) label.textContent = chosen.textContent;
+    }
+  }
+
   function initNotificationPermission() {
     if (!('Notification' in window)) return;
     const bar = el('buyer-notif-permission-bar');
@@ -807,6 +931,7 @@
     // Reset pilihan pembayaran & tempo (maksimal 4 hari)
     const paySelect = el('buyer-popup-payment');
     if (paySelect) paySelect.value = 'dana';
+    syncPaymentSelector('buyer-popup-pay-selector', 'buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
     if (cashNote) cashNote.style.display = 'none';
 
@@ -814,6 +939,7 @@
     if (timingSelect) {
       populateTimingSelect(timingSelect);
       timingSelect.value = 'now';
+      syncCustomTiming('buyer-popup-timing-wrap', 'buyer-popup-timing');
     }
     const tipEl = el('buyer-popup-due-tip');
     if (tipEl) tipEl.style.display = 'none';
@@ -837,6 +963,7 @@
     el('buyer-popup-close-x')?.addEventListener('click', closeOrderModal);
     el('buyer-popup-cancel')?.addEventListener('click', closeOrderModal);
 
+    setupPaymentSelector('buyer-popup-pay-selector', 'buyer-popup-payment');
     const paySelect = el('buyer-popup-payment');
     const cashNote = el('buyer-popup-cash-note');
     paySelect?.addEventListener('change', () => {
@@ -866,6 +993,7 @@
     }
 
     timingSelect?.addEventListener('change', updatePopupDueTip);
+    setupCustomTimingDropdown('buyer-popup-timing-wrap', 'buyer-popup-timing', () => updatePopupDueTip());
 
     const form = el('buyer-popup-form');
     form?.addEventListener('submit', async (e) => {
@@ -1141,9 +1269,11 @@
     }
 
     timingSelect?.addEventListener('change', updateDueTip);
+    setupCustomTimingDropdown('buyer-order-timing-wrap', 'buyer-order-timing', () => updateDueTip());
     el('buyer-order-amount')?.addEventListener('input', updateDueTip);
     updateDueTip();
 
+    setupPaymentSelector('buyer-order-pay-selector', 'buyer-order-payment');
     const formPaySelect = el('buyer-order-payment');
     const formCashNote = el('buyer-order-cash-note');
 
@@ -1206,7 +1336,9 @@
 
         playBuyerChime();
         form.reset();
+        syncPaymentSelector('buyer-order-pay-selector', 'buyer-order-payment');
         if (timingSelect) timingSelect.value = 'now';
+        syncCustomTiming('buyer-order-timing-wrap', 'buyer-order-timing');
         updateDueTip();
         toast('✅ Pesanan dikirim. Tunggu konfirmasi owner.');
         await refreshAll();
