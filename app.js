@@ -5161,119 +5161,81 @@
 
       if (!state.settings.floatingPhotos) {
         container.style.display = 'none';
+        container.innerHTML = '';
         return;
       }
 
       container.style.display = 'block';
       if (container.children.length > 0) return; // Sudah terpasang
 
-      const photoList = [
-        { src: 'assets/photos/0.jpg', title: 'Kenangan 0' },
-        { src: 'assets/photos/1.jpg', title: 'Kenangan 1' },
-        { src: 'assets/photos/2.jpg', title: 'Kenangan 2' },
-        { src: 'assets/photos/3.jpg', title: 'Kenangan 3' },
-        { src: 'assets/photos/4.jpg', title: 'Kenangan 4' },
-        { src: 'assets/photos/5.jpg', title: 'Kenangan 5' },
-        { src: 'assets/photos/6.jpg', title: 'Kenangan 6' },
-        { src: 'assets/photos/7.png', title: 'Kenangan 7' },
-        { src: 'assets/photos/8.jpg', title: 'Kenangan 8' },
-        { src: 'assets/photos/9.png', title: 'Kenangan 9' },
-        { src: 'assets/photos/10.jpg', title: 'Kenangan 10' }
+      const photoPool = [
+        'assets/photos/0.jpg',
+        'assets/photos/1.jpg',
+        'assets/photos/2.jpg',
+        'assets/photos/3.jpg',
+        'assets/photos/4.jpg',
+        'assets/photos/5.jpg',
+        'assets/photos/6.jpg',
+        'assets/photos/7.png',
+        'assets/photos/8.jpg',
+        'assets/photos/9.png',
+        'assets/photos/10.jpg'
       ];
 
-      photoList.forEach((p, idx) => {
+      // Pool cursor untuk rotasi foto yang masuk berikutnya
+      let nextPoolCursor = 3;
+
+      // HANYA 3 FOTO AKTIF MELAYANG DI LAYAR
+      // Slot 0: Melayang dari Kiri ke Kanan (jalur atas)
+      // Slot 1: Melayang dari Kanan ke Kiri (jalur tengah)
+      // Slot 2: Melayang dari Kiri ke Kanan (jalur bawah)
+      const slots = [
+        { anim: 'mcDriftLeftToRight', duration: 25, delay: 0, topMin: 12, topMax: 26, photoIdx: 0 },
+        { anim: 'mcDriftRightToLeft', duration: 29, delay: -9, topMin: 34, topMax: 48, photoIdx: 1 },
+        { anim: 'mcDriftLeftToRight', duration: 27, delay: -18, topMin: 56, topMax: 70, photoIdx: 2 }
+      ];
+
+      slots.forEach((slot, slotIdx) => {
         const item = document.createElement('div');
         item.className = 'mc-floating-photo-item';
+        item.dataset.slot = String(slotIdx);
+        item.dataset.currentSrc = photoPool[slot.photoIdx];
 
-        const cols = 4;
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-        const leftPercent = 5 + col * 24 + ((idx * 7) % 6);
-        const topPercent = 10 + row * 26 + ((idx * 11) % 8);
-
-        item.style.left = `${Math.max(4, Math.min(84, leftPercent))}%`;
-        item.style.top = `${Math.max(8, Math.min(76, topPercent))}%`;
-
-        const animIdx = idx % 4;
-        const duration = 4.5 + (idx % 3) * 1.2;
-        const delay = -(idx * 0.9);
-        item.style.animation = `mcPhotoFloat${animIdx} ${duration}s ease-in-out infinite alternate`;
-        item.style.animationDelay = `${delay}s`;
+        const initialTop = slot.topMin + Math.random() * (slot.topMax - slot.topMin);
+        item.style.top = `${initialTop}%`;
+        item.style.animation = `${slot.anim} ${slot.duration}s linear infinite`;
+        item.style.animationDelay = `${slot.delay}s`;
 
         item.innerHTML = `
-          <div class="mc-floating-photo-pin"></div>
-          <img class="mc-floating-photo-img" src="${p.src}" alt="${p.title}" loading="lazy" onerror="this.parentElement.style.display='none'">
-          <div class="mc-floating-photo-caption">#${idx + 1}</div>
+          <div class="mc-floating-photo-card">
+            <div class="mc-floating-photo-pin"></div>
+            <img class="mc-floating-photo-img" src="${photoPool[slot.photoIdx]}" alt="Foto Kenangan" loading="lazy" onerror="this.src='icon-192.png'">
+            <div class="mc-floating-photo-caption">#${slot.photoIdx + 1}</div>
+          </div>
         `;
 
-        let isDragging = false;
-        let startX = 0, startY = 0;
-        let origX = 0, origY = 0;
-        let hasMoved = false;
+        // Event: Ketika foto selesai melintasi frame dan keluar layar, ganti dengan foto berikutnya!
+        item.addEventListener('animationiteration', () => {
+          const nextSrc = photoPool[nextPoolCursor % photoPool.length];
+          const nextNum = (nextPoolCursor % photoPool.length) + 1;
+          nextPoolCursor++;
 
-        function onMouseDown(e) {
-          if (e.button !== 0) return;
-          isDragging = true;
-          hasMoved = false;
-          startX = e.clientX;
-          startY = e.clientY;
-          origX = item.offsetLeft;
-          origY = item.offsetTop;
-          item.classList.add('is-dragging');
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-        }
+          const img = item.querySelector('.mc-floating-photo-img');
+          const cap = item.querySelector('.mc-floating-photo-caption');
+          if (img) img.src = nextSrc;
+          if (cap) cap.textContent = `#${nextNum}`;
+          item.dataset.currentSrc = nextSrc;
 
-        function onMouseMove(e) {
-          if (!isDragging) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-          item.style.left = `${origX + dx}px`;
-          item.style.top = `${origY + dy}px`;
-        }
+          // Variasi acak posisi tinggi (top) baru dalam lane-nya
+          const newTop = slot.topMin + Math.random() * (slot.topMax - slot.topMin);
+          item.style.top = `${newTop}%`;
+        });
 
-        function onMouseUp() {
-          if (!isDragging) return;
-          isDragging = false;
-          item.classList.remove('is-dragging');
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-          if (!hasMoved) {
-            window.App.previewFloatingPhoto(p.src);
-          }
-        }
-
-        item.addEventListener('mousedown', onMouseDown);
-
-        item.addEventListener('touchstart', (e) => {
-          const t = e.touches[0];
-          isDragging = true;
-          hasMoved = false;
-          startX = t.clientX;
-          startY = t.clientY;
-          origX = item.offsetLeft;
-          origY = item.offsetTop;
-          item.classList.add('is-dragging');
-        }, { passive: true });
-
-        item.addEventListener('touchmove', (e) => {
-          if (!isDragging) return;
-          const t = e.touches[0];
-          const dx = t.clientX - startX;
-          const dy = t.clientY - startY;
-          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) hasMoved = true;
-          item.style.left = `${origX + dx}px`;
-          item.style.top = `${origY + dy}px`;
-        }, { passive: true });
-
-        item.addEventListener('touchend', () => {
-          if (!isDragging) return;
-          isDragging = false;
-          item.classList.remove('is-dragging');
-          if (!hasMoved) {
-            window.App.previewFloatingPhoto(p.src);
-          }
+        // Klik foto untuk melihat ukuran penuh
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const src = item.dataset.currentSrc || photoPool[slot.photoIdx];
+          window.App.previewFloatingPhoto(src);
         });
 
         container.appendChild(item);
