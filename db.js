@@ -739,12 +739,29 @@
     } catch (e) {}
 
     if (client) {
+      // 1. Prioritaskan RPC security definer agar upload bukti transfer 100% tembus RLS
+      try {
+        const { data: rpcData, error: rpcError } = await client.rpc('upload_order_proof', {
+          p_order_id: orderId,
+          p_proof: proofDataUrl
+        });
+        if (!rpcError) return true;
+        console.warn('RPC upload_order_proof fallback:', rpcError);
+      } catch (rpcEx) {
+        console.warn('RPC call exception:', rpcEx);
+      }
+
+      // 2. Direct update fallback
       const { error } = await client
         .from('orders')
-        .update({ payment_proof: proofDataUrl })
+        .update({ 
+          payment_proof: proofDataUrl,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', orderId);
 
-      if (error && !(/payment_proof|column .* does not exist/i.test(error.message || ''))) {
+      if (error) {
+        console.error('Gagal simpan bukti transfer ke database:', error);
         throw error;
       }
     }
