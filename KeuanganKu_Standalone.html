@@ -2130,7 +2130,9 @@ html.auth-pending #auth-screen {
 
 .buyer-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr) supaya kolom tidak pernah melebar melebihi layar
+     gara-gara isi di dalamnya (kartu produk / form). */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -2187,15 +2189,18 @@ html.auth-pending #auth-screen {
 
 .buyer-catalog-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
   padding-bottom: 2px;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .buyer-catalog-tab {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   padding: 7px 11px;
   font-family: var(--mc-pixel-font);
   font-size: 7.5px;
@@ -2284,6 +2289,8 @@ html.auth-pending #auth-screen {
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .buyer-product-info {
@@ -2308,20 +2315,35 @@ html.auth-pending #auth-screen {
 .buyer-product-action {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .buyer-product-price {
   font-family: var(--mc-pixel-font);
   font-size: 9px;
   color: var(--mc-diamond);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .buyer-form {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  min-width: 0;
+}
+
+.buyer-form .modal-input,
+.buyer-form select,
+.buyer-form input,
+.buyer-form textarea {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .buyer-form .mc-btn {
@@ -2420,7 +2442,9 @@ html.auth-pending #auth-screen {
 [data-theme="day"] .buyer-order-notes { background: rgba(15, 23, 42, 0.06); color: #1e293b; }
 [data-theme="day"] .buyer-user { color: #334155; background: rgba(15, 23, 42, 0.05); border-color: rgba(15, 23, 42, 0.1); }
 
-@media (max-width: 760px) {
+/* Di bawah 900px dua kolom jadi terlalu sempit: tab katalog kepotong
+   dan kartu produk berdesakan. Jadi tampilkan satu kolom penuh. */
+@media (max-width: 900px) {
   .buyer-grid { grid-template-columns: 1fr; }
   .buyer-balance-card { grid-column: auto; }
   .buyer-header { align-items: flex-start; }
