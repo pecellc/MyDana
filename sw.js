@@ -1,9 +1,9 @@
 // KeuanganKu Lightweight PWA Service Worker
-const CACHE_NAME = 'keuanganku-v7';
+const CACHE_NAME = 'keuanganku-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css',
+  './style.css?v=8',
   './icon.svg',
   './manifest.json',
   './supabase-config.js',

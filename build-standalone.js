@@ -6,7 +6,7 @@ let bundle = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
 
 // Inline stylesheet
 const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
-bundle = bundle.replace('<link rel="stylesheet" href="style.css">', `<style>\n${css}\n</style>`);
+bundle = bundle.replace(/<link rel="stylesheet" href="style\.css(?:\?[^"]*)?">/, `<style>\n${css}\n</style>`);
 
 // Inline semua script lokal (urutan tetap sesuai index.html)
 const localScripts = [
