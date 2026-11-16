@@ -657,8 +657,12 @@ begin
     raise exception 'Pesanan tidak ditemukan.';
   end if;
 
-  if v_buyer <> auth.uid() and not public.is_owner() then
-    raise exception 'Akses ditolak: Hanya pembeli yang bersangkutan yang dapat mengunggah bukti transfer.';
+  -- WAJIB login. Perbandingan harus pakai IS DISTINCT FROM supaya anon
+  -- (auth.uid() = null) tidak lolos karena hasil NULL.
+  if auth.uid() is null
+     or (v_buyer is distinct from auth.uid() and not public.is_owner()) then
+    raise exception 'Akses ditolak: Hanya pembeli yang bersangkutan yang dapat mengunggah bukti transfer.'
+      using errcode = '42501';
   end if;
 
   update public.orders
@@ -716,13 +720,21 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Service role / SQL editor (maintenance) tidak lewat JWT authenticated.
-  if coalesce(auth.role(), '') <> 'authenticated' then
+  -- Service role / SQL editor (maintenance) bebas. Anon TIDAK dibebaskan,
+  -- supaya validasi bukti tetap berlaku kalau ada celah policy lain.
+  if coalesce(auth.role(), '') not in ('authenticated', 'anon') then
     return new;
   end if;
 
   if new.payment_proof is not null and length(new.payment_proof) > 2000000 then
     raise exception 'Ukuran bukti transfer terlalu besar (maksimal sekitar 2 MB).'
+      using errcode = '22001';
+  end if;
+
+  if new.payment_proof is not null
+     and btrim(new.payment_proof) <> ''
+     and new.payment_proof not like 'data:image/%' then
+    raise exception 'Bukti transfer harus berupa gambar (data:image/...).'
       using errcode = '22001';
   end if;
 

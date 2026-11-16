@@ -37,8 +37,12 @@ begin
     raise exception 'Pesanan tidak ditemukan.';
   end if;
 
-  if v_buyer <> auth.uid() and not public.is_owner() then
-    raise exception 'Akses ditolak: Hanya pembeli yang bersangkutan yang dapat mengunggah bukti transfer.';
+  -- WAJIB login. Perbandingan harus pakai IS DISTINCT FROM supaya anon
+  -- (auth.uid() = null) tidak lolos karena hasil NULL.
+  if auth.uid() is null
+     or (v_buyer is distinct from auth.uid() and not public.is_owner()) then
+    raise exception 'Akses ditolak: Hanya pembeli yang bersangkutan yang dapat mengunggah bukti transfer.'
+      using errcode = '42501';
   end if;
 
   update public.orders

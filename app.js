@@ -4495,6 +4495,8 @@
                   onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
               </div>
             `;
+          } else if (order.status === 'cancelled') {
+            actions = '<span style="color:var(--mc-redstone);font-weight:700;font-size:0.75rem;">✕ DITOLAK</span>';
           } else {
             actions = '<span style="color:var(--mc-emerald);font-weight:700;font-size:0.75rem;">✔ SELESAI (LUNAS)</span>';
           }
@@ -4927,17 +4929,20 @@
 
       window.__settlingOrderIds[orderId] = true;
       try {
-        // Jalankan pelunasan hutang (mengurangi piutang dan memasukkan uang ke kas tujuan)
+        // 1. Selesaikan pesanan di database DULU. Kalau gagal (offline / RLS /
+        //    status sudah berubah), JANGAN catat pelunasan supaya uang tidak
+        //    tercatat dobel saat owner mencoba ACC lagi.
+        const done = await this.setOrderStatus(
+          orderId,
+          'completed',
+          `Pembayaran ${walletName} telah di-ACC & lunas. Pesanan beres! Terima kasih.`
+        );
+        if (!done) return;
+
+        // 2. Baru jalankan pelunasan hutang (mengurangi piutang & masuk kas tujuan)
         const modalPart = Number(loggedItem?.pulsaModal) || Math.max(0, orderAmt - (Number(order?.admin_fee) || 0));
         const profitPart = Number(loggedItem?.pulsaProfit) || (orderAmt - modalPart);
         this.executeDebtRepayment(buyerName, orderAmt, targetWallet, orderId, modalPart, profitPart);
-
-        // Update status pesanan di database
-        try {
-          await this.setOrderStatus(orderId, 'completed', `Pembayaran ${walletName} telah di-ACC & lunas. Pesanan beres! Terima kasih.`);
-        } catch (e) {
-          console.warn('Gagal setOrderStatus completed:', e);
-        }
 
         // Tandai item ledger lokal: TETAP isDebt = true (agar formula kas riil konsisten), tapi beri flag isSettled
         if (loggedItem) {

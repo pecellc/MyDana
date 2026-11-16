@@ -681,7 +681,11 @@
                     ✅ Bukti TF Terkirim
                   </div>
                   <div style="font-size: 0.7rem; color: #94a3b8;">
-                    ${order.status === 'completed' ? 'Pembayaran lunas beres!' : 'Menunggu Owner meninjau SS &amp; meng-ACC lunas'}
+                    ${order.status === 'completed'
+                      ? 'Pembayaran lunas beres!'
+                      : order.status === 'cancelled'
+                        ? 'Pesanan ditolak — bukti TF ini tidak diproses.'
+                        : 'Menunggu Owner meninjau SS &amp; meng-ACC lunas'}
                   </div>
                 </div>
                 <div style="display: flex; gap: 4px;">

@@ -16,14 +16,22 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Service role / SQL editor (maintenance) bebas, tidak lewat JWT authenticated.
-  if coalesce(auth.role(), '') <> 'authenticated' then
+  -- Service role / SQL editor (maintenance) bebas. Anon TIDAK dibebaskan,
+  -- supaya validasi bukti tetap berlaku kalau ada celah policy lain.
+  if coalesce(auth.role(), '') not in ('authenticated', 'anon') then
     return new;
   end if;
 
   -- Batas ukuran bukti transfer (data URL base64) untuk client.
   if new.payment_proof is not null and length(new.payment_proof) > 2000000 then
     raise exception 'Ukuran bukti transfer terlalu besar (maksimal sekitar 2 MB).'
+      using errcode = '22001';
+  end if;
+
+  if new.payment_proof is not null
+     and btrim(new.payment_proof) <> ''
+     and new.payment_proof not like 'data:image/%' then
+    raise exception 'Bukti transfer harus berupa gambar (data:image/...).'
       using errcode = '22001';
   end if;
 
