@@ -640,6 +640,35 @@ begin
 end;
 $$;
 
+create or replace function public.upload_order_proof(p_order_id uuid, p_proof text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_buyer uuid;
+begin
+  select buyer_id into v_buyer
+  from public.orders
+  where id = p_order_id;
+
+  if v_buyer is null then
+    raise exception 'Pesanan tidak ditemukan.';
+  end if;
+
+  if v_buyer <> auth.uid() and not public.is_owner() then
+    raise exception 'Akses ditolak: Hanya pembeli yang bersangkutan yang dapat mengunggah bukti transfer.';
+  end if;
+
+  update public.orders
+  set payment_proof = p_proof,
+      updated_at = now()
+  where id = p_order_id;
+
+  return jsonb_build_object('ok', true);
+end;
+$$;
 
 create index if not exists orders_buyer_idx
   on public.orders (buyer_id, created_at desc);
@@ -664,12 +693,73 @@ create policy orders_buyer_select
   to authenticated
   using (buyer_id = auth.uid());
 
+drop policy if exists orders_buyer_update_proof on public.orders;
+create policy orders_buyer_update_proof
+  on public.orders for update
+  to authenticated
+  using (buyer_id = auth.uid())
+  with check (buyer_id = auth.uid());
+
 drop policy if exists orders_owner_all on public.orders;
 create policy orders_owner_all
   on public.orders for all
   to authenticated
   using (public.is_owner())
   with check (public.is_owner());
+
+-- Buyer hanya boleh mengubah bukti transfer (payment_proof), bukan status
+-- atau nominal pesanannya. Owner tetap bebas (ACC / TOLAK / SELESAI).
+create or replace function public.guard_buyer_order_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Service role / SQL editor (maintenance) tidak lewat JWT authenticated.
+  if coalesce(auth.role(), '') <> 'authenticated' then
+    return new;
+  end if;
+
+  if new.payment_proof is not null and length(new.payment_proof) > 2000000 then
+    raise exception 'Ukuran bukti transfer terlalu besar (maksimal sekitar 2 MB).'
+      using errcode = '22001';
+  end if;
+
+  if public.is_owner() then
+    return new;
+  end if;
+
+  if new.buyer_id is distinct from old.buyer_id
+     or new.status is distinct from old.status
+     or new.product_id is distinct from old.product_id
+     or new.product_name is distinct from old.product_name
+     or new.amount is distinct from old.amount
+     or new.admin_fee is distinct from old.admin_fee
+     or new.notes is distinct from old.notes
+     or new.payment_method is distinct from old.payment_method
+     or new.pay_timing is distinct from old.pay_timing
+     or new.due_date is distinct from old.due_date
+     or new.owner_note is distinct from old.owner_note
+     or new.responded_at is distinct from old.responded_at
+     or new.responded_by is distinct from old.responded_by then
+    raise exception 'Pembeli hanya boleh mengunggah bukti transfer pada pesanannya.'
+      using errcode = '42501';
+  end if;
+
+  if old.status = 'cancelled' then
+    raise exception 'Pesanan yang sudah ditolak tidak bisa diubah.'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists guard_buyer_order_update on public.orders;
+create trigger guard_buyer_order_update
+  before update on public.orders
+  for each row execute function public.guard_buyer_order_update();
 
 -- ============================================================================
 -- 9. TRIGGER updated_at
@@ -746,6 +836,8 @@ grant execute on function public.modal_status() to anon, authenticated;
 grant execute on function public.accept_order(uuid, text) to authenticated;
 grant execute on function public.decline_order(uuid, text) to authenticated;
 grant execute on function public.complete_order(uuid, text) to authenticated;
+grant execute on function public.upload_order_proof(uuid, text) to authenticated;
+grant execute on function public.guard_buyer_order_update() to authenticated;
 
 -- ============================================================================
 -- 11. REALTIME (buyer bisa lihat perubahan saldo modal & status pesanan)
