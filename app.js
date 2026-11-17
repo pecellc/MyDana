@@ -1202,7 +1202,7 @@
     });
 
     // Buyer hanya boleh melihat saldo modal (uang panas), bukan total aset.
-    window.KeuanganDB.publishModal(calculateBalances().uangPanas);
+    window.KeuanganDB.publishModal(getModalPoolForSupabase());
   }
 
   // ===================================================================
@@ -1253,14 +1253,15 @@
         totalKurangiModal += amt;
       }
       // 2. Jualan Pulsa LUNAS (CASH langsung di tempat / DANA langsung):
-      // Pembeli bayar penuh ke destWallet (Dompet/DANA bertambah sesuai uang riil yang diterima)
+      // Modal kembali ke Modal Kios, laba admin (cuan) masuk ke kas penerima.
       else if (item.isPulsa && !item.isDebt) {
+        const profit = item.pulsaProfit != null ? Number(item.pulsaProfit) : Math.max(0, amt - (Number(item.pulsaModal) || 0));
         const destWallet = (loc !== 'Uang Akan Datang (Hutang)' && balances[loc] !== undefined)
           ? loc
           : (item.sourceWallet && balances[item.sourceWallet] !== undefined ? item.sourceWallet : 'Dompet');
 
         if (balances[destWallet] !== undefined) {
-          balances[destWallet] += amt;
+          balances[destWallet] += profit;
         }
       }
       // 3. Jualan Pulsa NYICIL / HUTANG / TEMPO:
@@ -1268,7 +1269,16 @@
       else if (item.isPulsa && item.isDebt) {
         balances['Uang Akan Datang (Hutang)'] += amt;
       }
-      // 4. Transaksi biasa / Pemasukan / Pengeluaran
+      // 3B. Pelunasan Pulsa Hutang / Cicilan:
+      // Piutang berkurang via item type 'out' di Uang Akan Datang.
+      // Kas penerima bertambah cuan bersih (profitPart), karena modal pokok kembali ke Modal Kios!
+      else if (item.isPulsaRepayment) {
+        const profitPart = item.pulsaProfit != null ? Number(item.pulsaProfit) : Math.max(0, amt - (Number(item.pulsaModal) || 0));
+        if (balances[loc] !== undefined) {
+          balances[loc] += profitPart;
+        }
+      }
+      // 4. Transaksi biasa / Pemasukan / Pengeluaran / Hutang non-pulsa
       else if (balances[loc] !== undefined) {
         if (item.type === 'in') {
           balances[loc] += amt;
@@ -1346,7 +1356,11 @@
         for (const d of debts) {
           if (remDebt <= 0) break;
           const debtCovered = Math.min(remDebt, d.total);
-          const unpaidModalForThisOrder = Math.min(d.modal, debtCovered);
+          // Bagian modal yang belum kembali dihitung PROPORSIONAL terhadap
+          // sisa tagihan (modal + laba), bukan "modal dulu". Kalau tidak,
+          // total aset meleset setelah pembayaran sebagian/cicilan.
+          const unpaidShare = d.total > 0 ? debtCovered / d.total : 0;
+          const unpaidModalForThisOrder = Math.min(d.modal, Math.round(d.modal * unpaidShare));
           totalUnpaidPulsaModal += unpaidModalForThisOrder;
           remDebt -= debtCovered;
         }
@@ -1373,7 +1387,6 @@
 
     const totalRiil = (balances['DANA'] || 0) + (balances['GoPay'] || 0) + (balances['Dompet'] || 0);
     const totalAkanDatang = Math.max(0, balances['Uang Akan Datang (Hutang)'] || 0);
-    const totalAset = totalRiil + totalAkanDatang;
 
     // TARGET MODAL (MODAL POKOK + TAMBAH MODAL - KURANGI MODAL):
     const baseModal = Number(state.pulsaConfig?.baseModal) || 0;
@@ -1389,6 +1402,13 @@
     // Karena modal kios sudah langsung dipotong dari dompet saat ditambah (dompet -100k),
     // maka seluruh saldo di Kas di Tangan (Dompet+DANA+GoPay) adalah Uang Bersih bebas!
     const uangDingin = totalRiil;
+
+    // TOTAL SEMUA UANG (SEMUA ASET) = KAS RIIL + MODAL KIOS + PIUTANG.
+    // Modal Kios ikut dihitung karena uangnya tetap milik owner (hanya
+    // dipisahkan sebagai modal operasional). Dengan begitu perintah
+    // "tambah uang modal 100k dari uang ril" hanya memindahkan uang:
+    // Kas di Tangan -100k, Modal Kios +100k, dan TOTAL SEMUA UANG tetap.
+    const totalAset = totalRiil + uangPanas + totalAkanDatang;
 
     // CUAN AKTIF TERSISA:
     const cuanAktif = totalPulsaProfit;
@@ -1427,6 +1447,42 @@
       .filter(it => it.isPulsa && it.isDebt && !it.orderId && !it.isSettled)
       .reduce((sum, it) => sum + (Number(it.pulsaModal) || 0), 0);
     return Math.max(0, targetModal - offlineUnpaidModal - totalSetorModal);
+  }
+
+  // ===================================================================
+  // PELUNASAN HUTANG: SATU TAGIHAN HANYA BOLEH LUNAS SEKALI
+  // ===================================================================
+  // Total nominal yang SUDAH tercatat sebagai pembayaran untuk satu pesanan.
+  function getOrderRepaidAmount(orderId) {
+    if (!orderId) return 0;
+    return (state.items || [])
+      .filter(it => String(it.orderId) === String(orderId) &&
+        it.type === 'out' &&
+        (it.location === 'Uang Akan Datang (Hutang)' || it.isDebtRepayment))
+      .reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
+  }
+
+  // Daftar tagihan pulsa yang masih terbuka (belum lunas) milik satu pelanggan.
+  // Dipakai bersama oleh tombol ACC order, tab Piutang, dan chat supaya
+  // pelunasan tidak pernah tercatat dua kali.
+  function getOpenPulsaDebts(debtorName) {
+    if (!debtorName) return [];
+    return (state.items || [])
+      .filter(it => it.isPulsa && it.isDebt && !it.isSettled &&
+        (it.debtorName === debtorName || it.pulsaCustomer === debtorName))
+      .map(it => {
+        const total = Number(it.pulsaTotal) || Number(it.amount) || 0;
+        const paid = getOrderRepaidAmount(it.orderId);
+        return {
+          item: it,
+          orderId: it.orderId || null,
+          total,
+          paid,
+          remaining: Math.max(0, total - paid)
+        };
+      })
+      .filter(d => d.remaining > 0.5)
+      .sort((a, b) => new Date(a.item.date) - new Date(b.item.date));
   }
 
   // ===================================================================
@@ -1490,7 +1546,7 @@
   function extractDebtorName(desc) {
     if (!desc) return 'Seseorang';
     const clean = desc.replace(/\b(dipinjam|uang|dihutang|ngutang|pinjam|menghutang|ke|orang|teman)\b/gi, '').trim();
-    return clean ? (clean.charAt(0).toUpperCase() + clean.slice(1)) : 'Teman';
+    return clean ? (clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase()) : 'Teman';
   }
 
   // Hitung Arus Kas Berdasarkan Periode
@@ -2524,21 +2580,23 @@
   // ===================================================================
   // RENDER GRAFIK & XP BARS
   // ===================================================================
-  function renderGraphics(balances, totalAset) {
+  function renderGraphics(balances, totalAset, uangPanas) {
     const barsContainer = document.getElementById('chart-bars-list');
     const canvas = document.getElementById('mc-chart-canvas');
 
+    const modalAmt = Math.max(0, Number(uangPanas) || 0);
     const catData = [
-      { name: 'DANA', icon: '📱', color: '#4de0eb' },
-      { name: 'GoPay', icon: '📱', color: '#47e268' },
-      { name: 'Dompet', icon: '💵', color: '#55ff55' },
-      { name: 'Uang Akan Datang (Hutang)', icon: '⏳', color: '#f5a623' }
+      { name: 'DANA', icon: '📱', color: '#4de0eb', value: balances['DANA'] },
+      { name: 'GoPay', icon: '📱', color: '#47e268', value: balances['GoPay'] },
+      { name: 'Dompet', icon: '💵', color: '#55ff55', value: balances['Dompet'] },
+      { name: 'Modal Kios', icon: '🔥', color: '#f59e0b', value: modalAmt },
+      { name: 'Uang Akan Datang (Hutang)', icon: '⏳', color: '#f5a623', value: balances['Uang Akan Datang (Hutang)'] }
     ];
 
     if (barsContainer) {
       let html = '';
       catData.forEach(c => {
-        const amt = Math.max(0, balances[c.name] || 0);
+        const amt = Math.max(0, Number(c.value) || 0);
         const pct = totalAset > 0 ? Math.round((amt / totalAset) * 100) : 0;
 
         html += `
@@ -2578,7 +2636,7 @@
       let startAngle = -0.5 * Math.PI;
 
       catData.forEach(c => {
-        const amt = Math.max(0, balances[c.name] || 0);
+        const amt = Math.max(0, Number(c.value) || 0);
         if (amt > 0) {
           const slice = (amt / totalAset) * 2 * Math.PI;
           const endAngle = startAngle + slice;
@@ -2924,7 +2982,7 @@
     renderQuests(uangDingin, uangPanas);
 
     // 8. Render Grafik & Visual XP Bars
-    renderGraphics(balances, totalAset);
+    renderGraphics(balances, totalAset, uangPanas);
 
     // Update BGM & SFX Button Status (Owner & Buyer)
     ['bgm-btn', 'buyer-bgm-btn'].forEach(id => {
@@ -3427,38 +3485,9 @@
 
       // 4. Kasus Kurangi Modal / Alihkan ke Uang Dingin (Opsi Tambah Uang Dingin dari Uang Panas)
       if (res.isKurangiModal) {
-        const curBal = calculateBalances();
-        if (curBal.uangPanas < res.amount) {
-          AudioEngine.play('hurt');
-          Fx.burst(null, null, 'redstone');
-          showToast(
-            `❌ Gagal Alihkan Modal (Saldo Kurang): Saldo Uang Panas (Modal) kamu hanya ${formatRupiah(curBal.uangPanas)}, tidak cukup untuk dialihkan ${formatRupiah(res.amount)} ke Uang Dingin! Modal sedang tertahan di hutang pelanggan yang belum bayar.`,
-            'danger'
-          );
-          return;
-        }
-
-        const itemDesc = res.isColdMoneyAddition
-          ? `Tambah Uang Dingin (${formatRupiah(res.amount)}) dari Uang Panas`
-          : `Kurangi / Tarik Modal Pulsa (${res.wallet}) ke Uang Dingin`;
-
-        state.items.push({
-          id: 'item-' + Date.now(),
-          date: new Date().toISOString(),
-          type: 'out',
-          amount: res.amount,
-          desc: itemDesc,
-          location: res.wallet,
-          isKurangiModal: true
-        });
-        saveData();
-        render();
+        window.App.submitKurangiModalDirect(res.amount, res.wallet);
         inputEl.value = '';
         inputEl.focus();
-        AudioEngine.play('coin');
-        Fx.burst(null, null, 'emerald');
-        const { uangPanas, uangDingin } = calculateBalances();
-        showToast(`❄️ Uang Dingin bertambah +${formatRupiah(res.amount)} dialihkan dari Uang Panas! Uang Dingin kini: ${formatRupiah(uangDingin)} • Sisa Modal: ${formatRupiah(uangPanas)}.`, 'success');
         return;
       }
 
@@ -3615,7 +3644,7 @@
 
       // 8. Kasus Pelunasan / Cicilan lewat Chat
       if (res.isRepayment) {
-        window.App.executeDebtRepayment(res.debtorName, res.amount, res.destWallet);
+        await window.App.executeDebtRepayment(res.debtorName, res.amount, res.destWallet);
         inputEl.value = '';
         inputEl.focus();
         return;
@@ -4034,52 +4063,145 @@
         if (!ok) return;
       }
 
-      window.App.executeDebtRepayment(debtorName, amount, destWallet);
+      await window.App.executeDebtRepayment(debtorName, amount, destWallet);
       window.App.closeModal();
     },
 
-    executeDebtRepayment: function (debtorName, amount, destWallet, orderId, pulsaModal, pulsaProfit) {
+    executeDebtRepayment: async function (debtorName, amount, destWallet, orderId, pulsaModal, pulsaProfit) {
+      const paidAmount = Math.max(0, Math.round(Number(amount) || 0));
+      if (!debtorName || paidAmount <= 0) return false;
+
+      // 1. Tentukan tagihan pulsa mana saja yang dilunasi (paling lama dulu).
+      let openDebts = getOpenPulsaDebts(debtorName);
+      if (orderId) {
+        openDebts = openDebts.filter(d => String(d.orderId) === String(orderId));
+        if (!openDebts.length) {
+          // Tagihan order ini sudah pernah dicatat lunas -> JANGAN catat lagi.
+          showToast('💡 Pembayaran pesanan ini sudah tercatat. Uang tidak dicatat dua kali.', 'gold');
+          return false;
+        }
+      } else if (!openDebts.length) {
+        // Tidak ada tagihan pulsa terbuka. Kalau total hutang pelanggan juga 0,
+        // tolak supaya uang tidak masuk dobel dari catatan yang sudah lunas.
+        const { debtors } = calculateBalances();
+        if ((Number(debtors[debtorName]) || 0) <= 0.5) {
+          showToast(`💡 Tidak ada hutang ${debtorName} yang belum lunas. Pembayaran tidak dicatat.`, 'gold');
+          return false;
+        }
+      }
+
+      let leftToAllocate = paidAmount;
+      const plan = [];
+      openDebts.forEach((d) => {
+        if (leftToAllocate <= 0.5) return;
+        const pay = Math.min(leftToAllocate, d.remaining);
+        leftToAllocate -= pay;
+        plan.push({
+          item: d.item,
+          orderId: d.orderId,
+          amount: pay,
+          total: d.total,
+          fullyPaid: pay >= d.remaining - 0.5
+        });
+      });
+
+      // 2. Selesaikan pesanan terkait di DATABASE DULU. Kalau gagal (offline /
+      //    RLS / sudah di-ACC di perangkat lain), batalkan semua pencatatan
+      //    supaya uang tidak pernah masuk dua kali.
+      for (const p of plan) {
+        if (!p.orderId || !p.fullyPaid) continue;
+        const done = await window.App.setOrderStatus(
+          p.orderId,
+          'completed',
+          `Pembayaran ${destWallet} telah di-ACC & lunas. Pesanan beres! Terima kasih.`
+        );
+        if (!done) return false;
+      }
+
+      // 3. Catat ledger. Satu pasang catatan per tagihan (out = kurangi piutang,
+      //    in = kas bertambah sebesar laba; modal pokok kembali ke Modal Kios).
       const now = new Date().toISOString();
+      const baseId = Date.now();
+      let pairIndex = 0;
+      const pushRepaymentPair = (partAmount, partModal, partProfit, linkOrderId) => {
+        const stampId = baseId + (pairIndex * 2);
+        pairIndex += 1;
+        const money = Math.max(0, Math.round(partAmount));
+        if (money <= 0) return;
+        const modal = Math.min(money, Math.max(0, Math.round(Number(partModal) || 0)));
+        const profit = Math.min(money, Math.max(0, Math.round(Number(partProfit) || (money - modal))));
 
-      state.items.push({
-        id: 'item-' + Date.now(),
-        date: now,
-        type: 'out',
-        amount: amount,
-        desc: `${debtorName} bayar cicilan / hutang`,
-        debtorName: debtorName,
-        pulsaCustomer: debtorName,
-        location: 'Uang Akan Datang (Hutang)',
-        orderId: orderId || null
+        state.items.push({
+          id: 'item-' + stampId,
+          date: now,
+          type: 'out',
+          amount: money,
+          desc: `${debtorName} bayar cicilan / hutang`,
+          debtorName: debtorName,
+          pulsaCustomer: debtorName,
+          location: 'Uang Akan Datang (Hutang)',
+          orderId: linkOrderId || null
+        });
+
+        state.items.push({
+          id: 'item-' + (stampId + 1),
+          date: now,
+          type: 'in',
+          amount: money,
+          desc: `Pelunasan pulsa dari ${debtorName} (${destWallet})`,
+          debtorName: debtorName,
+          pulsaCustomer: debtorName,
+          location: destWallet,
+          isColdMoney: true,
+          orderId: linkOrderId || null,
+          isPulsaRepayment: true,
+          pulsaModal: modal,
+          pulsaProfit: profit
+        });
+      };
+
+      plan.forEach((p) => {
+        const ratio = p.total > 0 ? Math.min(1, p.amount / p.total) : 1;
+        const itemModal = Number(p.item.pulsaModal) || 0;
+        const itemProfit = Number(p.item.pulsaProfit) || Math.max(0, p.total - itemModal);
+        const partModal = Math.min(p.amount, Math.round(itemModal * ratio));
+        const partProfit = Math.max(0, p.amount - partModal);
+        pushRepaymentPair(p.amount, partModal, partProfit, p.orderId);
+
+        if (p.fullyPaid && p.item) {
+          p.item.isDebt = true;
+          p.item.isSettled = true;
+          p.item.settledAt = now;
+          p.item.settledWallet = destWallet;
+        }
       });
 
-      state.items.push({
-        id: 'item-' + (Date.now() + 1),
-        date: now,
-        type: 'in',
-        amount: amount,
-        desc: `Pelunasan pulsa dari ${debtorName} (${destWallet})`,
-        debtorName: debtorName,
-        pulsaCustomer: debtorName,
-        location: destWallet,
-        isColdMoney: true,
-        orderId: orderId || null,
-        isPulsaRepayment: true,
-        pulsaModal: Number(pulsaModal) || 0,
-        pulsaProfit: Number(pulsaProfit) || 0
-      });
+      // Sisa yang tidak terkait tagihan pulsa (mis. pinjaman kas biasa).
+      if (leftToAllocate > 0.5) {
+        let restModal = Number(pulsaModal);
+        if (!Number.isFinite(restModal)) restModal = 0;
+        restModal = Math.min(leftToAllocate, Math.max(0, Math.round(restModal)));
+        pushRepaymentPair(leftToAllocate, restModal, leftToAllocate - restModal, null);
+      }
 
       saveData();
       render();
 
+      if (window.KeuanganDB?.publishModalNow) {
+        try {
+          await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
+        } catch (e) {}
+      }
+
       AudioEngine.play('coin');
-      triggerCelebration(amount);
+      triggerCelebration(paidAmount);
 
       const { debtors, uangPanas } = calculateBalances();
       const sisa = debtors[debtorName] || 0;
       const sisaText = sisa > 0 ? `Sisa hutang ${debtorName}: ${formatRupiah(sisa)}` : `Hutang ${debtorName} LUNAS! ✅`;
 
-      showToast(`💎 ${debtorName} membayar ${formatRupiah(amount)} masuk ke ${destWallet}. ${sisaText}. Saldo Panas (Modal) kini kembali ke ${formatRupiah(uangPanas)}!`, 'success');
+      showToast(`💎 ${debtorName} membayar ${formatRupiah(paidAmount)} ke ${destWallet}. ${sisaText} Saldo Panas (Modal) kini ${formatRupiah(uangPanas)}!`, 'success');
+      return true;
     },
 
     logoutAdmin: function () {
@@ -4202,6 +4324,13 @@
       state.items = state.items.filter(i => i.id !== id);
       saveData();
       render();
+
+      if (window.KeuanganDB?.publishModalNow) {
+        try {
+          window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
+        } catch (e) {}
+      }
+
       showToast('Catatan dihapus!', 'danger');
     },
 
@@ -4439,7 +4568,8 @@
                 : `${escapeHtml(method)}<br><span style="color:#94a3b8;">sekarang</span>`);
 
           let actions = '';
-          const loggedItem = state.items.find(it => it.orderId === order.id);
+          const loggedItem = state.items.find(it => it.orderId === order.id && it.isPulsa) ||
+            state.items.find(it => it.orderId === order.id);
           const isSettled = order.status === 'completed' || !!loggedItem?.isSettled;
           const isDebtOrder = loggedItem ? (!!loggedItem.isDebt && !isSettled) : (order.status === 'confirmed');
 
@@ -4759,7 +4889,8 @@
     },
 
     completeOrder: async function (orderId) {
-      const loggedItem = (state.items || []).find(it => it.orderId === orderId);
+      const loggedItem = (state.items || []).find(it => it.orderId === orderId && it.isPulsa) ||
+        (state.items || []).find(it => it.orderId === orderId);
       if (loggedItem && loggedItem.isDebt && !loggedItem.isSettled) {
         return this.confirmDebtSettlementForOrder(orderId);
       }
@@ -4845,7 +4976,8 @@
             </div>
           `;
         } else if (order?.status === 'confirmed') {
-          const loggedItem = state.items.find(it => it.orderId === order.id);
+          const loggedItem = state.items.find(it => it.orderId === order.id && it.isPulsa) ||
+            state.items.find(it => it.orderId === order.id);
           const isSettled = order.status === 'completed' || !!loggedItem?.isSettled;
           const isDebt = loggedItem ? (!!loggedItem.isDebt && !isSettled) : true;
           actionsEl.innerHTML = `
@@ -4900,27 +5032,55 @@
         } catch (e) {}
       }
 
-      const loggedItem = state.items.find(it => it.orderId === orderId);
-
-      if (order?.status === 'completed' || loggedItem?.isSettled) {
-        showToast('Pesanan ini sudah beres & lunas sebelumnya.', 'gold');
-        return;
-      }
+      const loggedItem = state.items.find(it => it.orderId === orderId && it.isPulsa) ||
+        state.items.find(it => it.orderId === orderId);
 
       const rawBuyer = order?.buyer_username || loggedItem?.debtorName || loggedItem?.pulsaCustomer || 'Pelanggan';
       const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
       const orderAmt = Number(order?.amount || loggedItem?.amount) || 0;
 
+      // Tagihan order ini yang masih terbuka. Kalau sudah tidak ada sisa,
+      // berarti sudah pernah dilunasi (dari tombol ini, tab Piutang, atau chat).
+      const openOrderDebt = getOpenPulsaDebts(buyerName)
+        .find(d => String(d.orderId) === String(orderId)) || null;
+      const alreadyRepaid = getOrderRepaidAmount(orderId) > 0.5;
+
+      if (order?.status === 'completed' || loggedItem?.isSettled || alreadyRepaid || !openOrderDebt) {
+        if (order && order.status !== 'completed') {
+          const fixed = await this.setOrderStatus(
+            orderId,
+            'completed',
+            'Pelunasan sudah tercatat sebelumnya.'
+          );
+          if (fixed) {
+            showToast('✅ Status pesanan dirapikan. Uang TIDAK dicatat dua kali.', 'gold');
+            return;
+          }
+        }
+        showToast('💡 Pembayaran pesanan ini sudah di-ACC sebelumnya. Uang tidak dicatat dua kali.', 'gold');
+        return;
+      }
+
       const isCash = String(order?.payment_method || '').toLowerCase() === 'cash' || String(order?.payment_method || '').toLowerCase() === 'tunai';
       const walletName = isCash ? 'Tunai (Dompet)' : 'DANA';
       const targetWallet = isCash ? 'Dompet' : 'DANA';
 
+      // Hanya tagih SISA-nya. Kalau buyer sudah mencicil sebagian lewat tab
+      // Piutang, jangan menagih/mencatat nominal penuh lagi.
+      const settleAmount = Math.max(0, Math.round(Number(openOrderDebt.remaining) || orderAmt));
+      const modalPart = Math.min(
+        settleAmount,
+        Number(openOrderDebt.item?.pulsaModal) || Math.max(0, settleAmount - (Number(order?.admin_fee) || 0))
+      );
+      const profitPart = Math.max(0, settleAmount - modalPart);
+
       const ok = await uiConfirm({
         title: '💰 ACC UANG MASUK (PELUNASAN)',
         message:
-          `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(orderAmt)} dari ${buyerName} SUDAH BENAR-BENAR MASUK ke ${walletName} kamu?\n\n` +
-          `• Piutang atas nama ${buyerName} akan otomatis lunas.\n` +
-          `• Uang sebesar ${formatRupiah(orderAmt)} masuk ke kas ${walletName}.\n` +
+          `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(settleAmount)} dari ${buyerName} SUDAH BENAR-BENAR MASUK?\n\n` +
+          `• Piutang atas nama ${buyerName} berkurang ${formatRupiah(settleAmount)} (sisa ${formatRupiah(Math.max(0, (Number(openOrderDebt.total) || settleAmount) - (Number(openOrderDebt.paid) || 0) - settleAmount))}).\n` +
+          `• Modal pokok ${formatRupiah(modalPart)} kembali ke Modal Kios, laba ${formatRupiah(profitPart)} masuk kas ${walletName}.\n` +
+          `• Total aset TIDAK berubah (hanya pindah dari piutang ke kas + modal).\n` +
           `• Status pesanan menjadi SELESAI (BERES).`,
         okText: '✅ YA, UANG SUDAH MASUK',
         cancelText: 'BATAL'
@@ -4929,33 +5089,20 @@
 
       window.__settlingOrderIds[orderId] = true;
       try {
-        // 1. Selesaikan pesanan di database DULU. Kalau gagal (offline / RLS /
-        //    status sudah berubah), JANGAN catat pelunasan supaya uang tidak
-        //    tercatat dobel saat owner mencoba ACC lagi.
-        const done = await this.setOrderStatus(
+        // Satu pintu pelunasan: DB diselesaikan dulu, lalu ledger dicatat
+        // SEKALI saja. Kalau sudah pernah tercatat, fungsi ini menolak.
+        const done = await this.executeDebtRepayment(
+          buyerName,
+          settleAmount,
+          targetWallet,
           orderId,
-          'completed',
-          `Pembayaran ${walletName} telah di-ACC & lunas. Pesanan beres! Terima kasih.`
+          modalPart,
+          profitPart
         );
         if (!done) return;
 
-        // 2. Baru jalankan pelunasan hutang (mengurangi piutang & masuk kas tujuan)
-        const modalPart = Number(loggedItem?.pulsaModal) || Math.max(0, orderAmt - (Number(order?.admin_fee) || 0));
-        const profitPart = Number(loggedItem?.pulsaProfit) || (orderAmt - modalPart);
-        this.executeDebtRepayment(buyerName, orderAmt, targetWallet, orderId, modalPart, profitPart);
-
-        // Tandai item ledger lokal: TETAP isDebt = true (agar formula kas riil konsisten), tapi beri flag isSettled
-        if (loggedItem) {
-          loggedItem.isDebt = true;
-          loggedItem.isSettled = true;
-          loggedItem.settledAt = new Date().toISOString();
-          loggedItem.settledWallet = targetWallet;
-          saveData();
-          render();
-        }
-
         await this.refreshOwnerOrders();
-        showToast(`🎉 Pembayaran ${walletName} dari ${buyerName} (${formatRupiah(orderAmt)}) berhasil di-ACC! Piutang lunas dan uang masuk kas.`, 'success');
+        showToast(`🎉 Pembayaran ${walletName} dari ${buyerName} (${formatRupiah(settleAmount)}) berhasil di-ACC! Piutang lunas, uang masuk kas.`, 'success');
       } finally {
         delete window.__settlingOrderIds[orderId];
       }
@@ -5269,8 +5416,8 @@
       // Re-render chart if switching to recap
       if (tabId === 'recap') {
         renderRecap();
-        const { balances, totalAset } = calculateBalances();
-        renderGraphics(balances, totalAset);
+        const { balances, totalAset, uangPanas } = calculateBalances();
+        renderGraphics(balances, totalAset, uangPanas);
       }
 
       // Re-render produk jika switching ke tab products
@@ -5418,7 +5565,8 @@
     uiPrompt: uiPrompt,
 
     parseFinanceSentence: parseFinanceSentence,
-    calculateBalances: calculateBalances
+    calculateBalances: calculateBalances,
+    getState: () => state
   };
 
   // ===================================================================
