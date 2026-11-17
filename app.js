@@ -1060,16 +1060,26 @@
       }
     });
 
-    // 3. Sinkronkan status isSettled untuk pesanan pulsa berdasarkan orderId masing-masing
-    const settledOrderIds = new Set(
-      items.filter(it => it.orderId && !toDelete.has(it.id) && (it.isPulsaRepayment || String(it.desc || '').includes('Pelunasan') || String(it.desc || '').includes('Cicilan'))).map(it => it.orderId)
-    );
+    // 3. Sinkronkan status isSettled untuk pesanan pulsa berdasarkan orderId
+    // masing-masing. PENTING: hanya boleh dianggap LUNAS kalau total
+    // pelunasannya sudah menutup total tagihan. Dulu setiap cicilan (walau
+    // sebagian) langsung menandai pesanan lunas, sehingga sisa hutang tidak
+    // bisa ditagih lagi setelah aplikasi di-reload.
+    const repaidByOrder = {};
+    items.forEach(it => {
+      if (!it.orderId || toDelete.has(it.id)) return;
+      if (it.type === 'out' &&
+          (it.location === 'Uang Akan Datang (Hutang)' || it.isDebtRepayment)) {
+        repaidByOrder[it.orderId] =
+          (repaidByOrder[it.orderId] || 0) + (Number(it.amount) || 0);
+      }
+    });
     items.forEach(it => {
       if (it.isPulsa && it.orderId && it.location === 'Uang Akan Datang (Hutang)') {
         it.isDebt = true;
-        if (it.isSettled || settledOrderIds.has(it.orderId)) {
-          it.isSettled = true;
-        }
+        const total = Number(it.pulsaTotal) || Number(it.amount) || 0;
+        const paid = repaidByOrder[it.orderId] || 0;
+        it.isSettled = total > 0 && paid >= total - 0.5;
       }
     });
 
@@ -1229,6 +1239,18 @@
     // Catatan hutang pulsa per pelanggan untuk melacak modal yang masih tertahan di luar
     const pulsaDebtsByCustomer = {};
 
+    // Total pembayaran per order (dipakai untuk menghitung sisa tagihan &
+    // modal yang masih tertahan secara konsisten dengan buku pelunasan).
+    const repaidByOrder = {};
+    state.items.forEach(it => {
+      if (!it.orderId) return;
+      if (it.type === 'out' &&
+          (it.location === 'Uang Akan Datang (Hutang)' || it.isDebtRepayment)) {
+        repaidByOrder[it.orderId] =
+          (repaidByOrder[it.orderId] || 0) + (Number(it.amount) || 0);
+      }
+    });
+
     state.items.forEach(item => {
       const loc = item.location;
       const amt = Number(item.amount) || 0;
@@ -1251,6 +1273,13 @@
       // 1C. Pengeluaran langsung dari Uang Panas / Modal (beli barang dari uang panas)
       else if (item.isModalExpense) {
         totalKurangiModal += amt;
+      }
+      // 1D. Setor / Belanja Modal Pulsa ke provider: uang keluar dari Modal Kios
+      // (totalSetorModal dihitung di bawah). Dompet kas TIDAK ikut dipotong,
+      // karena modal kios adalah uang panas yang disimpan terpisah — kalau
+      // dompet juga dipotong, total aset turun 2x lipat.
+      else if (item.isSetorModal) {
+        // sengaja tanpa perubahan saldo dompet
       }
       // 2. Jualan Pulsa LUNAS (CASH langsung di tempat / DANA langsung):
       // Modal kembali ke Modal Kios, laba admin (cuan) masuk ke kas penerima.
@@ -1303,8 +1332,12 @@
           if (item.isPulsa && item.isDebt) {
             const cust = item.pulsaCustomer || name;
             if (!pulsaDebtsByCustomer[cust]) pulsaDebtsByCustomer[cust] = [];
+            const debtTotal = Number(item.pulsaTotal) || amt;
+            const debtPaid = item.orderId ? (repaidByOrder[item.orderId] || 0) : 0;
             pulsaDebtsByCustomer[cust].push({
-              total: Number(item.pulsaTotal) || amt,
+              total: debtTotal,
+              paid: debtPaid,
+              remaining: Math.max(0, debtTotal - debtPaid),
               modal: Number(item.pulsaModal) || 0,
               profit: Number(item.pulsaProfit) || 0
             });
@@ -1346,25 +1379,24 @@
       }
     });
 
-    // Hitung total modal pulsa yang saat ini masih dihutang oleh pelanggan (belum lunas)
+    // Hitung total modal pulsa yang saat ini masih dihutang oleh pelanggan (belum lunas).
+    // Dihitung PER PESANAN dari sisa tagihannya sendiri, bukan dengan
+    // mengalokasikan total hutang pelanggan ke pesanan terbaru (yang bisa
+    // membuat modal tertahan meleset setelah cicilan/pelunasan tidak berurutan).
     let totalUnpaidPulsaModal = 0;
     Object.keys(debtors).forEach(name => {
-      let remDebt = debtors[name];
-      if (remDebt > 0 && pulsaDebtsByCustomer[name] && pulsaDebtsByCustomer[name].length > 0) {
-        // Alokasikan sisa hutang ke pesanan pulsa secara akurat (dari pesanan terbaru)
-        const debts = [...pulsaDebtsByCustomer[name]].reverse();
-        for (const d of debts) {
-          if (remDebt <= 0) break;
-          const debtCovered = Math.min(remDebt, d.total);
-          // Bagian modal yang belum kembali dihitung PROPORSIONAL terhadap
-          // sisa tagihan (modal + laba), bukan "modal dulu". Kalau tidak,
-          // total aset meleset setelah pembayaran sebagian/cicilan.
-          const unpaidShare = d.total > 0 ? debtCovered / d.total : 0;
-          const unpaidModalForThisOrder = Math.min(d.modal, Math.round(d.modal * unpaidShare));
-          totalUnpaidPulsaModal += unpaidModalForThisOrder;
-          remDebt -= debtCovered;
-        }
-      }
+      if ((Number(debtors[name]) || 0) <= 0) return;
+      const debts = pulsaDebtsByCustomer[name];
+      if (!debts || !debts.length) return;
+      debts.forEach(d => {
+        if (!(d.remaining > 0.5) || !(d.total > 0)) return;
+        const paidRatio = Math.min(1, Math.max(0, (Number(d.paid) || 0) / d.total));
+        // Modal yang belum kembali = modal - bagian modal yang sudah dibayar.
+        // Memakai komplemen pembulatan ini supaya saat pesanan lunas, kenaikan
+        // Modal Kios PERSIS sama dengan modal yang dicatat di buku pelunasan.
+        const unpaidModal = Math.max(0, Math.round(d.modal) - Math.round(d.modal * paidRatio));
+        totalUnpaidPulsaModal += unpaidModal;
+      });
     });
 
     // Finalize status sisa hutang & lunas untuk setiap pelanggan
@@ -4072,7 +4104,8 @@
       if (!debtorName || paidAmount <= 0) return false;
 
       // 1. Tentukan tagihan pulsa mana saja yang dilunasi (paling lama dulu).
-      let openDebts = getOpenPulsaDebts(debtorName);
+      const allOpenDebts = getOpenPulsaDebts(debtorName);
+      let openDebts = allOpenDebts;
       if (orderId) {
         openDebts = openDebts.filter(d => String(d.orderId) === String(orderId));
         if (!openDebts.length) {
@@ -4101,9 +4134,20 @@
           orderId: d.orderId,
           amount: pay,
           total: d.total,
+          paid: d.paid,
           fullyPaid: pay >= d.remaining - 0.5
         });
       });
+
+      // Kewajiban pelanggan SEBELUM pembayaran ini dicatat. Dipakai untuk
+      // membatasi alokasi sisa pembayaran ke hutang non-pulsa, supaya sisa
+      // kelebihan bayar tidak pernah dianggap "mengurangi piutang" yang sudah 0.
+      const outstandingBefore = Math.max(
+        0,
+        Number((calculateBalances().debtors || {})[debtorName]) || 0
+      );
+      const totalPulsaBefore = allOpenDebts.reduce((sum, d) => sum + d.remaining, 0);
+      const nonPulsaOutstanding = Math.max(0, Math.round(outstandingBefore - totalPulsaBefore));
 
       // 2. Selesaikan pesanan terkait di DATABASE DULU. Kalau gagal (offline /
       //    RLS / sudah di-ACC di perangkat lain), batalkan semua pencatatan
@@ -4161,10 +4205,17 @@
       };
 
       plan.forEach((p) => {
-        const ratio = p.total > 0 ? Math.min(1, p.amount / p.total) : 1;
-        const itemModal = Number(p.item.pulsaModal) || 0;
-        const itemProfit = Number(p.item.pulsaProfit) || Math.max(0, p.total - itemModal);
-        const partModal = Math.min(p.amount, Math.round(itemModal * ratio));
+        const total = Number(p.total) || 0;
+        const itemModal = Math.max(0, Math.round(Number(p.item.pulsaModal) || 0));
+        const paidBefore = Number(p.paid) || 0;
+        const ratioBefore = total > 0 ? Math.min(1, paidBefore / total) : 1;
+        const ratioAfter = total > 0 ? Math.min(1, (paidBefore + p.amount) / total) : 1;
+        // Pembulatan kumulatif: total modal yang "kembali" sepanjang cicilan
+        // harus sama persis dengan yang dihitung di calculateBalances.
+        const partModal = Math.max(
+          0,
+          Math.min(p.amount, Math.round(itemModal * ratioAfter) - Math.round(itemModal * ratioBefore))
+        );
         const partProfit = Math.max(0, p.amount - partModal);
         pushRepaymentPair(p.amount, partModal, partProfit, p.orderId);
 
@@ -4176,12 +4227,35 @@
         }
       });
 
-      // Sisa yang tidak terkait tagihan pulsa (mis. pinjaman kas biasa).
+      // Sisa pembayaran setelah semua tagihan pulsa terbuka dilunasi:
+      // - Sebagian boleh mengurangi hutang NON-PULSA (mis. pinjaman kas biasa),
+      //   maksimal sebesar kewajiban yang benar-benar masih tercatat.
+      // - Selebihnya adalah uang nyata yang diterima (kelebihan bayar / tip),
+      //   jadi dicatat sebagai PEMASUKAN saja. Jangan membuat item 'out' ke
+      //   Hutang lagi, karena itu membuat piutang negatif dan total aset ngawur.
       if (leftToAllocate > 0.5) {
-        let restModal = Number(pulsaModal);
-        if (!Number.isFinite(restModal)) restModal = 0;
-        restModal = Math.min(leftToAllocate, Math.max(0, Math.round(restModal)));
-        pushRepaymentPair(leftToAllocate, restModal, leftToAllocate - restModal, null);
+        const toNonPulsa = Math.min(leftToAllocate, nonPulsaOutstanding);
+        const extra = leftToAllocate - toNonPulsa;
+
+        if (toNonPulsa > 0.5) {
+          let restModal = Number(pulsaModal);
+          if (!Number.isFinite(restModal)) restModal = 0;
+          restModal = Math.min(toNonPulsa, Math.max(0, Math.round(restModal)));
+          pushRepaymentPair(toNonPulsa, restModal, toNonPulsa - restModal, null);
+        }
+
+        if (extra > 0.5) {
+          state.items.push({
+            id: 'item-extra-' + baseId,
+            date: now,
+            type: 'in',
+            amount: extra,
+            desc: `Kelebihan pembayaran ${debtorName} (${destWallet})`,
+            debtorName: debtorName,
+            location: destWallet,
+            isColdMoney: true
+          });
+        }
       }
 
       saveData();
