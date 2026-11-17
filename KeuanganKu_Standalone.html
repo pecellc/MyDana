@@ -13304,13 +13304,16 @@ textarea,
       const buyerName = rawBuyer ? (rawBuyer.charAt(0).toUpperCase() + rawBuyer.slice(1)) : 'Pelanggan';
       const orderAmt = Number(order?.amount || loggedItem?.amount) || 0;
 
-      // Tagihan order ini yang masih terbuka. Kalau sudah tidak ada sisa,
-      // berarti sudah pernah dilunasi (dari tombol ini, tab Piutang, atau chat).
+      // Tagihan order ini yang masih terbuka. getOpenPulsaDebts hanya
+      // mengembalikan yang sisanya > 0, jadi `!openOrderDebt` berarti LUNAS.
+      // Jangan pakai "sudah ada pembayaran > 0" sebagai penanda lunas:
+      // cicilan sebagian juga menghasilkan pembayaran, tapi sisanya tetap
+      // harus bisa di-ACC.
       const openOrderDebt = getOpenPulsaDebts(buyerName)
         .find(d => String(d.orderId) === String(orderId)) || null;
-      const alreadyRepaid = getOrderRepaidAmount(orderId) > 0.5;
+      const fullyRepaid = !!loggedItem && (!!loggedItem.isSettled || !openOrderDebt);
 
-      if (order?.status === 'completed' || loggedItem?.isSettled || alreadyRepaid || !openOrderDebt) {
+      if (order?.status === 'completed' || fullyRepaid) {
         if (order && order.status !== 'completed') {
           const fixed = await this.setOrderStatus(
             orderId,
@@ -13326,6 +13329,13 @@ textarea,
         return;
       }
 
+      // Tidak ada catatan tagihan untuk order ini (mis. data transaksi belum
+      // termuat di perangkat). Jangan mencatat uang tanpa dasar tagihan.
+      if (!openOrderDebt) {
+        showToast('⚠️ Catatan transaksi pesanan ini belum termuat. Muat ulang halaman (refresh) lalu coba lagi.', 'danger');
+        return;
+      }
+
       const isCash = String(order?.payment_method || '').toLowerCase() === 'cash' || String(order?.payment_method || '').toLowerCase() === 'tunai';
       const walletName = isCash ? 'Tunai (Dompet)' : 'DANA';
       const targetWallet = isCash ? 'Dompet' : 'DANA';
@@ -13333,9 +13343,15 @@ textarea,
       // Hanya tagih SISA-nya. Kalau buyer sudah mencicil sebagian lewat tab
       // Piutang, jangan menagih/mencatat nominal penuh lagi.
       const settleAmount = Math.max(0, Math.round(Number(openOrderDebt.remaining) || orderAmt));
+      // Modal pokok yang kembali juga PROPORSIONAL terhadap sisa tagihan.
+      // Kalau order sudah dicicil sebagian, jangan mengklaim seluruh modal
+      // pokok kembali pada pelunasan terakhir (laba jadi terlihat 0).
+      const totalOrderDebt = Number(openOrderDebt.total) || orderAmt || 1;
+      const totalOrderModal = Number(openOrderDebt.item?.pulsaModal) ||
+        Math.max(0, totalOrderDebt - (Number(order?.admin_fee) || 0));
       const modalPart = Math.min(
         settleAmount,
-        Number(openOrderDebt.item?.pulsaModal) || Math.max(0, settleAmount - (Number(order?.admin_fee) || 0))
+        Math.round(totalOrderModal * Math.min(1, settleAmount / totalOrderDebt))
       );
       const profitPart = Math.max(0, settleAmount - modalPart);
 
