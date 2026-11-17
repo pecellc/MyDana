@@ -12722,11 +12722,29 @@ textarea,
         ]);
         state.ownerOrders = orders || [];
 
-        const modal = Number(
-          statusRow?.available != null ? statusRow.available : statusRow?.modal_amount
-        ) || 0;
-        const reserved = Number(statusRow?.reserved) || 0;
-        const totalModal = Number(statusRow?.modal_amount) || 0;
+        // Pool modal dari ledger lokal (nilai yang seharusnya ada di DB).
+        // Dipakai juga untuk self-heal di bawah.
+        const expectedPool = state.remoteReady
+          ? Math.max(0, Math.round(getModalPoolForSupabase()))
+          : 0;
+        const dbModal = Math.max(0, Number(statusRow?.modal_amount) || 0);
+
+        // Self-heal: kalau modal_amount di DB LEBIH KECIL dari pool lokal
+        // (sering terjadi karena publish neto dari versi lama / perangkat
+        // lain), naikkan lagi supaya ACC & pesanan buyer tidak salah
+        // mengira modal habis. Hanya menaikkan (tidak menurunkan) agar
+        // tidak menimpa perubahan modal dari tab/perangkat lain.
+        if (state.remoteReady && window.KeuanganDB?.publishModalNow &&
+            expectedPool > dbModal + 0.5) {
+          window.KeuanganDB.publishModalNow(expectedPool).catch(() => {});
+        }
+
+        // Jangan pakai angka DB yang basi untuk mengunci tombol ACC:
+        // ambil yang lebih besar antara DB dan pool lokal. RPC tetap
+        // menjadi penentu akhir (atomik + validasi reservasi).
+        const totalModal = Math.max(dbModal, expectedPool);
+        const reserved = Math.max(0, Number(statusRow?.reserved) || 0);
+        const modal = Math.max(0, totalModal - reserved);
 
         const summaryEl = document.getElementById('owner-orders-modal-summary');
         if (summaryEl) {
@@ -13058,7 +13076,20 @@ textarea,
       // Hindari duplikasi pencatatan
       const alreadyLogged = state.items.some(it => it.orderId === order.id);
 
-      // 6. SIMPAN STATUS DULU. RPC inilah yang memvalidasi modal pokok.
+      // 6. SEGARKAN MODAL POOL KE DATABASE SEBELUM ACC.
+      // public_status.modal_amount bisa basi/lebih kecil (mis. sisa publish
+      // dari versi lama atau perangkat lain), sehingga RPC menolak dengan
+      // "modal tidak cukup" padahal saldo riil masih ada. Publish ulang dari
+      // ledger lokal yang sudah termuat lebih dulu.
+      if (window.KeuanganDB?.publishModalNow) {
+        try {
+          await window.KeuanganDB.publishModalNow(getModalPoolForSupabase());
+        } catch (e) {
+          console.warn('Gagal menyegarkan modal sebelum ACC:', e);
+        }
+      }
+
+      // 7. SIMPAN STATUS DULU. RPC inilah yang memvalidasi modal pokok.
       // Ledger baru ditulis setelah sukses, supaya kalau RPC gagal tidak ada
       // transaksi hantu / dobel saat owner mencoba ACC lagi.
       const ok = await window.App.setOrderStatus(orderId, 'confirmed', clean, profitAmount);
