@@ -12831,8 +12831,15 @@ textarea,
         // ambil yang lebih besar antara DB dan pool lokal. RPC tetap
         // menjadi penentu akhir (atomik + validasi reservasi).
         const totalModal = Math.max(dbModal, expectedPool);
-        const reserved = Math.max(0, Number(statusRow?.reserved) || 0);
-        const modal = Math.max(0, totalModal - reserved);
+        const dbReserved = Math.max(0, Number(statusRow?.reserved) || 0);
+        // Angka tampilan mengikuti ledger lokal: order yang MASIH MENUNGGU
+        // belum menahan modal (pulsa belum dikirim), sedangkan DB menghitung
+        // semua order pending+confirmed sebagai reserved. Tanpa ini kartu
+        // menampilkan "tersedia Rp 0" padahal ACC sebenarnya bisa.
+        const localPanas = Math.max(0, Math.round(calculateBalances().uangPanas));
+        const useLocalView = state.remoteReady && expectedPool > 0;
+        const reserved = useLocalView ? Math.max(0, expectedPool - localPanas) : dbReserved;
+        const modal = useLocalView ? localPanas : Math.max(0, totalModal - dbReserved);
 
         const summaryEl = document.getElementById('owner-orders-modal-summary');
         if (summaryEl) {
@@ -12962,15 +12969,21 @@ textarea,
             }
             if (orderProfit > Number(order.amount)) orderProfit = Number(order.amount);
             const orderNeededModal = Math.max(0, Number(order.amount) - orderProfit);
-            const enough = orderNeededModal <= totalModal + 0.5;
+            const shortfall = Math.max(0, orderNeededModal - modal);
 
+            // Tombol ACC TIDAK pernah dikunci: owner masih bisa menyesuaikan
+            // uang admin di dialog (modal pokok = harga - admin). Kalau kurang,
+            // tampilkan peringatan saja; validasi final tetap di acceptOrder.
             actions = `
-              <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
-                <button class="mc-btn mc-btn-green mc-btn-acc-lg" style="${enough ? '' : 'opacity:.4;cursor:not-allowed;'}"
-                  ${enough ? '' : `disabled title="Modal pokok ${formatRupiah(orderNeededModal)} melebihi total modal ${formatRupiah(totalModal)}"`}
-                  onclick="window.App.acceptOrder('${order.id}')">ACC</button>
-                <button class="mc-btn mc-btn-decline-lg"
-                  onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+              <div style="display:flex; flex-direction:column; gap:3px; align-items:center;">
+                <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                  <button class="mc-btn mc-btn-green mc-btn-acc-lg"
+                    title="Modal pokok ${formatRupiah(orderNeededModal)} • tersedia ${formatRupiah(modal)}"
+                    onclick="window.App.acceptOrder('${order.id}')">ACC</button>
+                  <button class="mc-btn mc-btn-decline-lg"
+                    onclick="window.App.declineOrder('${order.id}')">TOLAK</button>
+                </div>
+                ${shortfall > 0.5 ? `<div style="font-size:6.6px; color:#fbbf24; font-weight:700;">⚠️ Modal kurang ${formatRupiah(shortfall)} — kurangi uang admin saat ACC</div>` : ''}
               </div>
             `;
           } else if (order.status === 'confirmed') {
@@ -13819,6 +13832,13 @@ textarea,
       // Re-render produk jika switching ke tab products
       if (tabId === 'products') {
         this.refreshProductsTab();
+      }
+
+      // Segarkan daftar pesanan + ringkasan modal setiap membuka Kios, supaya
+      // angka "tersedia" tidak basi setelah aksi di tab lain (tambah modal,
+      // pelunasan, dll).
+      if (tabId === 'kios') {
+        this.refreshOwnerOrders?.();
       }
     },
 
