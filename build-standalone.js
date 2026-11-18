@@ -19,8 +19,9 @@ const localScripts = [
 
 for (const file of localScripts) {
   const code = fs.readFileSync(path.join(dir, file), 'utf8');
+  const escaped = file.replace(/\./g, '\\.');
   bundle = bundle.replace(
-    `<script src="${file}"></script>`,
+    new RegExp(`<script src="${escaped}(?:\\?[^"]*)?"></script>`),
     `<script>\n${code}\n</script>`
   );
 }

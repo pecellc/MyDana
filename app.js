@@ -1174,7 +1174,7 @@
           quests: state.quests,
           pulsaConfig: state.pulsaConfig,
           settings: state.settings,
-          modalAmount: calculateBalances().uangPanas
+          modalAmount: getModalPoolForSupabase()
         });
       }
 
@@ -1185,9 +1185,23 @@
 
       state.remoteReady = true;
       writeLocalData();
-      // Jangan publish ulang modal saat load. Nilai modal sudah tersimpan di
-      // public_status; kalau dipublish dari state lokal yang belum lengkap
-      // (mis. tab lama / cache kosong), modal kios bisa tiba-tiba jadi 0.
+
+      // Self-heal modal publik: DB bisa menyimpan nilai NETO/basi (publish dari
+      // versi lama) sehingga terlihat "modal habis" padahal saldo masih ada.
+      // Raise-only: hanya menaikkan, tidak menurunkan, agar tidak menimpa
+      // perubahan modal dari perangkat/tab lain.
+      if ((remoteHasLedger || localHasLedger) && window.KeuanganDB?.publishModalNow) {
+        try {
+          const pool = Math.max(0, Math.round(getModalPoolForSupabase()));
+          if (pool > 0) {
+            const st = await window.KeuanganDB.getPublicStatus();
+            const dbModal = Math.max(0, Number(st?.modal_amount) || 0);
+            if (pool > dbModal + 0.5) {
+              await window.KeuanganDB.publishModalNow(pool);
+            }
+          }
+        } catch (e) {}
+      }
       // Perubahan modal selalu dipublish eksplisit oleh aksi owner di bawah.
     } catch (e) {
       console.warn('Gagal memuat data Supabase, memakai cache lokal:', e);
@@ -4797,17 +4811,12 @@
       if (profitAmount > orderAmt) profitAmount = orderAmt;
       let modalAmount = Math.max(0, orderAmt - profitAmount);
 
-      // 2. VALIDASI KETERSEDIAAN SALDO MODAL KIOS
-      // HANYA memotong modal pokok (di luar uang admin)! Admin 4k langsung masuk kas/uang dingin, modal 10k memotong saldo kios.
+      // 2. INFO KETERSEDIAAN SALDO MODAL KIOS
+      // HANYA memotong modal pokok (di luar uang admin). JANGAN blokir di sini:
+      // modal pokok = harga - uang admin, dan owner masih bisa menyesuaikan
+      // admin pada langkah berikutnya. Validasi final dilakukan setelah nominal
+      // admin ditentukan (lihat re-validasi di bawah).
       const { uangPanas } = calculateBalances();
-      if (modalAmount > uangPanas) {
-        showToast(
-          `❌ Saldo modal kios tidak cukup (${formatRupiah(uangPanas)}).\n` +
-          `Modal pokok yang dibutuhkan: ${formatRupiah(modalAmount)} (admin ${formatRupiah(profitAmount)}). Silakan tambah modal dulu sebelum ACC.`,
-          'danger'
-        );
-        return;
-      }
 
       // 3. STATUS PEMBAYARAN: ALUR KIRIM PULSA DULU LALU TRANSFER
       // Sesuai alur kios pulsa: Saat owner klik ACC pesanan pending, pulsa/saldo
@@ -4827,7 +4836,8 @@
         title: '💎 JATAH ADMIN PESANAN',
         message:
           `Berapa uang admin / laba bersih pesanan ini?\n` +
-          `Admin langsung masuk ke kas sebagai keuntungan bersih, sedangkan modal pokok (${formatRupiah(orderAmt)} - admin) kembali ke Modal Kios.`,
+          `Admin langsung masuk ke kas sebagai keuntungan bersih, sedangkan modal pokok (${formatRupiah(orderAmt)} - admin) kembali ke Modal Kios.\n\n` +
+          `Saldo modal kios tersedia: ${formatRupiah(uangPanas)}.`,
         hint: 'Contoh: 2000 atau 4000. Ketik 0 jika tanpa admin.',
         inputLabel: 'UANG ADMIN (RP)',
         placeholder: '0',
