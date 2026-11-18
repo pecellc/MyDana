@@ -1041,8 +1041,80 @@
         } catch (err) {}
       }
 
+      // =============================================================
+      // BATAS TEMPO MAKSIMAL 4 HARI (dihitung dari hari ini, WIB)
+      // =============================================================
+      let safeDueDate = null;
+      if (payTiming === 'later') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const maxDate = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);
+        const picked = new Date(String(dueDate) + 'T00:00:00');
+        if (isNaN(picked.getTime()) || picked < today) {
+          toast('❌ Tanggal bayar tidak valid. Pilih tanggal hari ini sampai 4 hari ke depan.', 'danger');
+          return;
+        }
+        if (picked > maxDate) {
+          toast('❌ Batas tempo maksimal 4 hari. Pilih tanggal paling lambat 4 hari dari hari ini.', 'danger');
+          return;
+        }
+        safeDueDate = dueDate;
+      }
+
+      // =============================================================
+      // VERIFIKASI 2 LANGKAH: hanya buyer yang YAKIN punya uang
+      // =============================================================
+      const dueInfo = payTiming === 'later'
+        ? `Batas bayar: ${formatDay(safeDueDate)} (maksimal 4 hari dari hari ini).`
+        : 'Pembayaran: BAYAR SEKARANG saat pesanan di-ACC owner.';
+
+      const askConfirm = (window.App && typeof window.App.uiConfirm === 'function')
+        ? window.App.uiConfirm.bind(window.App)
+        : async (o) => window.confirm(String((o && o.message) || 'Lanjutkan?'));
+      const askPrompt = (window.App && typeof window.App.uiPrompt === 'function')
+        ? window.App.uiPrompt.bind(window.App)
+        : async (o) => window.prompt(String((o && o.message) || 'Ketik konfirmasi'));
+
+      // Langkah 1/2 — komitmen: buyer menyatakan sudah punya uang.
+      const agreed = await askConfirm({
+        title: '🔒 VERIFIKASI 1/2 — KOMITMEN BAYAR',
+        message:
+          `Produk: ${product.name}\n` +
+          `Total bayar: ${formatRupiah(product.price)}\n` +
+          `${dueInfo}\n\n` +
+          `Dengan menekan "SAYA SANGGUP", kamu menyatakan SUDAH PUNYA UANG dan ` +
+          `SANGGUP melunasi maksimal 4 hari. Pesanan yang sudah di-ACC owner tetap wajib dibayar.`,
+        okText: 'SAYA SANGGUP',
+        cancelText: 'BATAL',
+        danger: false
+      });
+      if (!agreed) return;
+
+      // Langkah 2/2 — ketik kode konfirmasi (anti klik asal).
+      const CONFIRM_CODE = 'SIAP BAYAR';
+      const typed = await askPrompt({
+        title: '🔒 VERIFIKASI 2/2 — KETIK KONFIRMASI',
+        message:
+          `Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.\n` +
+          `${dueInfo}\n\n` +
+          `Kalau kamu belum punya uang atau tidak sanggup bayar maksimal 4 hari, tekan BATAL.`,
+        hint: `Wajib diketik: ${CONFIRM_CODE}`,
+        inputLabel: 'KONFIRMASI',
+        placeholder: CONFIRM_CODE,
+        okText: 'KIRIM PESANAN',
+        required: true,
+        requiredMessage: 'Konfirmasi wajib diisi.'
+      });
+      if (typed === null || typed === undefined) return;
+      const typedCode = String(typed).trim().replace(/\s+/g, ' ').toUpperCase();
+      if (typedCode !== CONFIRM_CODE) {
+        toast(`❌ Konfirmasi salah. Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.`, 'danger');
+        return;
+      }
+
       let orderNotes = `No HP: ${phone}`;
       if (notes) orderNotes += ` | ${notes}`;
+      orderNotes += ` | Verifikasi 2 langkah: OK`;
 
       setBusy(submitBtn, true, 'MENGIRIM...');
       try {
@@ -1053,7 +1125,7 @@
           admin_fee: admin,
           payment_method: paymentMethod,
           pay_timing: payTiming,
-          due_date: payTiming === 'later' ? dueDate : null,
+          due_date: payTiming === 'later' ? safeDueDate : null,
           notes: orderNotes,
           payment_proof: null
         });

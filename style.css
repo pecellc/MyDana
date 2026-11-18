@@ -3600,3 +3600,32 @@ textarea,
 
 [data-theme="day"] .overall-bar-label { color: #0369a1; }
 [data-theme="day"] .overall-bar-val { color: #047857; text-shadow: none; }
+
+
+/* ============================================================
+   KOTAK KOMITMEN BAYAR (VERIFIKASI 2 LANGKAH BUYER)
+   ============================================================ */
+.buyer-commit-box {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px dashed rgba(251, 191, 36, 0.55);
+  background: rgba(251, 191, 36, 0.10);
+  color: #fcd34d;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.buyer-commit-box strong {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+[data-theme="day"] .buyer-commit-box {
+  border-color: rgba(180, 83, 9, 0.5);
+  background: rgba(251, 191, 36, 0.18);
+  color: #92400e;
+}
+
+[data-theme="day"] .buyer-commit-box strong { color: #b45309; }

@@ -16,7 +16,7 @@
   <link rel="dns-prefetch" href="https://ziibivkhualutrdiojto.supabase.co">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -407,6 +407,12 @@
             <label class="buyer-form-label" for="buyer-popup-notes">📝 CATATAN TAMBAHAN (OPSIONAL)</label>
             <textarea id="buyer-popup-notes" class="modal-input" rows="2"
               placeholder="Catatan tambahan: provider, waktu pengiriman, dll."></textarea>
+          </div>
+
+          <div class="buyer-commit-box">
+            🔒 <strong>Wajib verifikasi 2 langkah.</strong> Hanya buyer yang <strong>sudah punya uang</strong> dan
+            sanggup membayar <strong>maksimal 4 hari</strong> yang boleh memesan. Pesanan yang sudah di-ACC owner
+            tetap wajib dibayar.
           </div>
 
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
@@ -1495,11 +1501,11 @@
 
   <!-- Supabase client (CDN) + modul aplikasi -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js?v=19"></script>
-  <script src="auth.js?v=19"></script>
-  <script src="db.js?v=19"></script>
-  <script src="buyer.js?v=19"></script>
-  <script src="app.js?v=19"></script>
+  <script src="supabase-config.js?v=20"></script>
+  <script src="auth.js?v=20"></script>
+  <script src="db.js?v=20"></script>
+  <script src="buyer.js?v=20"></script>
+  <script src="app.js?v=20"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
