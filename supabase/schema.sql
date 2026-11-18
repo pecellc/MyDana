@@ -447,6 +447,87 @@ create trigger orders_enforce_modal
   before insert or update of status, amount, admin_fee on public.orders
   for each row execute function public.enforce_order_modal();
 
+-- Self-heal modal publik: hitung ulang pool GROSS dari ledger lalu NAIKKAN
+-- modal_amount bila lebih kecil (mis. tersimpan neto dari klien lama).
+-- Raise-only: tidak pernah menurunkan.
+create or replace function public.heal_modal_pool()
+returns numeric
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_owner uuid;
+  v_modal numeric := 0;
+  v_pool numeric := 0;
+  v_base numeric := 0;
+  v_offset numeric := 0;
+  v_tambah numeric := 0;
+  v_kurang numeric := 0;
+  v_setor numeric := 0;
+  v_offline numeric := 0;
+begin
+  select owner_id, coalesce(modal_amount, 0)
+    into v_owner, v_modal
+  from public.public_status
+  where id = 1;
+
+  if not found then
+    return 0;
+  end if;
+
+  if v_owner is null then
+    select owner_id into v_owner from public.app_settings limit 1;
+  end if;
+
+  if v_owner is null then
+    return coalesce(v_modal, 0);
+  end if;
+
+  select coalesce((pulsa_config->>'baseModal')::numeric, 0),
+         coalesce((pulsa_config->>'manualModalOffset')::numeric, 0)
+    into v_base, v_offset
+  from public.app_settings
+  where owner_id = v_owner
+  limit 1;
+
+  v_base := coalesce(v_base, 0);
+  v_offset := coalesce(v_offset, 0);
+
+  select
+    coalesce(sum(case when coalesce(payload->>'isTambahModal', 'false') = 'true'
+                      then amount else 0 end), 0),
+    coalesce(sum(case when coalesce(payload->>'isKurangiModal', 'false') = 'true'
+                       or coalesce(payload->>'isModalExpense', 'false') = 'true'
+                      then amount else 0 end), 0),
+    coalesce(sum(case when coalesce(payload->>'isSetorModal', 'false') = 'true'
+                      then amount else 0 end), 0),
+    coalesce(sum(case when is_pulsa
+                       and coalesce(payload->>'isDebt', 'false') = 'true'
+                       and coalesce(payload->>'orderId', '') = ''
+                       and coalesce(payload->>'isSettled', 'false') <> 'true'
+                      then coalesce((payload->>'pulsaModal')::numeric, 0)
+                      else 0 end), 0)
+    into v_tambah, v_kurang, v_setor, v_offline
+  from public.transactions
+  where owner_id = v_owner;
+
+  v_pool := greatest(0, v_base + v_tambah - v_kurang + v_offset - v_offline - v_setor);
+
+  if v_pool > v_modal + 0.5 then
+    update public.public_status
+       set modal_amount = v_pool,
+           updated_at = now()
+     where id = 1;
+    return v_pool;
+  end if;
+
+  return v_modal;
+end;
+$$;
+
+revoke all on function public.heal_modal_pool() from public;
+
 -- Status modal publik: reserved hanya modal pokok.
 create or replace function public.modal_status()
 returns jsonb
@@ -459,6 +540,8 @@ declare
   v_reserved numeric := 0;
   v_updated timestamptz;
 begin
+  v_modal := public.heal_modal_pool();
+
   select coalesce(modal_amount, 0), updated_at
     into v_modal, v_updated
   from public.public_status
@@ -513,6 +596,9 @@ begin
   if v_order.status <> 'pending' then
     raise exception 'Pesanan sudah berstatus %.', v_order.status using errcode = 'P0001';
   end if;
+
+  -- Menyembuhkan modal_amount basi (neto) sebelum validasi.
+  perform public.heal_modal_pool();
 
   select coalesce(modal_amount, 0)
     into v_modal
