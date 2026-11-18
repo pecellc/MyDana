@@ -3529,6 +3529,97 @@ textarea,
   white-space: nowrap;
 }
 
+/* ============================================================
+   RINCIAN DOMPET (DANA / GOPAY / DOMPET) + TOTAL KESELURUHAN
+   ============================================================ */
+.wallet-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.wallet-breakdown .wb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: rgba(16, 185, 129, 0.10);
+  color: #a7f3d0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wallet-breakdown .wb-item strong {
+  color: var(--mc-diamond);
+  font-family: var(--mc-pixel-font);
+  font-size: 0.66rem;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="day"] .wallet-breakdown .wb-item {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(4, 120, 87, 0.35);
+  color: #065f46;
+}
+
+[data-theme="day"] .wallet-breakdown .wb-item strong {
+  color: #0284c7;
+}
+
+.overall-bar {
+  margin-top: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(16, 185, 129, 0.12));
+}
+
+.overall-bar-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  line-height: 1.3;
+}
+
+.overall-bar-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #94a3b8;
+}
+
+.overall-bar-val {
+  font-family: var(--mc-pixel-font);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #34d399;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.02em;
+}
+
+[data-theme="day"] .overall-bar {
+  border-color: rgba(2, 132, 199, 0.35);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.18), rgba(16, 185, 129, 0.18));
+}
+
+[data-theme="day"] .overall-bar-label { color: #0369a1; }
+[data-theme="day"] .overall-bar-val { color: #047857; text-shadow: none; }
+
 </style>
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -4248,6 +4339,11 @@ textarea,
             </span>
             <div id="total-riil" class="stat-val-cyan">Rp 0</div>
             <span class="stat-subtext">TOTAL SALDO FISIK &amp; E-WALLET</span>
+            <div class="wallet-breakdown">
+              <span class="wb-item">💳 DANA <strong id="wb-dana">Rp 0</strong></span>
+              <span class="wb-item">🟢 GoPay <strong id="wb-gopay">Rp 0</strong></span>
+              <span class="wb-item">👛 Dompet <strong id="wb-dompet">Rp 0</strong></span>
+            </div>
           </div>
 
           <!-- 2. Uang Panas (Dompet Modal Pulsa) -->
@@ -4296,6 +4392,16 @@ textarea,
             <div id="total-akandatang" class="stat-val-gold">Rp 0</div>
             <span class="stat-subtext">UANG YANG BELUM DIBAYAR PEMBELI</span>
           </div>
+        </div>
+
+        <!-- TOTAL KESELURUHAN: semua uang yang benar-benar ada (kas + modal),
+             TANPA piutang/utang orang. -->
+        <div class="overall-bar">
+          <span class="overall-bar-label">
+            🧮 Total Keseluruhan (Tanpa Utang)
+            <span class="overall-bar-sub">DANA + GoPay + Dompet + Modal Kios • piutang tidak dihitung</span>
+          </span>
+          <span id="total-overall" class="overall-bar-val">Rp 0</span>
         </div>
       </section>
 
@@ -11105,6 +11211,19 @@ textarea,
 
     const totalAkanDatangEl = document.getElementById('total-akandatang');
     if (totalAkanDatangEl) totalAkanDatangEl.textContent = formatRupiah(totalAkanDatang);
+
+    // 2B. Rincian dompet (DANA / GoPay / Dompet) di kartu Kas di Tangan
+    const wbDanaEl = document.getElementById('wb-dana');
+    if (wbDanaEl) wbDanaEl.textContent = formatRupiah(balances['DANA'] || 0);
+    const wbGopayEl = document.getElementById('wb-gopay');
+    if (wbGopayEl) wbGopayEl.textContent = formatRupiah(balances['GoPay'] || 0);
+    const wbDompetEl = document.getElementById('wb-dompet');
+    if (wbDompetEl) wbDompetEl.textContent = formatRupiah(balances['Dompet'] || 0);
+
+    // 2C. Total keseluruhan: SEMUA uang yang benar-benar ada (kas + modal kios),
+    // TANPA piutang/utang orang.
+    const overallEl = document.getElementById('total-overall');
+    if (overallEl) overallEl.textContent = formatRupiah(totalRiil + uangPanas);
 
     // 3. Kios Pulsa & Dompet Modal Stats
     const pulsaCountEl = document.getElementById('pulsa-count');

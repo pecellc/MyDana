@@ -16,7 +16,7 @@
   <link rel="dns-prefetch" href="https://ziibivkhualutrdiojto.supabase.co">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -735,6 +735,11 @@
             </span>
             <div id="total-riil" class="stat-val-cyan">Rp 0</div>
             <span class="stat-subtext">TOTAL SALDO FISIK &amp; E-WALLET</span>
+            <div class="wallet-breakdown">
+              <span class="wb-item">💳 DANA <strong id="wb-dana">Rp 0</strong></span>
+              <span class="wb-item">🟢 GoPay <strong id="wb-gopay">Rp 0</strong></span>
+              <span class="wb-item">👛 Dompet <strong id="wb-dompet">Rp 0</strong></span>
+            </div>
           </div>
 
           <!-- 2. Uang Panas (Dompet Modal Pulsa) -->
@@ -783,6 +788,16 @@
             <div id="total-akandatang" class="stat-val-gold">Rp 0</div>
             <span class="stat-subtext">UANG YANG BELUM DIBAYAR PEMBELI</span>
           </div>
+        </div>
+
+        <!-- TOTAL KESELURUHAN: semua uang yang benar-benar ada (kas + modal),
+             TANPA piutang/utang orang. -->
+        <div class="overall-bar">
+          <span class="overall-bar-label">
+            🧮 Total Keseluruhan (Tanpa Utang)
+            <span class="overall-bar-sub">DANA + GoPay + Dompet + Modal Kios • piutang tidak dihitung</span>
+          </span>
+          <span id="total-overall" class="overall-bar-val">Rp 0</span>
         </div>
       </section>
 
@@ -1480,11 +1495,11 @@
 
   <!-- Supabase client (CDN) + modul aplikasi -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js?v=18"></script>
-  <script src="auth.js?v=18"></script>
-  <script src="db.js?v=18"></script>
-  <script src="buyer.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="supabase-config.js?v=19"></script>
+  <script src="auth.js?v=19"></script>
+  <script src="db.js?v=19"></script>
+  <script src="buyer.js?v=19"></script>
+  <script src="app.js?v=19"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

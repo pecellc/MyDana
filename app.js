@@ -2841,6 +2841,19 @@
     const totalAkanDatangEl = document.getElementById('total-akandatang');
     if (totalAkanDatangEl) totalAkanDatangEl.textContent = formatRupiah(totalAkanDatang);
 
+    // 2B. Rincian dompet (DANA / GoPay / Dompet) di kartu Kas di Tangan
+    const wbDanaEl = document.getElementById('wb-dana');
+    if (wbDanaEl) wbDanaEl.textContent = formatRupiah(balances['DANA'] || 0);
+    const wbGopayEl = document.getElementById('wb-gopay');
+    if (wbGopayEl) wbGopayEl.textContent = formatRupiah(balances['GoPay'] || 0);
+    const wbDompetEl = document.getElementById('wb-dompet');
+    if (wbDompetEl) wbDompetEl.textContent = formatRupiah(balances['Dompet'] || 0);
+
+    // 2C. Total keseluruhan: SEMUA uang yang benar-benar ada (kas + modal kios),
+    // TANPA piutang/utang orang.
+    const overallEl = document.getElementById('total-overall');
+    if (overallEl) overallEl.textContent = formatRupiah(totalRiil + uangPanas);
+
     // 3. Kios Pulsa & Dompet Modal Stats
     const pulsaCountEl = document.getElementById('pulsa-count');
     if (pulsaCountEl) pulsaCountEl.textContent = `${totalPulsaCount} Trx`;
