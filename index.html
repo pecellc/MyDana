@@ -16,7 +16,7 @@
   <link rel="dns-prefetch" href="https://ziibivkhualutrdiojto.supabase.co">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -147,18 +147,40 @@
           </div>
           <input type="file" id="buyer-avatar-file-input" accept="image/*" style="display:none;">
         </div>
-        <button class="mc-btn" id="buyer-sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro"
-          type="button">
-          🔊 SFX: ON
-        </button>
-        <button class="mc-btn" id="buyer-bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM"
-          type="button">
-          <span class="bgm-icon">🎵</span> BGM: OFF
-        </button>
-        <button class="mc-btn mc-btn-diamond" id="buyer-refresh" type="button">🔄 REFRESH</button>
-        <button class="mc-btn mc-btn-redstone" id="buyer-logout" type="button">🚪 KELUAR</button>
+        <div class="mc-header-menu">
+          <button class="mc-menu-toggle" id="buyer-menu-btn" type="button" aria-haspopup="true"
+            aria-expanded="false" aria-controls="buyer-menu-panel" title="Menu">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="mc-menu-panel" id="buyer-menu-panel" role="menu" hidden>
+            <div class="mc-menu-title">MENU PELANGGAN</div>
+            <button class="mc-btn mc-menu-item" id="buyer-sfx-btn" type="button" onclick="window.App.toggleSfx()"
+              title="Efek Suara 8-Bit Retro">🔊 SFX: ON</button>
+            <button class="mc-btn mc-menu-item" id="buyer-bgm-btn" type="button" onclick="window.App.toggleBgm()"
+              title="Lagu Pixelated Terraria BGM"><span class="bgm-icon">🎵</span> BGM: OFF</button>
+            <button class="mc-btn mc-menu-item" id="buyer-refresh" type="button">🔄 REFRESH</button>
+            <div class="mc-menu-divider"></div>
+            <button class="mc-btn mc-menu-item mc-menu-item-danger" id="buyer-logout" type="button">🚪
+              KELUAR</button>
+          </div>
+        </div>
       </div>
     </header>
+
+    <!-- LAYAR KIOS TUTUP (BUYER) -->
+    <section id="buyer-kios-closed" class="kios-closed-section" hidden aria-live="polite">
+      <div class="kios-closed-card">
+        <div class="kios-closed-lock">🔒</div>
+        <h2 class="kios-closed-title">KIOS SEDANG TUTUP</h2>
+        <p class="kios-closed-sub">Pesanan baru ditutup sementara oleh owner.</p>
+        <div class="kios-closed-note-box">
+          <span class="kios-closed-note-label">KETERANGAN DARI OWNER</span>
+          <p id="buyer-kios-closed-note" class="kios-closed-note">-</p>
+          <span id="buyer-kios-closed-time" class="kios-closed-time"></span>
+        </div>
+        <button class="mc-btn mc-btn-diamond" id="buyer-kios-closed-refresh" type="button">🔄 CEK LAGI</button>
+      </div>
+    </section>
 
     <!-- NOTIFIKASI PERMISSION BAR (BUYER) -->
     <div id="buyer-notif-permission-bar" class="buyer-notif-bar" style="display:none; margin-bottom:14px;">
@@ -628,35 +650,54 @@
         </div>
       </div>
       <div class="header-buttons">
-        <button class="mc-btn" id="sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro">
-          🔊 SFX: ON
-        </button>
-        <button class="mc-btn" id="bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM">
-          <span class="bgm-icon">🎵</span> BGM: OFF
-        </button>
-        <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
-          🌞 SIANG
-        </button>
-        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()"
-          title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
-          🖼️ FOTO: OFF
-        </button>
-        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()"
-          title="Ubah Password Akun Owner">
-          🔐 GANTI PW
-        </button>
-        <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
-          📥 EXCEL
-        </button>
-        <button class="mc-btn" onclick="window.App.resetData()" title="Kosongkan data">
-          🗑️ RESET
-        </button>
-        <button class="mc-btn mc-btn-gold" id="login-btn" onclick="window.KeuanganAuth.logout()"
-          title="Logout akun owner">
-          <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
-        </button>
+        <div class="mc-header-menu">
+          <button class="mc-menu-toggle" id="owner-menu-btn" type="button" aria-haspopup="true"
+            aria-expanded="false" aria-controls="owner-menu-panel" title="Menu Owner">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="mc-menu-panel owner-menu-panel" id="owner-menu-panel" role="menu" hidden>
+            <div class="mc-menu-title">MENU OWNER</div>
+            <div class="mc-menu-section">TAMPILAN</div>
+            <button class="mc-btn mc-menu-item" id="sfx-btn" type="button" onclick="window.App.toggleSfx()"
+              title="Efek Suara 8-Bit Retro">🔊 SFX: ON</button>
+            <button class="mc-btn mc-menu-item" id="bgm-btn" type="button" onclick="window.App.toggleBgm()"
+              title="Lagu Pixelated Terraria BGM"><span class="bgm-icon">🎵</span> BGM: OFF</button>
+            <button class="mc-btn mc-menu-item" id="theme-btn" type="button" onclick="window.App.toggleSkyTheme()"
+              title="Ubah Langit Siang / Malam">🌞 SIANG</button>
+            <button class="mc-btn mc-menu-item" id="floating-photos-btn" type="button"
+              onclick="window.App.toggleFloatingPhotos()"
+              title="Tampilkan / Sembunyikan Foto Kenangan Melayang">🖼️ FOTO: OFF</button>
+
+            <div class="mc-menu-divider"></div>
+            <div class="mc-menu-section">KIOS</div>
+            <button class="mc-btn mc-menu-item mc-menu-item-danger" id="owner-kios-toggle-btn" type="button"
+              onclick="window.App.toggleKiosStatus()">🔒 TUTUP KIOS</button>
+
+            <div class="mc-menu-divider"></div>
+            <div class="mc-menu-section">AKUN &amp; DATA</div>
+            <button class="mc-btn mc-menu-item" id="owner-pw-btn" type="button"
+              onclick="window.App.openChangePasswordModal()" title="Ubah Password Akun Owner">🔐 GANTI PW</button>
+            <button class="mc-btn mc-menu-item" type="button" onclick="window.App.exportCSV()"
+              title="Ekspor ke format Excel">📥 EXCEL</button>
+            <button class="mc-btn mc-menu-item" type="button" onclick="window.App.resetData()"
+              title="Kosongkan data">🗑️ RESET</button>
+            <div class="mc-menu-divider"></div>
+            <button class="mc-btn mc-menu-item mc-menu-item-gold" id="login-btn" type="button"
+              onclick="window.KeuanganAuth.logout()" title="Logout akun owner">
+              <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
+
+    <!-- BANNER STATUS KIOS (OWNER) -->
+    <div id="owner-kios-banner" class="owner-kios-banner" hidden>
+      <span class="owner-kios-banner-badge">🔒 KIOS DITUTUP</span>
+      <span class="owner-kios-banner-note">Keterangan: <strong id="owner-kios-banner-note">-</strong></span>
+      <span id="owner-kios-banner-time" class="owner-kios-banner-time"></span>
+      <button class="mc-btn mc-btn-green" type="button" onclick="window.App.toggleKiosStatus()">🔓 BUKA KIOS</button>
+    </div>
 
     <!-- UNIVERSAL MINECRAFT CHAT PROMPT BAR -->
     <section class="mc-box chat-box">
@@ -1501,11 +1542,11 @@
 
   <!-- Supabase client (CDN) + modul aplikasi -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
-  <script src="supabase-config.js?v=20"></script>
-  <script src="auth.js?v=20"></script>
-  <script src="db.js?v=20"></script>
-  <script src="buyer.js?v=20"></script>
-  <script src="app.js?v=20"></script>
+  <script src="supabase-config.js?v=21"></script>
+  <script src="auth.js?v=21"></script>
+  <script src="db.js?v=21"></script>
+  <script src="buyer.js?v=21"></script>
+  <script src="app.js?v=21"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

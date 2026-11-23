@@ -288,14 +288,17 @@
         modal_amount: Number(data.modal_amount) || 0,
         reserved: Number(data.reserved) || 0,
         available: Number(data.available) || 0,
-        updated_at: data.updated_at || null
+        updated_at: data.updated_at || null,
+        is_open: data.is_open !== false,
+        closed_note: data.closed_note || '',
+        closed_at: data.closed_at || null
       };
     }
 
     // Fallback kalau fungsi belum terpasang di project lama.
     const { data: row, error: rowError } = await client
       .from('public_status')
-      .select('modal_amount, updated_at')
+      .select('modal_amount, updated_at, is_open, closed_note, closed_at')
       .eq('id', 1)
       .maybeSingle();
 
@@ -305,8 +308,34 @@
       modal_amount: modal,
       reserved: 0,
       available: modal,
-      updated_at: row?.updated_at || null
+      updated_at: row?.updated_at || null,
+      is_open: row?.is_open !== false,
+      closed_note: row?.closed_note || '',
+      closed_at: row?.closed_at || null
     };
+  }
+
+  // Buka/tutup kios. Saat tutup, keterangan wajib diisi oleh owner.
+  async function setKiosOpen(open, note) {
+    if (!isOwnerContext()) throw new Error('Bukan sesi owner.');
+
+    const isOpen = !!open;
+    const patch = {
+      id: 1,
+      owner_id: ownerId(),
+      is_open: isOpen,
+      closed_note: isOpen ? null : (String(note == null ? '' : note).trim() || null),
+      closed_at: isOpen ? null : new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Upsert parsial: kolom modal_amount tidak ikut ditimpa.
+    const { error } = await client
+      .from('public_status')
+      .upsert(patch, { onConflict: 'id' });
+
+    if (error) throw error;
+    return patch;
   }
 
   // --- Metadata produk (admin & urutan) -------------------------------------
@@ -999,6 +1028,7 @@
     publishModal,
     publishModalNow,
     getPublicStatus,
+    setKiosOpen,
     listProducts,
     listAllProductsForOwner,
     addProduct,

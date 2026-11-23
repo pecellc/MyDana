@@ -11,6 +11,7 @@
   let started = false;
   let toastTimer = null;
   let currentModal = 0;
+  let kiosState = { is_open: true, closed_note: '', closed_at: null };
   let cachedOrders = [];
   let selectedOrderProduct = null;
   let activeProofOrderId = null;
@@ -335,6 +336,119 @@
     return `<span class="${info.className}">${info.label}</span>`;
   }
 
+  // ---------------------------------------------------------------- kios tutup
+  function renderKiosClosed() {
+    const section = el('buyer-kios-closed');
+    if (!section) return;
+
+    const open = kiosState.is_open !== false;
+    section.hidden = open;
+
+    const grid = document.querySelector('#buyer-app .buyer-grid');
+    if (grid) grid.style.display = open ? '' : 'none';
+
+    if (open) return;
+
+    // Tutup popup pesanan yang mungkin masih terbuka saat kios ditutup.
+    el('buyer-order-modal')?.classList.remove('active');
+    selectedOrderProduct = null;
+
+    const noteEl = el('buyer-kios-closed-note');
+    if (noteEl) {
+      noteEl.textContent = kiosState.closed_note || '(owner tidak menulis keterangan)';
+    }
+
+    const timeEl = el('buyer-kios-closed-time');
+    if (timeEl) {
+      if (kiosState.closed_at) {
+        let when = kiosState.closed_at;
+        try {
+          when = new Date(kiosState.closed_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+        } catch (e) {}
+        timeEl.textContent = 'Ditutup sejak ' + when;
+      } else {
+        timeEl.textContent = '';
+      }
+    }
+  }
+
+  // Verifikasi 2 langkah + batas tempo maksimal 4 hari.
+  // Dipakai oleh popup produk maupun form pesanan custom.
+  async function verifyBuyerCommitment(opts) {
+    const label = String((opts && opts.label) || 'Pesanan');
+    const amount = Number(opts && opts.amount) || 0;
+    const payTiming = opts && opts.payTiming === 'later' ? 'later' : 'now';
+    const dueDate = opts && opts.dueDate ? opts.dueDate : null;
+
+    let safeDueDate = null;
+    if (payTiming === 'later') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);
+      const picked = new Date(String(dueDate) + 'T00:00:00');
+      if (isNaN(picked.getTime()) || picked < today) {
+        toast('❌ Tanggal bayar tidak valid. Pilih tanggal hari ini sampai 4 hari ke depan.', 'danger');
+        return { ok: false };
+      }
+      if (picked > maxDate) {
+        toast('❌ Batas tempo maksimal 4 hari. Pilih tanggal paling lambat 4 hari dari hari ini.', 'danger');
+        return { ok: false };
+      }
+      safeDueDate = dueDate;
+    }
+
+    const dueInfo = payTiming === 'later'
+      ? `Batas bayar: ${formatDay(safeDueDate)} (maksimal 4 hari dari hari ini).`
+      : 'Pembayaran: BAYAR SEKARANG saat pesanan di-ACC owner.';
+
+    const askConfirm = (window.App && typeof window.App.uiConfirm === 'function')
+      ? window.App.uiConfirm.bind(window.App)
+      : async (o) => window.confirm(String((o && o.message) || 'Lanjutkan?'));
+    const askPrompt = (window.App && typeof window.App.uiPrompt === 'function')
+      ? window.App.uiPrompt.bind(window.App)
+      : async (o) => window.prompt(String((o && o.message) || 'Ketik konfirmasi'));
+
+    // Langkah 1/2 — komitmen: buyer menyatakan sudah punya uang.
+    const agreed = await askConfirm({
+      title: '🔒 VERIFIKASI 1/2 — KOMITMEN BAYAR',
+      message:
+        `Produk: ${label}\n` +
+        `Total bayar: ${formatRupiah(amount)}\n` +
+        `${dueInfo}\n\n` +
+        `Dengan menekan "SAYA SANGGUP", kamu menyatakan SUDAH PUNYA UANG dan ` +
+        `SANGGUP melunasi maksimal 4 hari. Pesanan yang sudah di-ACC owner tetap wajib dibayar.`,
+      okText: 'SAYA SANGGUP',
+      cancelText: 'BATAL',
+      danger: false
+    });
+    if (!agreed) return { ok: false };
+
+    // Langkah 2/2 — ketik kode konfirmasi (anti klik asal).
+    const CONFIRM_CODE = 'SIAP BAYAR';
+    const typed = await askPrompt({
+      title: '🔒 VERIFIKASI 2/2 — KETIK KONFIRMASI',
+      message:
+        `Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.\n` +
+        `${dueInfo}\n\n` +
+        `Kalau kamu belum punya uang atau tidak sanggup bayar maksimal 4 hari, tekan BATAL.`,
+      hint: `Wajib diketik: ${CONFIRM_CODE}`,
+      inputLabel: 'KONFIRMASI',
+      placeholder: CONFIRM_CODE,
+      okText: 'KIRIM PESANAN',
+      required: true,
+      requiredMessage: 'Konfirmasi wajib diisi.'
+    });
+    if (typed === null || typed === undefined) return { ok: false };
+
+    const typedCode = String(typed).trim().replace(/\s+/g, ' ').toUpperCase();
+    if (typedCode !== CONFIRM_CODE) {
+      toast(`❌ Konfirmasi salah. Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.`, 'danger');
+      return { ok: false };
+    }
+
+    return { ok: true, dueDate: safeDueDate };
+  }
+
   // ---------------------------------------------------------------- data
   async function refreshStatus() {
     const balanceEl = el('buyer-modal-balance');
@@ -362,6 +476,14 @@
           ? `Diperbarui ${formatDate(status.updated_at)}`
           : 'Belum ada data saldo modal.';
       }
+
+      // Status buka/tutup kios.
+      kiosState = {
+        is_open: status?.is_open !== false,
+        closed_note: String(status?.closed_note || ''),
+        closed_at: status?.closed_at || null
+      };
+      renderKiosClosed();
     } catch (error) {
       balanceEl.textContent = 'Gagal memuat';
       if (updatedEl) updatedEl.textContent = error?.message || 'Periksa koneksi internet.';
@@ -874,6 +996,10 @@
   // ===================================================================
   function openOrderModal(product) {
     if (!product) return;
+    if (kiosState.is_open === false) {
+      toast('Kios sedang tutup. Coba lagi nanti.', 'danger');
+      return;
+    }
     selectedOrderProduct = product;
     const modal = el('buyer-order-modal');
     if (!modal) return;
@@ -1041,76 +1167,15 @@
         } catch (err) {}
       }
 
-      // =============================================================
-      // BATAS TEMPO MAKSIMAL 4 HARI (dihitung dari hari ini, WIB)
-      // =============================================================
-      let safeDueDate = null;
-      if (payTiming === 'later') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const maxDate = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);
-        const picked = new Date(String(dueDate) + 'T00:00:00');
-        if (isNaN(picked.getTime()) || picked < today) {
-          toast('❌ Tanggal bayar tidak valid. Pilih tanggal hari ini sampai 4 hari ke depan.', 'danger');
-          return;
-        }
-        if (picked > maxDate) {
-          toast('❌ Batas tempo maksimal 4 hari. Pilih tanggal paling lambat 4 hari dari hari ini.', 'danger');
-          return;
-        }
-        safeDueDate = dueDate;
-      }
-
-      // =============================================================
-      // VERIFIKASI 2 LANGKAH: hanya buyer yang YAKIN punya uang
-      // =============================================================
-      const dueInfo = payTiming === 'later'
-        ? `Batas bayar: ${formatDay(safeDueDate)} (maksimal 4 hari dari hari ini).`
-        : 'Pembayaran: BAYAR SEKARANG saat pesanan di-ACC owner.';
-
-      const askConfirm = (window.App && typeof window.App.uiConfirm === 'function')
-        ? window.App.uiConfirm.bind(window.App)
-        : async (o) => window.confirm(String((o && o.message) || 'Lanjutkan?'));
-      const askPrompt = (window.App && typeof window.App.uiPrompt === 'function')
-        ? window.App.uiPrompt.bind(window.App)
-        : async (o) => window.prompt(String((o && o.message) || 'Ketik konfirmasi'));
-
-      // Langkah 1/2 — komitmen: buyer menyatakan sudah punya uang.
-      const agreed = await askConfirm({
-        title: '🔒 VERIFIKASI 1/2 — KOMITMEN BAYAR',
-        message:
-          `Produk: ${product.name}\n` +
-          `Total bayar: ${formatRupiah(product.price)}\n` +
-          `${dueInfo}\n\n` +
-          `Dengan menekan "SAYA SANGGUP", kamu menyatakan SUDAH PUNYA UANG dan ` +
-          `SANGGUP melunasi maksimal 4 hari. Pesanan yang sudah di-ACC owner tetap wajib dibayar.`,
-        okText: 'SAYA SANGGUP',
-        cancelText: 'BATAL',
-        danger: false
+      // Verifikasi 2 langkah + batas tempo maksimal 4 hari.
+      const verification = await verifyBuyerCommitment({
+        label: product.name,
+        amount: product.price,
+        payTiming,
+        dueDate
       });
-      if (!agreed) return;
-
-      // Langkah 2/2 — ketik kode konfirmasi (anti klik asal).
-      const CONFIRM_CODE = 'SIAP BAYAR';
-      const typed = await askPrompt({
-        title: '🔒 VERIFIKASI 2/2 — KETIK KONFIRMASI',
-        message:
-          `Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.\n` +
-          `${dueInfo}\n\n` +
-          `Kalau kamu belum punya uang atau tidak sanggup bayar maksimal 4 hari, tekan BATAL.`,
-        hint: `Wajib diketik: ${CONFIRM_CODE}`,
-        inputLabel: 'KONFIRMASI',
-        placeholder: CONFIRM_CODE,
-        okText: 'KIRIM PESANAN',
-        required: true,
-        requiredMessage: 'Konfirmasi wajib diisi.'
-      });
-      if (typed === null || typed === undefined) return;
-      const typedCode = String(typed).trim().replace(/\s+/g, ' ').toUpperCase();
-      if (typedCode !== CONFIRM_CODE) {
-        toast(`❌ Konfirmasi salah. Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.`, 'danger');
-        return;
-      }
+      if (!verification.ok) return;
+      const safeDueDate = verification.dueDate;
 
       let orderNotes = `No HP: ${phone}`;
       if (notes) orderNotes += ` | ${notes}`;
@@ -1395,6 +1460,25 @@
         return;
       }
 
+      if (kiosState.is_open === false) {
+        toast('Kios sedang tutup. Coba lagi nanti.', 'danger');
+        return;
+      }
+
+      const verification = await verifyBuyerCommitment({
+        label: name,
+        amount,
+        payTiming,
+        dueDate
+      });
+      if (!verification.ok) return;
+      const safeDueDate = verification.dueDate;
+
+      let orderNotes = String(notes || '').trim();
+      orderNotes = orderNotes
+        ? orderNotes + ' | Verifikasi 2 langkah: OK'
+        : 'Verifikasi 2 langkah: OK';
+
       submitBtn.disabled = true;
       submitBtn.textContent = 'MENGIRIM...';
 
@@ -1403,10 +1487,10 @@
           product_name: name,
           amount,
           admin_fee: customAdmin,
-          notes,
+          notes: orderNotes,
           payment_method: paymentMethod,
           pay_timing: payTiming,
-          due_date: dueDate || null,
+          due_date: payTiming === 'later' ? safeDueDate : null,
           payment_proof: null
         });
 
@@ -1709,6 +1793,11 @@
 
       el('buyer-refresh')?.addEventListener('click', async () => {
         toast('Memuat ulang data...', 'gold');
+        await refreshAll();
+      });
+
+      el('buyer-kios-closed-refresh')?.addEventListener('click', async () => {
+        toast('Memuat ulang status kios...', 'gold');
         await refreshAll();
       });
 

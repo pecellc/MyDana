@@ -3171,6 +3171,156 @@
   // ===================================================================
   // GLOBAL ACTIONS
   // ===================================================================
+  // ===================================================================
+  // STATUS KIOS (BUKA / TUTUP) — OWNER
+  // ===================================================================
+  let kiosInfo = { is_open: true, closed_note: '', closed_at: null };
+
+  function formatKiosTime(value) {
+    if (!value) return '';
+    try {
+      return new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function renderKiosStatus() {
+    const open = kiosInfo.is_open !== false;
+
+    const btn = document.getElementById('owner-kios-toggle-btn');
+    if (btn) {
+      btn.textContent = open ? '🔒 TUTUP KIOS' : '🔓 BUKA KIOS';
+      btn.classList.toggle('mc-menu-item-danger', open);
+      btn.classList.toggle('mc-menu-item-green', !open);
+    }
+
+    const banner = document.getElementById('owner-kios-banner');
+    if (banner) {
+      banner.hidden = open;
+      if (!open) {
+        const noteEl = document.getElementById('owner-kios-banner-note');
+        const timeEl = document.getElementById('owner-kios-banner-time');
+        if (noteEl) noteEl.textContent = kiosInfo.closed_note || '(tanpa keterangan)';
+        if (timeEl) {
+          const t = formatKiosTime(kiosInfo.closed_at);
+          timeEl.textContent = t ? 'Sejak ' + t : '';
+        }
+      }
+    }
+  }
+
+  async function refreshKiosStatus() {
+    if (!window.KeuanganDB || typeof window.KeuanganDB.getPublicStatus !== 'function') return;
+    try {
+      const status = await window.KeuanganDB.getPublicStatus();
+      kiosInfo = {
+        is_open: status?.is_open !== false,
+        closed_note: String(status?.closed_note || ''),
+        closed_at: status?.closed_at || null
+      };
+    } catch (e) {
+      // Offline: pertahankan status terakhir yang diketahui.
+    }
+    renderKiosStatus();
+  }
+
+  async function toggleKiosStatus() {
+    if (!window.KeuanganDB || typeof window.KeuanganDB.setKiosOpen !== 'function') {
+      showToast('Database belum siap. Coba lagi sebentar.', 'danger');
+      return;
+    }
+
+    // ---------- TUTUP KIOS ----------
+    if (kiosInfo.is_open !== false) {
+      const note = await uiPrompt({
+        title: '🔒 TUTUP KIOS',
+        message:
+          'Kios akan ditutup dan buyer TIDAK bisa membuat pesanan sampai dibuka lagi.\n' +
+          'Keterangan wajib diisi supaya buyer tahu alasannya.',
+        inputLabel: 'KETERANGAN PENUTUPAN',
+        hint: 'Contoh: stok habis, istirahat, maintenance, tutup sementara.',
+        placeholder: 'Tulis alasan kios ditutup...',
+        okText: 'TUTUP KIOS',
+        required: true,
+        requiredMessage: 'Keterangan wajib diisi.'
+      });
+
+      if (note === null || note === undefined) return;
+
+      const trimmed = String(note).trim();
+      if (trimmed.length < 3) {
+        showToast('Keterangan minimal 3 karakter.', 'danger');
+        return;
+      }
+
+      try {
+        await window.KeuanganDB.setKiosOpen(false, trimmed);
+        kiosInfo = { is_open: false, closed_note: trimmed, closed_at: new Date().toISOString() };
+        renderKiosStatus();
+        showToast('🔒 Kios ditutup. Buyer tidak bisa memesan.', 'gold');
+      } catch (e) {
+        showToast('Gagal menutup kios: ' + (e?.message || 'coba lagi.'), 'danger');
+      }
+      return;
+    }
+
+    // ---------- BUKA KIOS ----------
+    const ok = await uiConfirm({
+      title: '🔓 BUKA KIOS',
+      message: 'Buka kios lagi supaya buyer bisa membuat pesanan?',
+      okText: 'BUKA KIOS'
+    });
+    if (!ok) return;
+
+    try {
+      await window.KeuanganDB.setKiosOpen(true);
+      kiosInfo = { is_open: true, closed_note: '', closed_at: null };
+      renderKiosStatus();
+      showToast('🔓 Kios dibuka. Buyer sudah bisa memesan.', 'success');
+    } catch (e) {
+      showToast('Gagal membuka kios: ' + (e?.message || 'coba lagi.'), 'danger');
+    }
+  }
+
+  // Menu garis tiga (dipakai header owner & buyer).
+  function wireHeaderMenus() {
+    if (document.body.dataset.headerMenusWired === 'true') return;
+    document.body.dataset.headerMenusWired = 'true';
+
+    const closeAll = () => {
+      document.querySelectorAll('.mc-menu-panel').forEach((p) => { p.hidden = true; });
+      document.querySelectorAll('.mc-menu-toggle').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    };
+
+    document.addEventListener('click', (e) => {
+      const toggle = e.target.closest('.mc-menu-toggle');
+      if (toggle) {
+        e.preventDefault();
+        const panel = document.getElementById(toggle.getAttribute('aria-controls') || '');
+        const willOpen = !!(panel && panel.hidden);
+        closeAll();
+        if (panel && willOpen) {
+          panel.hidden = false;
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+
+      if (e.target.closest('.mc-menu-panel')) {
+        // Tutup setelah aksi menu dijalankan.
+        setTimeout(closeAll, 150);
+        return;
+      }
+
+      closeAll();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAll();
+    });
+  }
+
   window.App = {
     submitChat: async function () {
       const inputEl = document.getElementById('chat-input');
@@ -5623,6 +5773,14 @@
       );
     },
 
+    toggleKiosStatus: function () {
+      return toggleKiosStatus();
+    },
+
+    refreshKiosStatus: function () {
+      return refreshKiosStatus();
+    },
+
     updateFloatingPhotos: function () {
       const btn = document.getElementById('floating-photos-btn');
       if (btn) {
@@ -5759,6 +5917,14 @@
 
     render();
 
+    // Status buka/tutup kios (banner + menu) dan sinkron realtime.
+    refreshKiosStatus();
+    if (window.KeuanganDB && typeof window.KeuanganDB.subscribePublicStatus === 'function') {
+      try {
+        window.KeuanganDB.subscribePublicStatus(() => { refreshKiosStatus(); });
+      } catch (e) {}
+    }
+
     const savedTab = localStorage.getItem('keuanganku_active_tab') || 'dashboard';
     if (window.App && window.App.switchTab) {
       window.App.switchTab(savedTab);
@@ -5887,6 +6053,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Menu garis tiga di header (owner & buyer).
+    wireHeaderMenus();
+
     // Input nominal owner: tampilkan pemisah ribuan otomatis (5000 -> 5.000).
     ['input-base-modal', 'modal-pay-amount', 'prod-modal', 'prod-admin'].forEach((id) => {
       setupRupiahInput(document.getElementById(id));

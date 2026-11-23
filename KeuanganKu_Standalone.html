@@ -2536,7 +2536,8 @@ html.auth-pending #auth-screen {
   .buyer-grid { grid-template-columns: 1fr; }
   .buyer-balance-card { grid-column: auto; }
   .buyer-header { align-items: flex-start; }
-  .buyer-header-right { width: 100%; }
+  /* Profil & menu garis tiga tetap menempel di kanan atas. */
+  .buyer-header-right { width: 100%; justify-content: flex-end; }
 }
 
 @media (max-width: 480px) {
@@ -3649,6 +3650,309 @@ textarea,
 
 [data-theme="day"] .buyer-commit-box strong { color: #b45309; }
 
+
+/* ============================================================
+   MENU GARIS TIGA (HEADER OWNER & BUYER)
+   ============================================================ */
+.mc-header-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.mc-menu-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 46px;
+  height: 38px;
+  padding: 0 11px;
+  cursor: pointer;
+  background: var(--panel-bg);
+  border: 2px solid var(--panel-border-dark);
+  border-top-color: var(--panel-border-light);
+  border-left-color: var(--panel-border-light);
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+}
+
+.mc-menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: #e2e8f0;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.mc-menu-toggle:hover span { background: #ffffff; }
+.mc-menu-toggle[aria-expanded="true"] span { background: var(--mc-gold); }
+
+.mc-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1400;
+  width: 252px;
+  max-width: calc(100vw - 24px);
+  max-height: min(72vh, 560px);
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #0b1424;
+  border: 3px solid #020617;
+  border-top-color: #3d5e8c;
+  border-left-color: #3d5e8c;
+  border-radius: 4px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.62);
+}
+
+.mc-menu-panel[hidden] { display: none !important; }
+
+.mc-menu-title {
+  font-family: var(--mc-pixel-font);
+  font-size: 7.5px;
+  letter-spacing: 0.5px;
+  color: var(--mc-diamond);
+  padding: 4px 6px 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  margin-bottom: 2px;
+}
+
+.mc-menu-section {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  padding: 5px 6px 2px;
+}
+
+.mc-menu-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.22);
+  margin: 5px 2px;
+}
+
+.mc-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+  padding: 9px 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.4;
+  white-space: normal;
+  text-transform: none;
+}
+
+.mc-menu-item .bgm-icon { font-size: 0.9rem; }
+
+.mc-menu-item-danger {
+  background: rgba(153, 27, 27, 0.55);
+  border-color: #7f1d1d;
+  border-top-color: #ef4444;
+  border-left-color: #ef4444;
+  color: #fecaca;
+}
+
+.mc-menu-item-danger:hover {
+  background: rgba(185, 28, 28, 0.75);
+  color: #ffffff;
+}
+
+.mc-menu-item-green {
+  background: rgba(6, 95, 70, 0.65);
+  border-color: #065f46;
+  border-top-color: #34d399;
+  border-left-color: #34d399;
+  color: #a7f3d0;
+}
+
+.mc-menu-item-green:hover {
+  background: rgba(5, 150, 105, 0.8);
+  color: #ffffff;
+}
+
+.mc-menu-item-gold {
+  background: rgba(120, 83, 10, 0.55);
+  border-color: #78350f;
+  border-top-color: #fbbf24;
+  border-left-color: #fbbf24;
+  color: #fde68a;
+}
+
+.mc-menu-item-gold:hover {
+  background: rgba(180, 120, 10, 0.75);
+  color: #ffffff;
+}
+
+[data-theme="day"] .mc-menu-panel {
+  background: #eef3fa;
+  border-color: #94a3b8;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+}
+
+[data-theme="day"] .mc-menu-title { color: #0369a1; }
+[data-theme="day"] .mc-menu-section { color: #475569; }
+[data-theme="day"] .mc-menu-toggle span { background: #334155; }
+
+/* ============================================================
+   BANNER STATUS KIOS (OWNER)
+   ============================================================ */
+.owner-kios-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 14px;
+  padding: 10px 14px;
+  background: rgba(127, 29, 29, 0.35);
+  border: 2px solid #b91c1c;
+  border-radius: 6px;
+  color: #fecaca;
+  font-size: 0.8rem;
+}
+
+.owner-kios-banner[hidden] { display: none !important; }
+
+.owner-kios-banner-badge {
+  font-family: var(--mc-pixel-font);
+  font-size: 7.5px;
+  letter-spacing: 0.5px;
+  color: #fca5a5;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+
+.owner-kios-banner-note {
+  flex: 1 1 220px;
+  min-width: 160px;
+  line-height: 1.4;
+}
+
+.owner-kios-banner-note strong { color: #ffffff; }
+
+.owner-kios-banner-time {
+  font-size: 0.7rem;
+  color: #fca5a5;
+  opacity: 0.9;
+}
+
+/* ============================================================
+   LAYAR KIOS TUTUP (BUYER)
+   ============================================================ */
+.kios-closed-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 16px 80px;
+}
+
+.kios-closed-section[hidden] { display: none !important; }
+
+.kios-closed-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+  padding: 30px 24px 26px;
+  background: var(--panel-bg);
+  border: 3px solid #7f1d1d;
+  border-top-color: #dc2626;
+  border-left-color: #dc2626;
+  border-radius: 6px;
+  box-shadow: var(--panel-shadow);
+}
+
+.kios-closed-lock {
+  font-size: 52px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.kios-closed-title {
+  font-family: var(--mc-pixel-font);
+  font-size: 1.05rem;
+  letter-spacing: 1px;
+  color: #f87171;
+  line-height: 1.6;
+  margin: 16px 0 6px;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.kios-closed-sub {
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.kios-closed-note-box {
+  margin: 18px 0 20px;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px dashed rgba(248, 113, 113, 0.55);
+  border-radius: 4px;
+}
+
+.kios-closed-note-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #fca5a5;
+  margin-bottom: 5px;
+}
+
+.kios-closed-note {
+  margin: 0;
+  color: #fee2e2;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.kios-closed-time {
+  display: block;
+  margin-top: 7px;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+[data-theme="day"] .kios-closed-card {
+  border-color: #b91c1c;
+  border-top-color: #ef4444;
+  border-left-color: #ef4444;
+}
+
+[data-theme="day"] .kios-closed-title { color: #b91c1c; text-shadow: none; }
+[data-theme="day"] .kios-closed-sub { color: #475569; }
+[data-theme="day"] .kios-closed-note-box { background: rgba(239, 68, 68, 0.08); }
+[data-theme="day"] .kios-closed-note { color: #7f1d1d; }
+[data-theme="day"] .kios-closed-note-label { color: #b91c1c; }
+
+@media (max-width: 680px) {
+  .mc-menu-panel {
+    width: min(300px, calc(100vw - 20px));
+  }
+
+  .kios-closed-section { padding: 20px 10px 60px; }
+  .kios-closed-card { padding: 24px 16px 20px; }
+  .kios-closed-title { font-size: 0.92rem; }
+}
+
 </style>
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -3780,18 +4084,40 @@ textarea,
           </div>
           <input type="file" id="buyer-avatar-file-input" accept="image/*" style="display:none;">
         </div>
-        <button class="mc-btn" id="buyer-sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro"
-          type="button">
-          🔊 SFX: ON
-        </button>
-        <button class="mc-btn" id="buyer-bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM"
-          type="button">
-          <span class="bgm-icon">🎵</span> BGM: OFF
-        </button>
-        <button class="mc-btn mc-btn-diamond" id="buyer-refresh" type="button">🔄 REFRESH</button>
-        <button class="mc-btn mc-btn-redstone" id="buyer-logout" type="button">🚪 KELUAR</button>
+        <div class="mc-header-menu">
+          <button class="mc-menu-toggle" id="buyer-menu-btn" type="button" aria-haspopup="true"
+            aria-expanded="false" aria-controls="buyer-menu-panel" title="Menu">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="mc-menu-panel" id="buyer-menu-panel" role="menu" hidden>
+            <div class="mc-menu-title">MENU PELANGGAN</div>
+            <button class="mc-btn mc-menu-item" id="buyer-sfx-btn" type="button" onclick="window.App.toggleSfx()"
+              title="Efek Suara 8-Bit Retro">🔊 SFX: ON</button>
+            <button class="mc-btn mc-menu-item" id="buyer-bgm-btn" type="button" onclick="window.App.toggleBgm()"
+              title="Lagu Pixelated Terraria BGM"><span class="bgm-icon">🎵</span> BGM: OFF</button>
+            <button class="mc-btn mc-menu-item" id="buyer-refresh" type="button">🔄 REFRESH</button>
+            <div class="mc-menu-divider"></div>
+            <button class="mc-btn mc-menu-item mc-menu-item-danger" id="buyer-logout" type="button">🚪
+              KELUAR</button>
+          </div>
+        </div>
       </div>
     </header>
+
+    <!-- LAYAR KIOS TUTUP (BUYER) -->
+    <section id="buyer-kios-closed" class="kios-closed-section" hidden aria-live="polite">
+      <div class="kios-closed-card">
+        <div class="kios-closed-lock">🔒</div>
+        <h2 class="kios-closed-title">KIOS SEDANG TUTUP</h2>
+        <p class="kios-closed-sub">Pesanan baru ditutup sementara oleh owner.</p>
+        <div class="kios-closed-note-box">
+          <span class="kios-closed-note-label">KETERANGAN DARI OWNER</span>
+          <p id="buyer-kios-closed-note" class="kios-closed-note">-</p>
+          <span id="buyer-kios-closed-time" class="kios-closed-time"></span>
+        </div>
+        <button class="mc-btn mc-btn-diamond" id="buyer-kios-closed-refresh" type="button">🔄 CEK LAGI</button>
+      </div>
+    </section>
 
     <!-- NOTIFIKASI PERMISSION BAR (BUYER) -->
     <div id="buyer-notif-permission-bar" class="buyer-notif-bar" style="display:none; margin-bottom:14px;">
@@ -4261,35 +4587,54 @@ textarea,
         </div>
       </div>
       <div class="header-buttons">
-        <button class="mc-btn" id="sfx-btn" onclick="window.App.toggleSfx()" title="Efek Suara 8-Bit Retro">
-          🔊 SFX: ON
-        </button>
-        <button class="mc-btn" id="bgm-btn" onclick="window.App.toggleBgm()" title="Lagu Pixelated Terraria BGM">
-          <span class="bgm-icon">🎵</span> BGM: OFF
-        </button>
-        <button class="mc-btn" id="theme-btn" onclick="window.App.toggleSkyTheme()" title="Ubah Langit Siang / Malam">
-          🌞 SIANG
-        </button>
-        <button class="mc-btn" id="floating-photos-btn" onclick="window.App.toggleFloatingPhotos()"
-          title="Tampilkan / Sembunyikan Foto Kenangan Melayang">
-          🖼️ FOTO: OFF
-        </button>
-        <button class="mc-btn" id="owner-pw-btn" onclick="window.App.openChangePasswordModal()"
-          title="Ubah Password Akun Owner">
-          🔐 GANTI PW
-        </button>
-        <button class="mc-btn" onclick="window.App.exportCSV()" title="Ekspor ke format Excel">
-          📥 EXCEL
-        </button>
-        <button class="mc-btn" onclick="window.App.resetData()" title="Kosongkan data">
-          🗑️ RESET
-        </button>
-        <button class="mc-btn mc-btn-gold" id="login-btn" onclick="window.KeuanganAuth.logout()"
-          title="Logout akun owner">
-          <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
-        </button>
+        <div class="mc-header-menu">
+          <button class="mc-menu-toggle" id="owner-menu-btn" type="button" aria-haspopup="true"
+            aria-expanded="false" aria-controls="owner-menu-panel" title="Menu Owner">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="mc-menu-panel owner-menu-panel" id="owner-menu-panel" role="menu" hidden>
+            <div class="mc-menu-title">MENU OWNER</div>
+            <div class="mc-menu-section">TAMPILAN</div>
+            <button class="mc-btn mc-menu-item" id="sfx-btn" type="button" onclick="window.App.toggleSfx()"
+              title="Efek Suara 8-Bit Retro">🔊 SFX: ON</button>
+            <button class="mc-btn mc-menu-item" id="bgm-btn" type="button" onclick="window.App.toggleBgm()"
+              title="Lagu Pixelated Terraria BGM"><span class="bgm-icon">🎵</span> BGM: OFF</button>
+            <button class="mc-btn mc-menu-item" id="theme-btn" type="button" onclick="window.App.toggleSkyTheme()"
+              title="Ubah Langit Siang / Malam">🌞 SIANG</button>
+            <button class="mc-btn mc-menu-item" id="floating-photos-btn" type="button"
+              onclick="window.App.toggleFloatingPhotos()"
+              title="Tampilkan / Sembunyikan Foto Kenangan Melayang">🖼️ FOTO: OFF</button>
+
+            <div class="mc-menu-divider"></div>
+            <div class="mc-menu-section">KIOS</div>
+            <button class="mc-btn mc-menu-item mc-menu-item-danger" id="owner-kios-toggle-btn" type="button"
+              onclick="window.App.toggleKiosStatus()">🔒 TUTUP KIOS</button>
+
+            <div class="mc-menu-divider"></div>
+            <div class="mc-menu-section">AKUN &amp; DATA</div>
+            <button class="mc-btn mc-menu-item" id="owner-pw-btn" type="button"
+              onclick="window.App.openChangePasswordModal()" title="Ubah Password Akun Owner">🔐 GANTI PW</button>
+            <button class="mc-btn mc-menu-item" type="button" onclick="window.App.exportCSV()"
+              title="Ekspor ke format Excel">📥 EXCEL</button>
+            <button class="mc-btn mc-menu-item" type="button" onclick="window.App.resetData()"
+              title="Kosongkan data">🗑️ RESET</button>
+            <div class="mc-menu-divider"></div>
+            <button class="mc-btn mc-menu-item mc-menu-item-gold" id="login-btn" type="button"
+              onclick="window.KeuanganAuth.logout()" title="Logout akun owner">
+              <span id="login-btn-icon">👑</span> <span id="login-btn-text">OWNER</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
+
+    <!-- BANNER STATUS KIOS (OWNER) -->
+    <div id="owner-kios-banner" class="owner-kios-banner" hidden>
+      <span class="owner-kios-banner-badge">🔒 KIOS DITUTUP</span>
+      <span class="owner-kios-banner-note">Keterangan: <strong id="owner-kios-banner-note">-</strong></span>
+      <span id="owner-kios-banner-time" class="owner-kios-banner-time"></span>
+      <button class="mc-btn mc-btn-green" type="button" onclick="window.App.toggleKiosStatus()">🔓 BUKA KIOS</button>
+    </div>
 
     <!-- UNIVERSAL MINECRAFT CHAT PROMPT BAR -->
     <section class="mc-box chat-box">
@@ -6000,14 +6345,17 @@ textarea,
         modal_amount: Number(data.modal_amount) || 0,
         reserved: Number(data.reserved) || 0,
         available: Number(data.available) || 0,
-        updated_at: data.updated_at || null
+        updated_at: data.updated_at || null,
+        is_open: data.is_open !== false,
+        closed_note: data.closed_note || '',
+        closed_at: data.closed_at || null
       };
     }
 
     // Fallback kalau fungsi belum terpasang di project lama.
     const { data: row, error: rowError } = await client
       .from('public_status')
-      .select('modal_amount, updated_at')
+      .select('modal_amount, updated_at, is_open, closed_note, closed_at')
       .eq('id', 1)
       .maybeSingle();
 
@@ -6017,8 +6365,34 @@ textarea,
       modal_amount: modal,
       reserved: 0,
       available: modal,
-      updated_at: row?.updated_at || null
+      updated_at: row?.updated_at || null,
+      is_open: row?.is_open !== false,
+      closed_note: row?.closed_note || '',
+      closed_at: row?.closed_at || null
     };
+  }
+
+  // Buka/tutup kios. Saat tutup, keterangan wajib diisi oleh owner.
+  async function setKiosOpen(open, note) {
+    if (!isOwnerContext()) throw new Error('Bukan sesi owner.');
+
+    const isOpen = !!open;
+    const patch = {
+      id: 1,
+      owner_id: ownerId(),
+      is_open: isOpen,
+      closed_note: isOpen ? null : (String(note == null ? '' : note).trim() || null),
+      closed_at: isOpen ? null : new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Upsert parsial: kolom modal_amount tidak ikut ditimpa.
+    const { error } = await client
+      .from('public_status')
+      .upsert(patch, { onConflict: 'id' });
+
+    if (error) throw error;
+    return patch;
   }
 
   // --- Metadata produk (admin & urutan) -------------------------------------
@@ -6711,6 +7085,7 @@ textarea,
     publishModal,
     publishModalNow,
     getPublicStatus,
+    setKiosOpen,
     listProducts,
     listAllProductsForOwner,
     addProduct,
@@ -6748,6 +7123,7 @@ textarea,
   let started = false;
   let toastTimer = null;
   let currentModal = 0;
+  let kiosState = { is_open: true, closed_note: '', closed_at: null };
   let cachedOrders = [];
   let selectedOrderProduct = null;
   let activeProofOrderId = null;
@@ -7072,6 +7448,119 @@ textarea,
     return `<span class="${info.className}">${info.label}</span>`;
   }
 
+  // ---------------------------------------------------------------- kios tutup
+  function renderKiosClosed() {
+    const section = el('buyer-kios-closed');
+    if (!section) return;
+
+    const open = kiosState.is_open !== false;
+    section.hidden = open;
+
+    const grid = document.querySelector('#buyer-app .buyer-grid');
+    if (grid) grid.style.display = open ? '' : 'none';
+
+    if (open) return;
+
+    // Tutup popup pesanan yang mungkin masih terbuka saat kios ditutup.
+    el('buyer-order-modal')?.classList.remove('active');
+    selectedOrderProduct = null;
+
+    const noteEl = el('buyer-kios-closed-note');
+    if (noteEl) {
+      noteEl.textContent = kiosState.closed_note || '(owner tidak menulis keterangan)';
+    }
+
+    const timeEl = el('buyer-kios-closed-time');
+    if (timeEl) {
+      if (kiosState.closed_at) {
+        let when = kiosState.closed_at;
+        try {
+          when = new Date(kiosState.closed_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+        } catch (e) {}
+        timeEl.textContent = 'Ditutup sejak ' + when;
+      } else {
+        timeEl.textContent = '';
+      }
+    }
+  }
+
+  // Verifikasi 2 langkah + batas tempo maksimal 4 hari.
+  // Dipakai oleh popup produk maupun form pesanan custom.
+  async function verifyBuyerCommitment(opts) {
+    const label = String((opts && opts.label) || 'Pesanan');
+    const amount = Number(opts && opts.amount) || 0;
+    const payTiming = opts && opts.payTiming === 'later' ? 'later' : 'now';
+    const dueDate = opts && opts.dueDate ? opts.dueDate : null;
+
+    let safeDueDate = null;
+    if (payTiming === 'later') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);
+      const picked = new Date(String(dueDate) + 'T00:00:00');
+      if (isNaN(picked.getTime()) || picked < today) {
+        toast('❌ Tanggal bayar tidak valid. Pilih tanggal hari ini sampai 4 hari ke depan.', 'danger');
+        return { ok: false };
+      }
+      if (picked > maxDate) {
+        toast('❌ Batas tempo maksimal 4 hari. Pilih tanggal paling lambat 4 hari dari hari ini.', 'danger');
+        return { ok: false };
+      }
+      safeDueDate = dueDate;
+    }
+
+    const dueInfo = payTiming === 'later'
+      ? `Batas bayar: ${formatDay(safeDueDate)} (maksimal 4 hari dari hari ini).`
+      : 'Pembayaran: BAYAR SEKARANG saat pesanan di-ACC owner.';
+
+    const askConfirm = (window.App && typeof window.App.uiConfirm === 'function')
+      ? window.App.uiConfirm.bind(window.App)
+      : async (o) => window.confirm(String((o && o.message) || 'Lanjutkan?'));
+    const askPrompt = (window.App && typeof window.App.uiPrompt === 'function')
+      ? window.App.uiPrompt.bind(window.App)
+      : async (o) => window.prompt(String((o && o.message) || 'Ketik konfirmasi'));
+
+    // Langkah 1/2 — komitmen: buyer menyatakan sudah punya uang.
+    const agreed = await askConfirm({
+      title: '🔒 VERIFIKASI 1/2 — KOMITMEN BAYAR',
+      message:
+        `Produk: ${label}\n` +
+        `Total bayar: ${formatRupiah(amount)}\n` +
+        `${dueInfo}\n\n` +
+        `Dengan menekan "SAYA SANGGUP", kamu menyatakan SUDAH PUNYA UANG dan ` +
+        `SANGGUP melunasi maksimal 4 hari. Pesanan yang sudah di-ACC owner tetap wajib dibayar.`,
+      okText: 'SAYA SANGGUP',
+      cancelText: 'BATAL',
+      danger: false
+    });
+    if (!agreed) return { ok: false };
+
+    // Langkah 2/2 — ketik kode konfirmasi (anti klik asal).
+    const CONFIRM_CODE = 'SIAP BAYAR';
+    const typed = await askPrompt({
+      title: '🔒 VERIFIKASI 2/2 — KETIK KONFIRMASI',
+      message:
+        `Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.\n` +
+        `${dueInfo}\n\n` +
+        `Kalau kamu belum punya uang atau tidak sanggup bayar maksimal 4 hari, tekan BATAL.`,
+      hint: `Wajib diketik: ${CONFIRM_CODE}`,
+      inputLabel: 'KONFIRMASI',
+      placeholder: CONFIRM_CODE,
+      okText: 'KIRIM PESANAN',
+      required: true,
+      requiredMessage: 'Konfirmasi wajib diisi.'
+    });
+    if (typed === null || typed === undefined) return { ok: false };
+
+    const typedCode = String(typed).trim().replace(/\s+/g, ' ').toUpperCase();
+    if (typedCode !== CONFIRM_CODE) {
+      toast(`❌ Konfirmasi salah. Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.`, 'danger');
+      return { ok: false };
+    }
+
+    return { ok: true, dueDate: safeDueDate };
+  }
+
   // ---------------------------------------------------------------- data
   async function refreshStatus() {
     const balanceEl = el('buyer-modal-balance');
@@ -7099,6 +7588,14 @@ textarea,
           ? `Diperbarui ${formatDate(status.updated_at)}`
           : 'Belum ada data saldo modal.';
       }
+
+      // Status buka/tutup kios.
+      kiosState = {
+        is_open: status?.is_open !== false,
+        closed_note: String(status?.closed_note || ''),
+        closed_at: status?.closed_at || null
+      };
+      renderKiosClosed();
     } catch (error) {
       balanceEl.textContent = 'Gagal memuat';
       if (updatedEl) updatedEl.textContent = error?.message || 'Periksa koneksi internet.';
@@ -7611,6 +8108,10 @@ textarea,
   // ===================================================================
   function openOrderModal(product) {
     if (!product) return;
+    if (kiosState.is_open === false) {
+      toast('Kios sedang tutup. Coba lagi nanti.', 'danger');
+      return;
+    }
     selectedOrderProduct = product;
     const modal = el('buyer-order-modal');
     if (!modal) return;
@@ -7778,76 +8279,15 @@ textarea,
         } catch (err) {}
       }
 
-      // =============================================================
-      // BATAS TEMPO MAKSIMAL 4 HARI (dihitung dari hari ini, WIB)
-      // =============================================================
-      let safeDueDate = null;
-      if (payTiming === 'later') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const maxDate = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);
-        const picked = new Date(String(dueDate) + 'T00:00:00');
-        if (isNaN(picked.getTime()) || picked < today) {
-          toast('❌ Tanggal bayar tidak valid. Pilih tanggal hari ini sampai 4 hari ke depan.', 'danger');
-          return;
-        }
-        if (picked > maxDate) {
-          toast('❌ Batas tempo maksimal 4 hari. Pilih tanggal paling lambat 4 hari dari hari ini.', 'danger');
-          return;
-        }
-        safeDueDate = dueDate;
-      }
-
-      // =============================================================
-      // VERIFIKASI 2 LANGKAH: hanya buyer yang YAKIN punya uang
-      // =============================================================
-      const dueInfo = payTiming === 'later'
-        ? `Batas bayar: ${formatDay(safeDueDate)} (maksimal 4 hari dari hari ini).`
-        : 'Pembayaran: BAYAR SEKARANG saat pesanan di-ACC owner.';
-
-      const askConfirm = (window.App && typeof window.App.uiConfirm === 'function')
-        ? window.App.uiConfirm.bind(window.App)
-        : async (o) => window.confirm(String((o && o.message) || 'Lanjutkan?'));
-      const askPrompt = (window.App && typeof window.App.uiPrompt === 'function')
-        ? window.App.uiPrompt.bind(window.App)
-        : async (o) => window.prompt(String((o && o.message) || 'Ketik konfirmasi'));
-
-      // Langkah 1/2 — komitmen: buyer menyatakan sudah punya uang.
-      const agreed = await askConfirm({
-        title: '🔒 VERIFIKASI 1/2 — KOMITMEN BAYAR',
-        message:
-          `Produk: ${product.name}\n` +
-          `Total bayar: ${formatRupiah(product.price)}\n` +
-          `${dueInfo}\n\n` +
-          `Dengan menekan "SAYA SANGGUP", kamu menyatakan SUDAH PUNYA UANG dan ` +
-          `SANGGUP melunasi maksimal 4 hari. Pesanan yang sudah di-ACC owner tetap wajib dibayar.`,
-        okText: 'SAYA SANGGUP',
-        cancelText: 'BATAL',
-        danger: false
+      // Verifikasi 2 langkah + batas tempo maksimal 4 hari.
+      const verification = await verifyBuyerCommitment({
+        label: product.name,
+        amount: product.price,
+        payTiming,
+        dueDate
       });
-      if (!agreed) return;
-
-      // Langkah 2/2 — ketik kode konfirmasi (anti klik asal).
-      const CONFIRM_CODE = 'SIAP BAYAR';
-      const typed = await askPrompt({
-        title: '🔒 VERIFIKASI 2/2 — KETIK KONFIRMASI',
-        message:
-          `Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.\n` +
-          `${dueInfo}\n\n` +
-          `Kalau kamu belum punya uang atau tidak sanggup bayar maksimal 4 hari, tekan BATAL.`,
-        hint: `Wajib diketik: ${CONFIRM_CODE}`,
-        inputLabel: 'KONFIRMASI',
-        placeholder: CONFIRM_CODE,
-        okText: 'KIRIM PESANAN',
-        required: true,
-        requiredMessage: 'Konfirmasi wajib diisi.'
-      });
-      if (typed === null || typed === undefined) return;
-      const typedCode = String(typed).trim().replace(/\s+/g, ' ').toUpperCase();
-      if (typedCode !== CONFIRM_CODE) {
-        toast(`❌ Konfirmasi salah. Ketik "${CONFIRM_CODE}" untuk mengirim pesanan.`, 'danger');
-        return;
-      }
+      if (!verification.ok) return;
+      const safeDueDate = verification.dueDate;
 
       let orderNotes = `No HP: ${phone}`;
       if (notes) orderNotes += ` | ${notes}`;
@@ -8132,6 +8572,25 @@ textarea,
         return;
       }
 
+      if (kiosState.is_open === false) {
+        toast('Kios sedang tutup. Coba lagi nanti.', 'danger');
+        return;
+      }
+
+      const verification = await verifyBuyerCommitment({
+        label: name,
+        amount,
+        payTiming,
+        dueDate
+      });
+      if (!verification.ok) return;
+      const safeDueDate = verification.dueDate;
+
+      let orderNotes = String(notes || '').trim();
+      orderNotes = orderNotes
+        ? orderNotes + ' | Verifikasi 2 langkah: OK'
+        : 'Verifikasi 2 langkah: OK';
+
       submitBtn.disabled = true;
       submitBtn.textContent = 'MENGIRIM...';
 
@@ -8140,10 +8599,10 @@ textarea,
           product_name: name,
           amount,
           admin_fee: customAdmin,
-          notes,
+          notes: orderNotes,
           payment_method: paymentMethod,
           pay_timing: payTiming,
-          due_date: dueDate || null,
+          due_date: payTiming === 'later' ? safeDueDate : null,
           payment_proof: null
         });
 
@@ -8446,6 +8905,11 @@ textarea,
 
       el('buyer-refresh')?.addEventListener('click', async () => {
         toast('Memuat ulang data...', 'gold');
+        await refreshAll();
+      });
+
+      el('buyer-kios-closed-refresh')?.addEventListener('click', async () => {
+        toast('Memuat ulang status kios...', 'gold');
         await refreshAll();
       });
 
@@ -11649,6 +12113,156 @@ textarea,
   // ===================================================================
   // GLOBAL ACTIONS
   // ===================================================================
+  // ===================================================================
+  // STATUS KIOS (BUKA / TUTUP) — OWNER
+  // ===================================================================
+  let kiosInfo = { is_open: true, closed_note: '', closed_at: null };
+
+  function formatKiosTime(value) {
+    if (!value) return '';
+    try {
+      return new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function renderKiosStatus() {
+    const open = kiosInfo.is_open !== false;
+
+    const btn = document.getElementById('owner-kios-toggle-btn');
+    if (btn) {
+      btn.textContent = open ? '🔒 TUTUP KIOS' : '🔓 BUKA KIOS';
+      btn.classList.toggle('mc-menu-item-danger', open);
+      btn.classList.toggle('mc-menu-item-green', !open);
+    }
+
+    const banner = document.getElementById('owner-kios-banner');
+    if (banner) {
+      banner.hidden = open;
+      if (!open) {
+        const noteEl = document.getElementById('owner-kios-banner-note');
+        const timeEl = document.getElementById('owner-kios-banner-time');
+        if (noteEl) noteEl.textContent = kiosInfo.closed_note || '(tanpa keterangan)';
+        if (timeEl) {
+          const t = formatKiosTime(kiosInfo.closed_at);
+          timeEl.textContent = t ? 'Sejak ' + t : '';
+        }
+      }
+    }
+  }
+
+  async function refreshKiosStatus() {
+    if (!window.KeuanganDB || typeof window.KeuanganDB.getPublicStatus !== 'function') return;
+    try {
+      const status = await window.KeuanganDB.getPublicStatus();
+      kiosInfo = {
+        is_open: status?.is_open !== false,
+        closed_note: String(status?.closed_note || ''),
+        closed_at: status?.closed_at || null
+      };
+    } catch (e) {
+      // Offline: pertahankan status terakhir yang diketahui.
+    }
+    renderKiosStatus();
+  }
+
+  async function toggleKiosStatus() {
+    if (!window.KeuanganDB || typeof window.KeuanganDB.setKiosOpen !== 'function') {
+      showToast('Database belum siap. Coba lagi sebentar.', 'danger');
+      return;
+    }
+
+    // ---------- TUTUP KIOS ----------
+    if (kiosInfo.is_open !== false) {
+      const note = await uiPrompt({
+        title: '🔒 TUTUP KIOS',
+        message:
+          'Kios akan ditutup dan buyer TIDAK bisa membuat pesanan sampai dibuka lagi.\n' +
+          'Keterangan wajib diisi supaya buyer tahu alasannya.',
+        inputLabel: 'KETERANGAN PENUTUPAN',
+        hint: 'Contoh: stok habis, istirahat, maintenance, tutup sementara.',
+        placeholder: 'Tulis alasan kios ditutup...',
+        okText: 'TUTUP KIOS',
+        required: true,
+        requiredMessage: 'Keterangan wajib diisi.'
+      });
+
+      if (note === null || note === undefined) return;
+
+      const trimmed = String(note).trim();
+      if (trimmed.length < 3) {
+        showToast('Keterangan minimal 3 karakter.', 'danger');
+        return;
+      }
+
+      try {
+        await window.KeuanganDB.setKiosOpen(false, trimmed);
+        kiosInfo = { is_open: false, closed_note: trimmed, closed_at: new Date().toISOString() };
+        renderKiosStatus();
+        showToast('🔒 Kios ditutup. Buyer tidak bisa memesan.', 'gold');
+      } catch (e) {
+        showToast('Gagal menutup kios: ' + (e?.message || 'coba lagi.'), 'danger');
+      }
+      return;
+    }
+
+    // ---------- BUKA KIOS ----------
+    const ok = await uiConfirm({
+      title: '🔓 BUKA KIOS',
+      message: 'Buka kios lagi supaya buyer bisa membuat pesanan?',
+      okText: 'BUKA KIOS'
+    });
+    if (!ok) return;
+
+    try {
+      await window.KeuanganDB.setKiosOpen(true);
+      kiosInfo = { is_open: true, closed_note: '', closed_at: null };
+      renderKiosStatus();
+      showToast('🔓 Kios dibuka. Buyer sudah bisa memesan.', 'success');
+    } catch (e) {
+      showToast('Gagal membuka kios: ' + (e?.message || 'coba lagi.'), 'danger');
+    }
+  }
+
+  // Menu garis tiga (dipakai header owner & buyer).
+  function wireHeaderMenus() {
+    if (document.body.dataset.headerMenusWired === 'true') return;
+    document.body.dataset.headerMenusWired = 'true';
+
+    const closeAll = () => {
+      document.querySelectorAll('.mc-menu-panel').forEach((p) => { p.hidden = true; });
+      document.querySelectorAll('.mc-menu-toggle').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    };
+
+    document.addEventListener('click', (e) => {
+      const toggle = e.target.closest('.mc-menu-toggle');
+      if (toggle) {
+        e.preventDefault();
+        const panel = document.getElementById(toggle.getAttribute('aria-controls') || '');
+        const willOpen = !!(panel && panel.hidden);
+        closeAll();
+        if (panel && willOpen) {
+          panel.hidden = false;
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+
+      if (e.target.closest('.mc-menu-panel')) {
+        // Tutup setelah aksi menu dijalankan.
+        setTimeout(closeAll, 150);
+        return;
+      }
+
+      closeAll();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAll();
+    });
+  }
+
   window.App = {
     submitChat: async function () {
       const inputEl = document.getElementById('chat-input');
@@ -14101,6 +14715,14 @@ textarea,
       );
     },
 
+    toggleKiosStatus: function () {
+      return toggleKiosStatus();
+    },
+
+    refreshKiosStatus: function () {
+      return refreshKiosStatus();
+    },
+
     updateFloatingPhotos: function () {
       const btn = document.getElementById('floating-photos-btn');
       if (btn) {
@@ -14237,6 +14859,14 @@ textarea,
 
     render();
 
+    // Status buka/tutup kios (banner + menu) dan sinkron realtime.
+    refreshKiosStatus();
+    if (window.KeuanganDB && typeof window.KeuanganDB.subscribePublicStatus === 'function') {
+      try {
+        window.KeuanganDB.subscribePublicStatus(() => { refreshKiosStatus(); });
+      } catch (e) {}
+    }
+
     const savedTab = localStorage.getItem('keuanganku_active_tab') || 'dashboard';
     if (window.App && window.App.switchTab) {
       window.App.switchTab(savedTab);
@@ -14365,6 +14995,9 @@ textarea,
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Menu garis tiga di header (owner & buyer).
+    wireHeaderMenus();
+
     // Input nominal owner: tampilkan pemisah ribuan otomatis (5000 -> 5.000).
     ['input-base-modal', 'modal-pay-amount', 'prod-modal', 'prod-admin'].forEach((id) => {
       setupRupiahInput(document.getElementById(id));

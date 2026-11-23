@@ -249,11 +249,18 @@ create table if not exists public.public_status (
   id integer primary key default 1 check (id = 1),
   owner_id uuid references auth.users(id) on delete set null,
   modal_amount numeric not null default 0,
+  is_open boolean not null default true,
+  closed_note text,
+  closed_at timestamptz,
   updated_at timestamptz not null default now()
 );
 
-insert into public.public_status (id, modal_amount)
-values (1, 0)
+alter table public.public_status add column if not exists is_open boolean not null default true;
+alter table public.public_status add column if not exists closed_note text;
+alter table public.public_status add column if not exists closed_at timestamptz;
+
+insert into public.public_status (id, modal_amount, is_open)
+values (1, 0, true)
 on conflict (id) do nothing;
 
 alter table public.public_status enable row level security;
@@ -508,6 +515,41 @@ create trigger orders_enforce_due_max
   before insert or update of pay_timing, due_date on public.orders
   for each row execute function public.enforce_order_due_max();
 
+-- KIOS TUTUP: owner bisa menutup kios sementara + keterangan wajib.
+-- Pesanan baru ditolak di server selama kios tutup.
+create or replace function public.enforce_kios_open()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_open boolean := true;
+  v_note text;
+begin
+  select coalesce(is_open, true), closed_note
+    into v_open, v_note
+  from public.public_status
+  where id = 1;
+
+  if v_open is false then
+    raise exception 'Kios sedang tutup%.',
+      case
+        when v_note is null or btrim(v_note) = '' then ''
+        else ': ' || v_note
+      end
+      using errcode = 'P0001';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_enforce_kios_open on public.orders;
+create trigger orders_enforce_kios_open
+  before insert on public.orders
+  for each row execute function public.enforce_kios_open();
+
 -- Self-heal modal publik: hitung ulang pool GROSS dari ledger lalu NAIKKAN
 -- modal_amount bila lebih kecil (mis. tersimpan neto dari klien lama).
 -- Raise-only: tidak pernah menurunkan.
@@ -600,15 +642,20 @@ declare
   v_modal numeric := 0;
   v_reserved numeric := 0;
   v_updated timestamptz;
+  v_is_open boolean := true;
+  v_closed_note text;
+  v_closed_at timestamptz;
 begin
   v_modal := public.heal_modal_pool();
 
-  select coalesce(modal_amount, 0), updated_at
-    into v_modal, v_updated
+  select coalesce(modal_amount, 0), updated_at,
+         coalesce(is_open, true), closed_note, closed_at
+    into v_modal, v_updated, v_is_open, v_closed_note, v_closed_at
   from public.public_status
   where id = 1;
 
   if v_modal is null then v_modal := 0; end if;
+  if v_is_open is null then v_is_open := true; end if;
 
   select coalesce(sum(greatest(0, amount - coalesce(admin_fee, 0))), 0)
     into v_reserved
@@ -619,7 +666,10 @@ begin
     'modal_amount', v_modal,
     'reserved', v_reserved,
     'available', greatest(0, v_modal - v_reserved),
-    'updated_at', v_updated
+    'updated_at', v_updated,
+    'is_open', v_is_open,
+    'closed_note', v_closed_note,
+    'closed_at', v_closed_at
   );
 end;
 $$;
