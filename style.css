@@ -170,6 +170,7 @@ html, body, * {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 /* ===================================================================
@@ -1857,7 +1858,11 @@ tbody tr:last-child td {
 }
 
 [data-theme="night"] .mc-celestial-body {
-  background: #f8fafc;
+  background:
+    radial-gradient(circle at 30% 30%, #cbd5e1 0 11%, transparent 12%),
+    radial-gradient(circle at 66% 56%, #cbd5e1 0 8%, transparent 9%),
+    radial-gradient(circle at 42% 74%, #cbd5e1 0 6%, transparent 7%),
+    #f8fafc;
   border: 4px solid #cbd5e1;
   box-shadow: 
     inset -8px -8px 0 #94a3b8,
@@ -3594,10 +3599,27 @@ textarea,
   letter-spacing: -0.02em;
 }
 
+.overall-bar-assets {
+  margin-top: 8px;
+  border-color: rgba(245, 166, 35, 0.45);
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.14), rgba(16, 185, 129, 0.16));
+}
+
+.overall-bar-assets .overall-bar-label { color: #fbbf24; }
+.overall-bar-assets .overall-bar-val { color: #fde68a; }
+
 [data-theme="day"] .overall-bar {
   border-color: rgba(2, 132, 199, 0.35);
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.18), rgba(16, 185, 129, 0.18));
 }
+
+[data-theme="day"] .overall-bar-assets {
+  border-color: rgba(180, 120, 10, 0.4);
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.16), rgba(16, 185, 129, 0.16));
+}
+
+[data-theme="day"] .overall-bar-assets .overall-bar-label { color: #b45309; }
+[data-theme="day"] .overall-bar-assets .overall-bar-val { color: #92400e; }
 
 [data-theme="day"] .overall-bar-label { color: #0369a1; }
 [data-theme="day"] .overall-bar-val { color: #047857; text-shadow: none; }

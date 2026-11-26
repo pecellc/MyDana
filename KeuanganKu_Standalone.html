@@ -189,6 +189,7 @@ html, body, * {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 /* ===================================================================
@@ -1876,7 +1877,11 @@ tbody tr:last-child td {
 }
 
 [data-theme="night"] .mc-celestial-body {
-  background: #f8fafc;
+  background:
+    radial-gradient(circle at 30% 30%, #cbd5e1 0 11%, transparent 12%),
+    radial-gradient(circle at 66% 56%, #cbd5e1 0 8%, transparent 9%),
+    radial-gradient(circle at 42% 74%, #cbd5e1 0 6%, transparent 7%),
+    #f8fafc;
   border: 4px solid #cbd5e1;
   box-shadow: 
     inset -8px -8px 0 #94a3b8,
@@ -3613,10 +3618,27 @@ textarea,
   letter-spacing: -0.02em;
 }
 
+.overall-bar-assets {
+  margin-top: 8px;
+  border-color: rgba(245, 166, 35, 0.45);
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.14), rgba(16, 185, 129, 0.16));
+}
+
+.overall-bar-assets .overall-bar-label { color: #fbbf24; }
+.overall-bar-assets .overall-bar-val { color: #fde68a; }
+
 [data-theme="day"] .overall-bar {
   border-color: rgba(2, 132, 199, 0.35);
   background: linear-gradient(90deg, rgba(56, 189, 248, 0.18), rgba(16, 185, 129, 0.18));
 }
+
+[data-theme="day"] .overall-bar-assets {
+  border-color: rgba(180, 120, 10, 0.4);
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.16), rgba(16, 185, 129, 0.16));
+}
+
+[data-theme="day"] .overall-bar-assets .overall-bar-label { color: #b45309; }
+[data-theme="day"] .overall-bar-assets .overall-bar-val { color: #92400e; }
 
 [data-theme="day"] .overall-bar-label { color: #0369a1; }
 [data-theme="day"] .overall-bar-val { color: #047857; text-shadow: none; }
@@ -4774,14 +4796,23 @@ textarea,
           </div>
         </div>
 
-        <!-- TOTAL KESELURUHAN: semua uang yang benar-benar ada (kas + modal),
+        <!-- UANG DI TANGAN + MODAL: uang yang benar-benar ada sekarang,
              TANPA piutang/utang orang. -->
         <div class="overall-bar">
           <span class="overall-bar-label">
-            🧮 Total Keseluruhan (Tanpa Utang)
+            💵 Uang di Tangan + Modal Kios
             <span class="overall-bar-sub">DANA + GoPay + Dompet + Modal Kios • piutang tidak dihitung</span>
           </span>
           <span id="total-overall" class="overall-bar-val">Rp 0</span>
+        </div>
+
+        <!-- TOTAL ASET: uang yang ada sekarang + uang yang masih di pelanggan. -->
+        <div class="overall-bar overall-bar-assets">
+          <span class="overall-bar-label">
+            💎 Total Aset (Kas + Modal + Piutang)
+            <span class="overall-bar-sub">Uang di tangan sekarang + uang yang masih di pelanggan</span>
+          </span>
+          <span id="total-assets" class="overall-bar-val">Rp 0</span>
         </div>
       </section>
 
@@ -11796,6 +11827,11 @@ textarea,
     const overallEl = document.getElementById('total-overall');
     if (overallEl) overallEl.textContent = formatRupiah(totalRiil + uangPanas);
 
+    // 2D. Total aset: kas + modal + piutang (uang yang masih di pelanggan).
+    // Angka ini TETAP sama sebelum & sesudah pelunasan: piutang berubah jadi kas.
+    const totalAssetsEl = document.getElementById('total-assets');
+    if (totalAssetsEl) totalAssetsEl.textContent = formatRupiah(totalRiil + uangPanas + totalAkanDatang);
+
     // 3. Kios Pulsa & Dompet Modal Stats
     const pulsaCountEl = document.getElementById('pulsa-count');
     if (pulsaCountEl) pulsaCountEl.textContent = `${totalPulsaCount} Trx`;
@@ -13836,9 +13872,9 @@ textarea,
                   </button>
                 ` : ''}
                 ${isDebtOrder ? `
-                  <button class="mc-btn mc-btn-green" style="padding:6px 9px; font-size:7.5px; font-weight:700; background:#059669;"
-                    onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang transfer DANA/Cash sudah masuk, selesaikan piutang">
-                    💰 ACC UANG MASUK
+                  <button class="mc-btn mc-btn-gold" style="padding:6px 9px; font-size:7.5px; font-weight:700; background:#b45309;"
+                    onclick="window.App.confirmDebtSettlementForOrder('${order.id}')" title="Uang dari buyer SUDAH masuk? Klik untuk melunasi. Ini BUKAN tombol ACC pesanan.">
+                    💵 LUNASI TAGIHAN
                   </button>
                 ` : `
                   <span style="color:var(--mc-emerald);font-weight:700;font-size:0.75rem;">✔ LUNAS BERES</span>
@@ -14215,8 +14251,8 @@ textarea,
           const isDebt = loggedItem ? (!!loggedItem.isDebt && !isSettled) : true;
           actionsEl.innerHTML = `
             ${isDebt ? `
-              <button class="mc-btn mc-btn-green mc-btn-acc-lg" onclick="window.App.closeProofViewer(); window.App.confirmDebtSettlementForOrder('${order.id}')">
-                💰 BUKTI BENAR - ACC UANG MASUK (LUNAS BERES)
+              <button class="mc-btn mc-btn-gold mc-btn-acc-lg" onclick="window.App.closeProofViewer(); window.App.confirmDebtSettlementForOrder('${order.id}')">
+                💵 BUKTI BENAR — LUNASI TAGIHAN
               </button>
             ` : `
               <div style="color:var(--mc-emerald); font-weight:700; margin-bottom:6px; font-size:0.8rem;">
@@ -14323,18 +14359,41 @@ textarea,
       );
       const profitPart = Math.max(0, settleAmount - modalPart);
 
-      const ok = await uiConfirm({
-        title: '💰 ACC UANG MASUK (PELUNASAN)',
-        message:
-          `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(settleAmount)} dari ${buyerName} SUDAH BENAR-BENAR MASUK?\n\n` +
-          `• Piutang atas nama ${buyerName} berkurang ${formatRupiah(settleAmount)} (sisa ${formatRupiah(Math.max(0, (Number(openOrderDebt.total) || settleAmount) - (Number(openOrderDebt.paid) || 0) - settleAmount))}).\n` +
-          `• Modal pokok ${formatRupiah(modalPart)} kembali ke Modal Kios, laba ${formatRupiah(profitPart)} masuk kas ${walletName}.\n` +
-          `• Total aset TIDAK berubah (hanya pindah dari piutang ke kas + modal).\n` +
-          `• Status pesanan menjadi SELESAI (BERES).`,
-        okText: '✅ YA, UANG SUDAH MASUK',
-        cancelText: 'BATAL'
-      });
-      if (!ok) return;
+      const settlementMessage =
+        `Konfirmasi bahwa uang ${walletName} sebesar ${formatRupiah(settleAmount)} dari ${buyerName} SUDAH BENAR-BENAR MASUK?\n\n` +
+        `• Ini PELUNASIAN TAGIHAN — BUKAN ACC pesanan.\n` +
+        `• Piutang atas nama ${buyerName} berkurang ${formatRupiah(settleAmount)} (sisa ${formatRupiah(Math.max(0, (Number(openOrderDebt.total) || settleAmount) - (Number(openOrderDebt.paid) || 0) - settleAmount))}).\n` +
+        `• Modal pokok ${formatRupiah(modalPart)} kembali ke Modal Kios, laba ${formatRupiah(profitPart)} masuk kas ${walletName}.\n` +
+        `• Total aset TIDAK berubah (hanya pindah dari piutang ke kas + modal).\n` +
+        `• Status pesanan menjadi SELESAI (BERES).\n\n` +
+        `Kalau uangnya BELUM masuk, tekan BATAL.`;
+
+      // Nominal besar wajib diketik supaya tidak kepencet dobel / salah tombol.
+      if (settleAmount >= 50000) {
+        const typed = await uiPrompt({
+          title: '💵 PELUNASIAN TAGIHAN (BUKAN ACC)',
+          message: settlementMessage,
+          hint: 'Ketik LUNAS kalau uang dari buyer benar-benar sudah masuk.',
+          inputLabel: 'KONFIRMASI PELUNASIAN',
+          placeholder: 'LUNAS',
+          okText: 'CATAT UANG MASUK',
+          required: true,
+          requiredMessage: 'Ketik LUNAS untuk melanjutkan.'
+        });
+        if (typed === null || typed === undefined) return;
+        if (String(typed).trim().toUpperCase() !== 'LUNAS') {
+          showToast('❌ Dibatalkan. Pelunasan hanya dicatat kalau kamu ketik LUNAS.', 'danger');
+          return;
+        }
+      } else {
+        const ok = await uiConfirm({
+          title: '💵 PELUNASIAN TAGIHAN (BUKAN ACC)',
+          message: settlementMessage,
+          okText: '✅ YA, UANG SUDAH MASUK',
+          cancelText: 'BATAL'
+        });
+        if (!ok) return;
+      }
 
       window.__settlingOrderIds[orderId] = true;
       try {
